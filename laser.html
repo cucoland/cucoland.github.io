@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Óptica laser</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+    :root {
+        --bg: #ffffff;
+        --primary: #bdd9db;
+        --accent: #3498db;
+        --espejo: white;
+        --alerta: #e74c3c;
+        --cell-size: 60px; 
+	    --boton-verde: #58cc02;
+    	--boton-verde-borde: #46a302;
+    	--boton-azul: #35bcde;
+    	--boton-azul-borde: #1899d6;
+    	--boton-gris: #afafaf;
+    	--boton-gris-borde: #808080;
+    }
+
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: var(--bg);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-x: hidden; 
+    }
+
+	h2 {
+    	margin: 0px;
+    	font-size: 1.5em;
+	    padding: 0px;
+    	font-weight: bold;
+	}
+
+	p {
+	    margin: 0px;
+	    padding: 0px;
+	}
+
+    nav {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap; 
+        justify-content: center;
+        padding: 5px;
+        gap: 10px;
+        box-sizing: border-box;
+	    background: var(--primary);
+    }
+
+    button {
+        padding: 10px 12px;
+        margin-top: 10px;
+        cursor: pointer;
+        border: none;
+        border-radius: 10px; 
+        background: var(--boton-azul);
+        color: white;
+        font-weight: 800; 
+        font-size: 14px;
+        letter-spacing: 0.8px;
+        transition: filter 0.2s;
+        box-shadow: 0 5px 0 var(--boton-azul-borde);
+        position: relative;
+        margin-bottom: 10px; 
+        display: inline-block;
+    }
+
+    button:active {
+        box-shadow: 0 0 0 var(--boton-azul-borde);
+        transform: translateY(5px);
+    }
+
+    button.alt {
+        background: var(--boton-gris);
+        box-shadow: 0 5px 0 var(--boton-gris-borde);
+    }
+
+    button.alt:active {
+        box-shadow: 0 0 0 var(--boton-gris-borde);
+    }
+
+    .config-zone {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 8px; 
+        padding: 10px 5px; 
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden; 
+    }
+
+    .config-zone button {
+        height: 32px; 
+        padding: 0 10px;
+        margin: 0;
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+        flex: 1; 
+        min-width: 0; 
+    }
+
+    .control-group label {
+        font-size: 0.8rem; 
+        font-weight: bold;
+        white-space: nowrap;
+        flex-shrink: 0;
+        color: var(--boton-azul);
+    }
+
+    .control-group span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px; 
+        height: 32px;
+        flex-shrink: 0;
+        background: white;
+        color: var(--boton-azul);
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    input[type=range] {
+        -webkit-appearance: none;
+        flex: 1;
+        min-width: 0;
+        background: transparent;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+        height: 8px;
+        background: #1cb0f6;
+        border-radius: 10px;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 22px;
+        width: 22px;
+        border-radius: 50%;
+        background-color: var(--boton-gris);
+        background-image: radial-gradient(farthest-side at 40% 30%, white, rgba(255,255,255,0));
+        cursor: pointer;
+        margin-top: -7px;
+        border-bottom: 2px solid white;
+        box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+    }
+
+    .stats { margin: 3px; font-size: 1.1rem; color: #35bcde; font-weight: bold; }
+
+    #game-container {
+        position: relative;
+        background: transparent;
+        padding: 40px; 
+        border-radius: 12px;
+        margin: 0px auto;
+        max-width: 95vw; 
+        box-sizing: border-box;
+    }
+
+    #grid { 
+        display: grid; 
+	    background: #dfe6e9;
+        border: 5px solid #dfe6e9;
+        margin: 0 auto;
+        border-radius: 5px;
+    }
+
+    .cell {
+        width: var(--cell-size);
+        height: var(--cell-size);
+        border: 1px solid rgba(0,0,0,0.08);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; position: relative;
+        border-radius: 3px;
+    }
+
+    .espejo-line {
+        width: 100%; height: 4px;
+        background: linear-gradient(15deg, grey, white, #eee, white, grey);
+        position: absolute; z-index: 2;
+        box-shadow: 0 0 5px #4acad4;
+        border-radius: 2px;
+    }
+    .m-pos { transform: rotate(-45deg); }
+    .m-neg { transform: rotate(45deg); }
+    .sol-ghost { opacity: 0.25; background: var(--alerta); height: 2px; z-index: 1; }
+
+    .pistas {
+        position: absolute; 
+        font-weight: 900; 
+        font-size: clamp(10px, 3vw, 13px);
+        color: var(--boton-gris-borde); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        width: var(--cell-size);
+        height: var(--cell-size);
+        pointer-events: none; 
+        z-index: 5;
+    }
+
+    /* --- NUEVO: MODIFICACIÓN DEL CONTENEDOR DE MENSAJES --- */
+    #message-container {
+        position: fixed;        /* Fijo respecto a la pantalla */
+        bottom: 5px;           /* Distancia al borde inferior */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        display: flex;
+        justify-content: center;
+        z-index: 1000;         /* Por encima del juego */
+        pointer-events: none;  /* No bloquea clics si está oculto */
+        min-height: auto;
+        margin-top: 0;
+    }
+
+    #win-msg, #error-msg {
+        display: none; 
+        width: 100%;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        pointer-events: auto; /* Permite clics en los botones del mensaje */
+        animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    #win-msg {
+        background: #d4edda;
+        color: #155724;
+        border: 2px solid #c3e6cb;
+    }
+
+    #error-msg {
+        background: #f8d7da;
+        color: #721c24;
+        border: 2px solid #f5c6cb;
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(100px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+</style>
+</head>
+<body>
+
+    <nav>
+        <button class="alt" onclick="resetStats()">Reinicio</button>
+        <button onclick="saveImage()">Captura</button>
+        <button onclick="toggleFS()">FullPage</button>
+        <button class="alt" onclick="toggleSolution()">Solución</button>
+    </nav>
+
+<div class="config-zone">
+    <div class="control-group">
+        <label>Tamaño:</label>
+        <input type="range" id="in-size" value="4" min="3" max="8" step="1" oninput="updateSlider('size')">
+        <span id="val-size">4</span>
+    </div>
+
+    <div class="control-group">
+        <label>Salas:</label>
+        <input type="range" id="in-rooms" value="4" min="3" max="8" step="1" oninput="updateSlider('rooms')">
+        <span id="val-rooms">4</span>
+    </div>
+
+    <button onclick="newPuzzle()">Nuevo</button>
+</div>
+
+    <div class="stats">
+        Media: <span id="stat-avg">0</span>s | Partidas: <span id="stat-count">0</span>
+    </div>
+
+
+    <div id="game-container">
+        <div id="grid"></div>
+    </div>
+
+<div id="message-container">
+    <div id="win-msg">
+        <h2 style="color: #27ae60;">¡Conseguido!</h2>
+        <p>Tiempo: <span id="solve-time"></span>s</p>
+        <button onclick="newPuzzle()">Siguiente</button>
+    </div>
+
+    <div id="error-msg">
+        <h2 style="color: #c0392b;">¡Atención!</h2>
+        <p>Solo se permite un espejo por habitación.</p>
+        <button class="alt" onclick="cerrarError()">Aceptar</button>
+    </div>
+</div>
+
+
+
+<script>
+    let gridSize, roomCount;
+    let rooms = []; 
+    let userState = []; 
+    let solution = [];
+    let activepistass = [];
+    let startTime;
+    let records = { total: 0, count: 0 };
+    let showingSolution = false;
+
+const colors = [
+    '#FFD1DC', '#BFFCC6', '#CFE9FF', '#FFFFD1', '#E0BBE4', 
+    '#FFCCBB', '#C5E1A5', '#F48FB1', '#A7FFEB', '#fcbf7e', 
+    '#D1C4E9', '#F8BBD0', '#DCEDC8', '#B2EBF2', '#F0F4C3'
+];
+
+
+function updateSlider(type) {
+    const sizeInput = document.getElementById('in-size');
+    const roomsInput = document.getElementById('in-rooms');
+    const sizeVal = document.getElementById('val-size');
+    const roomsVal = document.getElementById('val-rooms');
+
+    if (type === 'size') {
+        sizeVal.innerText = sizeInput.value;
+        const newMax = parseInt(sizeInput.value) * 2;
+        roomsInput.max = newMax;
+        if (parseInt(roomsInput.value) > newMax) {
+            roomsInput.value = newMax;
+            roomsVal.innerText = newMax;
+        }
+    } else {
+        roomsVal.innerText = roomsInput.value;
+    }
+}
+
+function newPuzzle() {
+    document.getElementById('grid').style.pointerEvents = 'auto';
+    document.getElementById('win-msg').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'none';
+    
+    gridSize = parseInt(document.getElementById('in-size').value);
+    roomCount = parseInt(document.getElementById('in-rooms').value);
+    showingSolution = false;
+
+    generateMap();
+    if(!generateValidpistass()) {
+        newPuzzle(); 
+        return;
+    }
+    
+    startTime = Date.now();
+    draw();
+}
+
+    function generateMap() {
+        rooms = Array(gridSize).fill().map(() => Array(gridSize).fill(-1));
+        let seeds = [];
+        for (let i = 0; i < roomCount; i++) {
+            let x, y;
+            do { x = Math.floor(Math.random()*gridSize); y = Math.floor(Math.random()*gridSize); } 
+            while (rooms[y][x] !== -1);
+            rooms[y][x] = i;
+            seeds.push({x, y, id: i});
+        }
+        let total = roomCount;
+        while (total < gridSize * gridSize) {
+            let s = seeds[Math.floor(Math.random()*seeds.length)];
+            let adj = [[0,1],[0,-1],[1,0],[-1,0]].map(d => ({x: s.x+d[0], y: s.y+d[1]}));
+            let valid = adj.filter(n => n.x>=0 && n.x<gridSize && n.y>=0 && n.y<gridSize && rooms[n.y][n.x] === -1);
+            if(valid.length > 0) {
+                let pick = valid[Math.floor(Math.random()*valid.length)];
+                rooms[pick.y][pick.x] = s.id;
+                seeds.push({x: pick.x, y: pick.y, id: s.id});
+                total++;
+            }
+        }
+    }
+
+function generateValidpistass() {
+    solution = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+    userState = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+    
+    for (let i = 0; i < roomCount; i++) {
+        let cells = [];
+        for(let y=0; y<gridSize; y++) 
+            for(let x=0; x<gridSize; x++) if(rooms[y][x] === i) cells.push({x, y});
+        let p = cells[Math.floor(Math.random()*cells.length)];
+        solution[p.y][p.x] = Math.random() > 0.5 ? 1 : 2;
+    }
+
+    activepistass = [];
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let occupiedLabelSlots = new Set(); 
+
+    for (let i = 0; i < roomCount; i++) {
+        let found = false;
+        let attempts = 0;
+        while(!found && attempts < 1000) {
+            let side = Math.floor(Math.random()*4);
+            let pos = Math.floor(Math.random()*gridSize);
+            let startKey = `${side}-${pos}`;
+
+            if (occupiedLabelSlots.has(startKey)) {
+                attempts++;
+                continue;
+            }
+
+            let res = trace(side, pos, solution);
+            let endKey = `${res.end.s}-${res.end.p}`;
+
+            if (occupiedLabelSlots.has(endKey)) {
+                attempts++;
+                continue;
+            }
+
+            if(res.hits > 0 && res.path.some(pt => rooms[pt.y][pt.x] === i)) {
+                res.id = chars[i % 26] + res.hits;
+                activepistass.push(res);
+                occupiedLabelSlots.add(startKey);
+                occupiedLabelSlots.add(endKey);
+                found = true;
+            }
+            attempts++;
+        }
+        if(!found) return false; 
+    }
+    return true;
+}
+    function trace(s, p, gridData) {
+        let x, y, dx, dy;
+        if(s===0){ x=p; y=0; dx=0; dy=1; }
+        else if(s===1){ x=gridSize-1; y=p; dx=-1; dy=0; }
+        else if(s===2){ x=p; y=gridSize-1; dx=0; dy=-1; }
+        else { x=0; y=p; dx=1; dy=0; }
+
+        let hits = 0;
+        let path = [];
+        let cx = x, cy = y;
+
+        while(cx>=0 && cx<gridSize && cy>=0 && cy<gridSize) {
+            path.push({x:cx, y:cy});
+            let m = gridData[cy][cx];
+            if(m === 1) { [dx, dy] = [-dy, -dx]; hits++; }
+            else if(m === 2) { [dx, dy] = [dy, dx]; hits++; }
+            cx += dx; cy += dy;
+        }
+
+        let exS, exP;
+        if(cx<0){ exS=3; exP=cy; }
+        else if(cx>=gridSize){ exS=1; exP=cy; }
+        else if(cy<0){ exS=0; exP=cx; }
+        else { exS=2; exP=cx; }
+
+        return { start: {s, p}, end: {s: exS, p: exP}, hits, path };
+    }
+
+function draw() {
+    const board = document.getElementById('grid');
+    const availableWidth = window.innerWidth - 100; 
+    const calculatedSize = Math.min(60, Math.floor(availableWidth / gridSize));
+    document.documentElement.style.setProperty('--cell-size', `${calculatedSize}px`);
+
+    board.style.gridTemplateColumns = `repeat(${gridSize}, var(--cell-size))`;
+    board.innerHTML = '';
+
+    for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+            let cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.style.backgroundColor = colors[rooms[y][x] % colors.length];
+            cell.onclick = () => handleClick(x, y);
+
+            if(showingSolution && solution[y][x] > 0) {
+                let s = document.createElement('div');
+                s.className = `espejo-line sol-ghost ${solution[y][x]===1?'m-pos':'m-neg'}`;
+                cell.appendChild(s);
+            }
+
+            if(userState[y][x] > 0) {
+                let m = document.createElement('div');
+                m.className = `espejo-line ${userState[y][x]===1?'m-pos':'m-neg'}`;
+                cell.appendChild(m);
+            }
+            board.appendChild(cell);
+        }
+    }
+    generarEtiquetas();
+}
+
+function generarEtiquetas() {
+    document.querySelectorAll('.pistas').forEach(e => e.remove());
+    const cont = document.getElementById('game-container');
+    const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+    const padding = 40; 
+
+    activepistass.forEach(c => {
+        [c.start, c.end].forEach(pt => {
+            let d = document.createElement('div');
+            d.className = 'pistas';
+            d.style.width = cellSize + 'px';
+            d.style.height = cellSize + 'px';
+            d.innerText = c.id;
+
+            if(pt.s === 0) { d.style.top='0px'; d.style.left=(pt.p*cellSize + padding) + 'px'; }
+            if(pt.s === 1) { d.style.right='0px'; d.style.top=(pt.p*cellSize + padding) + 'px'; }
+            if(pt.s === 2) { d.style.bottom='0px'; d.style.left=(pt.p*cellSize + padding) + 'px'; }
+            if(pt.s === 3) { d.style.left='0px'; d.style.top=(pt.p*cellSize + padding) + 'px'; }
+            cont.appendChild(d);
+        });
+    });
+}
+
+function handleClick(x, y) {
+    const rid = rooms[y][x];
+    if(userState[y][x] === 0) {
+        let exists = false;
+        for(let r=0; r<gridSize; r++)
+            for(let c=0; c<gridSize; c++)
+                if(rooms[r][c] === rid && userState[r][c] > 0) exists = true;
+        
+        if(exists) { 
+            document.getElementById('win-msg').style.display = 'none'; 
+            const err = document.getElementById('error-msg');
+            err.style.display = 'block';
+            return; 
+        }
+    }
+    cerrarError(); 
+    userState[y][x] = (userState[y][x] + 1) % 3;
+    draw();
+    check();
+}
+
+function cerrarError() {
+    document.getElementById('error-msg').style.display = 'none';
+}
+
+function check() {
+    let count = 0;
+    for(let r=0; r<gridSize; r++)
+        for(let c=0; c<gridSize; c++) if(userState[r][c] > 0) count++;
+    
+    if(count !== roomCount) return;
+
+    let ok = activepistass.every(c => {
+        let res = trace(c.start.s, c.start.p, userState);
+        return res.end.s === c.end.s && res.end.p === c.end.p && res.hits === c.hits;
+    });
+
+    if(ok) {
+        document.getElementById('error-msg').style.display = 'none'; 
+        let t = Math.floor((Date.now() - startTime) / 1000);
+        records.count++; 
+        records.total += t;
+        document.getElementById('stat-avg').innerText = (records.total / records.count).toFixed(1);
+        document.getElementById('stat-count').innerText = records.count;
+        document.getElementById('solve-time').innerText = t;
+        document.getElementById('win-msg').style.display = 'block'; 
+        document.getElementById('grid').style.pointerEvents = 'none';
+    }
+}
+    function resetStats() { records = {total:0, count:0}; newPuzzle(); }
+    function toggleSolution() { showingSolution = !showingSolution; draw(); }
+function toggleFS() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        const el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        else if (el.msRequestFullscreen) el.msRequestFullscreen();
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+}
+    function saveImage() {
+        html2canvas(document.getElementById('game-container')).then(canvas => {
+            const a = document.createElement('a');
+            a.download = 'laser-maze.png'; a.href = canvas.toDataURL(); a.click();
+        });
+    }
+
+window.onload = () => {
+    updateSlider('size');
+    updateSlider('rooms');
+    newPuzzle();
+};
+
+</script>
+</body>
+</html>
