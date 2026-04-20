@@ -36,13 +36,15 @@
         --espejo: white;
         --alerta: #e74c3c;
         --cell-size: 60px; 
-	    --boton-verde: #58cc02;
-    	--boton-verde-borde: #46a302;
-    	--boton-azul: #35bcde;
-    	--boton-azul-borde: #1899d6;
-    	--boton-gris: #afafaf;
-    	--boton-gris-borde: #808080;
+	--c-verde: #58cc02;
+    	--c-verde-borde: #46a302;
+    	--c-azul: #35bcde;
+    	--c-azul-borde: #1899d6;
+    	--c-gris: #afafaf;
+    	--c-gris-borde: #808080;
     }
+
+
 
     body {
         font-family: 'Segoe UI', sans-serif;
@@ -66,6 +68,40 @@
 	    padding: 0px;
 	}
 
+
+/* ____________________Colores para modo nocturno */
+
+body.modo-nocturno {
+    --bg: #48535e;
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --c-gris: #404040;
+    --c-gris-borde: #222;
+}
+
+body.modo-nocturno .stats {
+    color: #35bcde;
+}
+
+body.modo-nocturno .pistas {
+    color: #bbb;
+}
+
+/* Ajuste opcional para que los espejos resalten más en oscuro */
+body.modo-nocturno .espejo-line {
+    box-shadow: 0 0 8px #5dade2;
+}
+
+#bNocturno {
+    min-width: 45px; /* Evita que el botón cambie de tamaño según el icono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* ____________________Fin de modo nocturno */
+
     nav {
         width: 100%;
         display: flex;
@@ -76,6 +112,11 @@
         box-sizing: border-box;
 	    background: var(--primary);
     }
+nav button {
+    min-width: 45px; /* Asegura que los botones con iconos sean cuadrados o ligeramente rectangulares */
+    padding: 10px;
+}
+
 
     button {
         padding: 10px 12px;
@@ -83,30 +124,21 @@
         cursor: pointer;
         border: none;
         border-radius: 10px; 
-        background: var(--boton-azul);
+        background: var(--c-azul);
         color: white;
         font-weight: 800; 
         font-size: 14px;
         letter-spacing: 0.8px;
         transition: filter 0.2s;
-        box-shadow: 0 5px 0 var(--boton-azul-borde);
+        box-shadow: 0 5px 0 var(--c-azul-borde);
         position: relative;
         margin-bottom: 10px; 
         display: inline-block;
     }
 
     button:active {
-        box-shadow: 0 0 0 var(--boton-azul-borde);
+        box-shadow: 0 0 0 var(--c-azul-borde);
         transform: translateY(5px);
-    }
-
-    button.alt {
-        background: var(--boton-gris);
-        box-shadow: 0 5px 0 var(--boton-gris-borde);
-    }
-
-    button.alt:active {
-        box-shadow: 0 0 0 var(--boton-gris-borde);
     }
 
     .config-zone {
@@ -130,24 +162,25 @@
         white-space: nowrap;
     }
 
-    .control-group {
+    .controles1, .controles2 {
         display: flex;
         flex-direction: row;
         align-items: center;
         gap: 5px;
         flex: 1; 
         min-width: 0; 
+	max-width: 250px;
     }
 
-    .control-group label {
+    .controles1 label, .controles2 label {
         font-size: 0.8rem; 
         font-weight: bold;
         white-space: nowrap;
         flex-shrink: 0;
-        color: var(--boton-azul);
+        color: var(--c-azul);
     }
 
-    .control-group span {
+    .controles1 span, .controles2 span {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -155,7 +188,7 @@
         height: 32px;
         flex-shrink: 0;
         background: white;
-        color: var(--boton-azul);
+        color: var(--c-azul);
         border: 1px solid #ddd;
         border-radius: 6px;
         font-size: 0.9rem;
@@ -181,7 +214,7 @@
         height: 22px;
         width: 22px;
         border-radius: 50%;
-        background-color: var(--boton-gris);
+        background-color: var(--c-gris);
         background-image: radial-gradient(farthest-side at 40% 30%, white, rgba(255,255,255,0));
         cursor: pointer;
         margin-top: -7px;
@@ -233,7 +266,7 @@
         position: absolute; 
         font-weight: 900; 
         font-size: clamp(10px, 3vw, 13px);
-        color: var(--boton-gris-borde); 
+        color: var(--c-gris-borde); 
         display: flex; 
         align-items: center; 
         justify-content: center;
@@ -243,8 +276,13 @@
         z-index: 5;
     }
 
+.pistas.correcta {
+    color: var(--c-azul) !important;
+    text-shadow: 0 0 5px rgba(39, 174, 96, 0.5);
+}
+
     /* --- NUEVO: MODIFICACIÓN DEL CONTENEDOR DE MENSAJES --- */
-    #message-container {
+    #avisos {
         position: fixed;        /* Fijo respecto a la pantalla */
         bottom: 5px;           /* Distancia al borde inferior */
         left: 50%;
@@ -259,7 +297,7 @@
         margin-top: 0;
     }
 
-    #win-msg, #error-msg {
+    #aviso-win, #aviso-error {
         display: none; 
         width: 100%;
         padding: 15px;
@@ -270,13 +308,13 @@
         animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
-    #win-msg {
+    #aviso-win {
         background: #d4edda;
         color: #155724;
         border: 2px solid #c3e6cb;
     }
 
-    #error-msg {
+    #aviso-error {
         background: #f8d7da;
         color: #721c24;
         border: 2px solid #f5c6cb;
@@ -300,20 +338,21 @@
 <body>
 
     <nav>
-        <button class="alt" onclick="resetStats()">Reinicio</button>
-        <button onclick="saveImage()">Captura</button>
-        <button onclick="toggleFS()">FullPage</button>
-        <button class="alt" onclick="toggleSolution()">Solución</button>
+        <button class="bReinicio" onclick="resetStats()">Reinicio</button>
+        <button class="bCaptura"onclick="saveImage()">Captura</button>
+        <button class="bSolucion" onclick="toggleSolution()">Solución</button>
+        <button class="bFullPage" onclick="toggleFS()">⛶</button>
+        <button id="bNocturno" onclick="toggleNightMode()" style="background: #2c3e50; box-shadow: 0 5px 0 #1a252f;">🌙</button>
     </nav>
 
 <div class="config-zone">
-    <div class="control-group">
+    <div class="controles1">
         <label>Tamaño:</label>
         <input type="range" id="in-size" value="4" min="3" max="8" step="1" oninput="updateSlider('size')">
         <span id="val-size">4</span>
     </div>
 
-    <div class="control-group">
+    <div class="controles2">
         <label>Salas:</label>
         <input type="range" id="in-rooms" value="4" min="3" max="8" step="1" oninput="updateSlider('rooms')">
         <span id="val-rooms">4</span>
@@ -331,17 +370,21 @@
         <div id="grid"></div>
     </div>
 
-<div id="message-container">
-    <div id="win-msg">
+<div id="avisos">
+	<div id="aviso-instrucciones" style="display: block; background: #e8f4fd; color: #2c3e50; border: 2px solid #35bcde; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); pointer-events: auto;">
+        	<h2 style="color: #35bcde;">Cómo se juega</h2>
+        	<p>Disponer un sólo espejo en cada sala de diferente color de manera que cada letra se pueda reflejar en el número de espejos indicados al lado de la letra.</p>
+    	</div>
+    <div id="aviso-win">
         <h2 style="color: #27ae60;">¡Conseguido!</h2>
         <p>Tiempo: <span id="solve-time"></span>s</p>
         <button onclick="newPuzzle()">Siguiente</button>
     </div>
 
-    <div id="error-msg">
+    <div id="aviso-error">
         <h2 style="color: #c0392b;">¡Atención!</h2>
         <p>Solo se permite un espejo por habitación.</p>
-        <button class="alt" onclick="cerrarError()">Aceptar</button>
+        <button class="Aceptar" onclick="cerrarError()">Aceptar</button>
     </div>
 </div>
 
@@ -349,6 +392,7 @@
 
 <script>
     let gridSize, roomCount;
+    let firstMirrorPlaced = false; // Controla si ya se puso el primer espejo
     let rooms = []; 
     let userState = []; 
     let solution = [];
@@ -356,6 +400,7 @@
     let startTime;
     let records = { total: 0, count: 0 };
     let showingSolution = false;
+
 
 const colors = [
     '#FFD1DC', '#BFFCC6', '#CFE9FF', '#FFFFD1', '#E0BBE4', 
@@ -385,8 +430,13 @@ function updateSlider(type) {
 
 function newPuzzle() {
     document.getElementById('grid').style.pointerEvents = 'auto';
-    document.getElementById('win-msg').style.display = 'none';
-    document.getElementById('error-msg').style.display = 'none';
+    document.getElementById('aviso-win').style.display = 'none';
+    document.getElementById('aviso-error').style.display = 'none';
+
+    const msgInstrucciones = document.getElementById('aviso-instrucciones');
+    if (msgInstrucciones) {
+        msgInstrucciones.style.display = firstMirrorPlaced ? 'none' : 'block';
+    }
     
     gridSize = parseInt(document.getElementById('in-size').value);
     roomCount = parseInt(document.getElementById('in-rooms').value);
@@ -544,9 +594,25 @@ function generarEtiquetas() {
     const padding = 40; 
 
     activepistass.forEach(c => {
+        // --- LÓGICA DE VALIDACIÓN ---
+        // Trazamos el camino actual del usuario para esta pista específica
+        let resActual = trace(c.start.s, c.start.p, userState);
+        
+        // Verificamos si el final y los rebotes coinciden con la pista original
+        let esCorrecta = (resActual.end.s === c.end.s && 
+                          resActual.end.p === c.end.p && 
+                          resActual.hits === c.hits);
+        // ----------------------------
+
         [c.start, c.end].forEach(pt => {
             let d = document.createElement('div');
             d.className = 'pistas';
+            
+            // Si es correcta, añadimos la clase CSS
+            if (esCorrecta) {
+                d.classList.add('correcta');
+            }
+
             d.style.width = cellSize + 'px';
             d.style.height = cellSize + 'px';
             d.innerText = c.id;
@@ -561,6 +627,12 @@ function generarEtiquetas() {
 }
 
 function handleClick(x, y) {
+// Si es el primer espejo que se pone, ocultamos el mensaje
+    if (!firstMirrorPlaced) {
+        firstMirrorPlaced = true;
+        const msgInstrucciones = document.getElementById('aviso-instrucciones');
+        if (msgInstrucciones) msgInstrucciones.style.display = 'none';
+    }
     const rid = rooms[y][x];
     if(userState[y][x] === 0) {
         let exists = false;
@@ -569,8 +641,8 @@ function handleClick(x, y) {
                 if(rooms[r][c] === rid && userState[r][c] > 0) exists = true;
         
         if(exists) { 
-            document.getElementById('win-msg').style.display = 'none'; 
-            const err = document.getElementById('error-msg');
+            document.getElementById('aviso-win').style.display = 'none'; 
+            const err = document.getElementById('aviso-error');
             err.style.display = 'block';
             return; 
         }
@@ -582,7 +654,7 @@ function handleClick(x, y) {
 }
 
 function cerrarError() {
-    document.getElementById('error-msg').style.display = 'none';
+    document.getElementById('aviso-error').style.display = 'none';
 }
 
 function check() {
@@ -598,18 +670,29 @@ function check() {
     });
 
     if(ok) {
-        document.getElementById('error-msg').style.display = 'none'; 
+        document.getElementById('aviso-error').style.display = 'none'; 
         let t = Math.floor((Date.now() - startTime) / 1000);
         records.count++; 
         records.total += t;
         document.getElementById('stat-avg').innerText = (records.total / records.count).toFixed(1);
         document.getElementById('stat-count').innerText = records.count;
         document.getElementById('solve-time').innerText = t;
-        document.getElementById('win-msg').style.display = 'block'; 
+        document.getElementById('aviso-win').style.display = 'block'; 
         document.getElementById('grid').style.pointerEvents = 'none';
     }
 }
-    function resetStats() { records = {total:0, count:0}; newPuzzle(); }
+    function resetStats() { 
+    // 1. Reiniciamos la lógica
+    records = {total: 0, count: 0}; 
+	firstMirrorPlaced = false; // Volvemos a marcar como que no hay espejos
+    
+    // 2. Actualizamos la pantalla (el DOM)
+    document.getElementById('stat-avg').innerText = "0";
+    document.getElementById('stat-count').innerText = "0";
+    
+    // 3. Generamos un nuevo puzzle
+    newPuzzle(); 
+    }
     function toggleSolution() { showingSolution = !showingSolution; draw(); }
 function toggleFS() {
     if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
@@ -629,6 +712,25 @@ function toggleFS() {
             a.download = 'laser-maze.png'; a.href = canvas.toDataURL(); a.click();
         });
     }
+
+function toggleNightMode() {
+    const body = document.body;
+    const btn = document.getElementById('bNocturno');
+    
+    body.classList.toggle('modo-nocturno');
+    
+    if (body.classList.contains('modo-nocturno')) {
+        btn.innerText = "☀️";
+        btn.style.background = "#fcf4c0"; // Color amarillento para el sol
+        btn.style.boxShadow = "0 5px 0 #d4ac0d";
+        btn.style.color = "#000";
+    } else {
+        btn.innerText = "🌙";
+        btn.style.background = "#2c3e50";
+        btn.style.boxShadow = "0 5px 0 #1a252f";
+        btn.style.color = "#fff";
+    }
+}
 
 window.onload = () => {
     updateSlider('size');
