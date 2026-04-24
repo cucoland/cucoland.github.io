@@ -346,17 +346,17 @@ nav button {
     </nav>
 
 <div class="config-zone">
-    <div class="controles1">
-        <label>Tamaño:</label>
-        <input type="range" id="in-size" value="4" min="3" max="8" step="1" oninput="updateSlider('size')">
-        <span id="val-size">4</span>
-    </div>
+<div class="controles1">
+    <label>Tamaño:</label>
+    <input type="range" id="in-size" value="4" min="3" max="8" step="1" oninput="updateSlider('size')">
+    <span id="val-size">4</span>
+</div>
 
-    <div class="controles2">
-        <label>Salas:</label>
-        <input type="range" id="in-rooms" value="4" min="3" max="8" step="1" oninput="updateSlider('rooms')">
-        <span id="val-rooms">4</span>
-    </div>
+<div class="controles2">
+    <label>Salas:</label>
+    <input type="range" id="in-rooms" value="4" min="4" max="8" step="1" oninput="updateSlider('rooms')">
+    <span id="val-rooms">4</span>
+</div>
 
     <button onclick="newPuzzle()">Nuevo</button>
 </div>
@@ -415,17 +415,25 @@ function updateSlider(type) {
     const sizeVal = document.getElementById('val-size');
     const roomsVal = document.getElementById('val-rooms');
 
+    const currentSize = parseInt(sizeInput.value);
+
+    // Ajustar el mínimo y el valor de salas según el tamaño
+    roomsInput.min = currentSize; 
+    if (parseInt(roomsInput.value) < currentSize) {
+        roomsInput.value = currentSize;
+    }
+
     if (type === 'size') {
         sizeVal.innerText = sizeInput.value;
-        const newMax = parseInt(sizeInput.value) * 2;
+        const newMax = currentSize * 2;
         roomsInput.max = newMax;
-        if (parseInt(roomsInput.value) > newMax) {
-            roomsInput.value = newMax;
-            roomsVal.innerText = newMax;
-        }
     } else {
         roomsVal.innerText = roomsInput.value;
     }
+    
+    // Actualizar siempre ambos textos para evitar desfases visuales
+    sizeVal.innerText = sizeInput.value;
+    roomsVal.innerText = roomsInput.value;
 }
 
 function newPuzzle() {
