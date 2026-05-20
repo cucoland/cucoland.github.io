@@ -629,7 +629,7 @@ function syncLyrics(currentTime) {
 
     // Encontrar qué línea corresponde al segundo actual
     for (let i = 0; i < currentLyricsParsed.length; i++) {
-        if (currentTime >= currentLyricsParsed[i].time) {
+        if ((currentTime + 0.5) >= currentLyricsParsed[i].time) {
             activeIndex = i;
         } else {
             break;
