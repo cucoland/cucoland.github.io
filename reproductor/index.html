@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Reproductor mp3</title>
+    <style>
+
+/* Estilos para la capa de bienvenida */
+#intro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--c-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000; /* Asegura que esté por encima de todo */
+}
+
+/* Botón que ocupa el 90% de ancho y alto */
+#start-btn {
+    width: 90vw;
+    height: 90vh;
+    background-color: var(--c-amarillo);
+    color: #000;
+    border: none;
+    border-radius: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+#start-btn:hover {
+    background-color: var(--c-amarilloscuro);
+    transform: scale(1.01);
+}
+
+
+        :root {
+            --c-bg: #000;
+            --c-gris: #888;
+            --c-grisoscuro: #333;
+            --c-amarillo: #ffcc00;
+	    --c-amarilloscuro: #e6b800;
+            --c-texto: #fff;
+        }
+
+/* --- Personalización del Scrollbar --- */
+
+/* 1. Estándar para Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-amarillo) var(--c-grisoscuro);
+}
+
+/* 2. Para Chrome, Edge y Safari (Webkit) */
+
+/* Tamaño de la barra */
+::-webkit-scrollbar {
+    width: 15px;  /* Ancho para scroll vertical */
+    height: 15px; /* Alto para scroll horizontal */
+}
+
+/* Fondo de la barra (el carril) */
+::-webkit-scrollbar-track {
+    background: var(--c-bg); 
+}
+
+/* La pieza que se mueve (el "pulgar") */
+::-webkit-scrollbar-thumb {
+    background-color: var(--c-amarillo);
+    border-radius: 10px;
+    border: 2px solid var(--c-bg); /* Crea un efecto de margen */
+
+}
+
+/* Color cuando pasas el ratón por encima */
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--c-amarilloscuro); /* Un amarillo un poco más oscuro */
+}
+
+
+        body, html {
+            margin: 0; padding: 0;
+            height: 100%; width: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--c-bg);
+            color: var(--c-texto);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 1. LISTA DE CANCIONES (50% ALTO) */
+#top-section {
+    height: 50vh;
+    overflow-y: auto;
+    background-color: var(--c-grisoscuro);
+    border-bottom: none; /* Quitamos el borde sólido para que el degradado luzca mejor */
+    position: relative;
+    z-index: 1;
+}
+
+        #playlist { list-style: none; padding: 0; margin: 0; }
+        .track-item {
+            display: flex; align-items: center;
+            padding: 10px 15px; border-bottom: 1px solid #222;
+            cursor: pointer;
+        }
+        .track-item:hover, .custom-file-upload:hover, .btn-rect:hover, .btn-rect.active:hover { background-color: var(--c-amarilloscuro); color: white;}
+        .track-item.active { background-color: #000; color: var(--c-amarillo); }
+/* Círculo para la lista de canciones */
+.list-placeholder {
+    width: 45px;
+    height: 45px;
+    background-color: var(--c-amarillo);
+    border-radius: 50%;
+    margin-right: 12px;
+    flex-shrink: 0; /* Evita que se deforme */
+}
+
+/* Ajuste para la imagen de la lista para que sea circular también */
+.track-item img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* Cambiado a 50% para que coincida con el círculo */
+    margin-right: 12px;
+    object-fit: cover;
+}
+        /* 2. ZONA REPRODUCTOR */
+#middle-section {
+    flex: 1;
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* CAMBIADO de hidden a visible para que el before se vea */
+    position: relative;
+    background-color: #000; /* Color base del reproductor */
+    z-index: 10; 
+}
+
+/* 3. El degradado mejorado */
+#middle-section::before {
+
+    content: "";
+    position: absolute;
+    top: -5vh; /* Esto lo sube al área de la lista */
+    left: 0;
+    width: 100%;
+    height: 5vh;
+    /* Usamos el color de fondo del reproductor (negro) hacia transparente */
+    background: linear-gradient(to top, 
+        rgba(0, 0, 0, 1) 0%, 
+        rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+    z-index: 9999; /* Valor muy alto para estar sobre las letras de la lista */
+    display: block;
+}
+
+        .player-main-row {
+            display: flex;
+            flex: 1; 
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #current-cover-container {
+            width: 50%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 5px; box-sizing: border-box;
+        }
+
+        #current-cover { height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; }
+        #current-cover img, .placeholder-circle {
+            max-width: 100%; max-height: 100%;
+            object-fit: contain; aspect-ratio: 1 / 1;
+        }
+        .placeholder-circle { background-color: var(--c-amarillo); border-radius: 50%;  height: 80%; }
+
+        .controls-column {
+            width: 50%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; gap: 15px;
+            padding: 10px; box-sizing: border-box;
+	align-items: anchor-center;
+        }
+
+        .nav-buttons { display: flex; gap: 8px; justify-content: center; }
+        .extra-buttons { display: flex; flex-direction: column; gap: 5px; }
+
+        .btn-circle {
+            width: 45px; height: 45px; border-radius: 50%;
+            border: none; background: var(--c-amarillo); color: white;
+            font-size: 18px; cursor: pointer;
+        }
+
+	.btn-circle:hover {
+		background: white; color: var(--c-gris);
+        }
+
+
+        .btn-rect {
+            width: 150px; padding: 8px; border-radius: 4px;
+            border: 1px solid #444; background: transparent;
+            color: white; font-size: 11px; cursor: pointer;
+
+
+        }
+        .btn-rect.active { background: var(--c-amarillo); color: black; }
+
+        /* SLIDER PERSONALIZADO */
+        #progress-container {
+            width: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--c-amarillo);
+            padding: 0 5px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 5px;
+            background: #333;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 10px;
+            height: 10px;
+            background: #eee;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        #song-info {
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--c-amarillo);
+            background: #080808;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #bottom-bar {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-top: 1px solid #333;
+        }
+
+        .custom-file-upload {
+            background: var(--c-grisoscuro);
+            color: var(--c-amarillo);
+            padding: 5px 35px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="intro-overlay">
+    <button id="start-btn" onclick="iniciarReproductor()">ENTRAR AL REPRODUCTOR</button>
+</div>
+
+    <div id="top-section">
+        <ul id="playlist"></ul>
+    </div>
+
+    <div id="middle-section">
+        <div class="player-main-row">
+            <div id="current-cover-container">
+                <div id="current-cover">
+                    <div class="placeholder-circle" id="placeholder"></div>
+                    <img id="main-img" class="hidden">
+                </div>
+            </div>
+
+            <div class="controls-column">
+                <div class="nav-buttons">
+                    <button class="btn-circle" onclick="prevTrack()">⏮</button>
+                    <button class="btn-circle" id="play-pause-btn" onclick="togglePlay()">▶</button>
+                    <button class="btn-circle" onclick="nextTrack()">⏭</button>
+                </div>
+
+                <div class="extra-buttons">
+                    <button id="shuffle-btn" class="btn-rect" onclick="toggleShuffle()">ALEATORIO: OFF</button>
+                    <button id="mute-btn" class="btn-rect" onclick="toggleMute()">SILENCIO: OFF</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="progress-container">
+            <div class="time-info">
+                <span id="current-time">0:00</span>
+                <span id="duration-time">0:00</span>
+            </div>
+            <input type="range" id="seek-slider" value="0" max="100">
+        </div>
+
+        <div id="song-info">Carga la carpeta de música</div>
+ 
+
+    <div id="bottom-bar">
+        <label class="custom-file-upload">
+           <input type="file" id="fileInput" accept="audio/*" webkitdirectory directory multiple style="display:none">
+    CARGAR MÚSICA
+        </label>
+    </div>
+    
+
+    <audio id="audio-player"></audio>
+
+<script>
+
+function activarPantallaCompleta() {
+    // Primero comprobamos si el navegador YA está en pantalla completa
+    const isFullscreen = document.fullscreenElement || 
+                         document.webkitFullscreenElement || 
+                         document.mozFullScreenElement || 
+                         document.msFullscreenElement;
+
+    // Si ya está activa, no hacemos nada y salimos de la función
+    if (isFullscreen) return;
+
+    const docElm = document.documentElement;
+    if (docElm.requestFullscreen) {
+        docElm.requestFullscreen();
+    } else if (docElm.mozRequestFullScreen) { /* Firefox */
+        docElm.mozRequestFullScreen();
+    } else if (docElm.webkitRequestFullscreen) { /* Chrome, Safari y Opera */
+        docElm.webkitRequestFullscreen();
+    } else if (docElm.msRequestFullscreen) { /* IE/Edge */
+        docElm.msRequestFullscreen();
+    }
+}
+
+function iniciarReproductor() {
+    activarPantallaCompleta();
+    // Ocultar la capa del botón gigante
+    document.getElementById('intro-overlay').style.display = 'none';
+}
+
+
+
+const audioPlayer = document.getElementById('audio-player');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const shuffleBtn = document.getElementById('shuffle-btn');
+    shuffleBtn.classList.add('active');
+    shuffleBtn.innerText = "ALEATORIO: ON";
+    const muteBtn = document.getElementById('mute-btn');
+    const playlistElement = document.getElementById('playlist');
+    const mainImg = document.getElementById('main-img');
+    const placeholder = document.getElementById('placeholder');
+    const songInfo = document.getElementById('song-info');
+    const seekSlider = document.getElementById('seek-slider');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationTimeEl = document.getElementById('duration-time');
+
+    let tracks = [];
+    let currentIndex = 0;
+    let isShuffle = true;
+    let playbackQueue = []; // Nueva variable para gestionar el orden
+    // Inicialización
+    shuffleBtn.classList.add('active');
+
+document.getElementById('fileInput').addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Filtrar solo archivos de audio para evitar errores
+    const audioFiles = files.filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.mp3'));
+    if (audioFiles.length === 0) {
+        alert("No se encontraron archivos de audio en la carpeta seleccionada.");
+        return;
+    }
+    
+    // INTENTO 1: Reentrar a pantalla completa con un mini retraso de 100ms
+    setTimeout(() => {
+        activarPantallaCompleta();
+    }, 100);
+
+    tracks = audioFiles.map(file => ({ 
+        file, 
+        name: file.name.replace(/\.[^/.]+$/, ""), 
+        cover: null 
+    }));
+    
+    createQueue();
+    renderPlaylist();
+    
+    if (tracks.length > 0) {
+        currentIndex = 0;
+        playTrack(playbackQueue[0]);
+    }
+});
+
+    // Función para crear o barajar la cola de reproducción
+    function createQueue() {
+        playbackQueue = tracks.map((_, index) => index);
+        if (isShuffle) {
+            // Algoritmo Fisher-Yates para barajar bien
+            for (let i = playbackQueue.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [playbackQueue[i], playbackQueue[j]] = [playbackQueue[j], playbackQueue[i]];
+            }
+        }
+    }
+
+function renderPlaylist() {
+    playlistElement.innerHTML = '';
+    tracks.forEach((track, index) => {
+        const li = document.createElement('li');
+        li.className = 'track-item';
+        li.id = `track-${index}`;
+        li.innerHTML = `
+            <div class="list-placeholder" id="placeholder-list-${index}"></div>
+            <img src="" id="img-list-${index}" class="hidden">
+            <span>${track.name}</span>
+        `;
+        li.onclick = () => {
+            const queuePos = playbackQueue.indexOf(index);
+            currentIndex = queuePos;
+            playTrack(index);
+        };
+        playlistElement.appendChild(li);
+        fetchCover(track.name, index);
+    });
+}
+
+async function fetchCover(term, index) {
+    try {
+        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=1`);
+        const data = await response.json();
+        
+        if (data.results.length > 0) {
+            const url = data.results[0].artworkUrl100.replace('100x100', '600x600');
+            tracks[index].cover = url;
+
+            // Elementos de la lista
+            const imgList = document.getElementById(`img-list-${index}`);
+            const placeholderList = document.getElementById(`placeholder-list-${index}`);
+
+            if (imgList && placeholderList) {
+                imgList.src = url;
+                imgList.classList.remove('hidden'); // Muestra la imagen
+                placeholderList.classList.add('hidden'); // Oculta el círculo
+            }
+
+            // Si es la canción que se está reproduciendo ahora, actualiza el centro
+            if (playbackQueue[currentIndex] === index) updateMainDisplay(url);
+        }
+    } catch (e) { 
+        console.log("Cover not found for index:", index); 
+    }
+}
+
+function playTrack(trackIndex) {
+    if (trackIndex === undefined) return;
+    
+    // INTENTO 2: Forzar pantalla completa al iniciar la reproducción de cualquier track
+    activarPantallaCompleta();
+    
+    const track = tracks[trackIndex];
+    audioPlayer.src = URL.createObjectURL(track.file);
+    songInfo.innerText = track.name;
+    
+    document.querySelectorAll('.track-item').forEach(el => el.classList.remove('active'));
+    const activeItem = document.getElementById(`track-${trackIndex}`);
+    if(activeItem) activeItem.classList.add('active');
+    
+    updateMainDisplay(track.cover);
+    audioPlayer.play();
+}
+
+    function updateMainDisplay(coverUrl) {
+        if (coverUrl) { 
+            mainImg.src = coverUrl; 
+            mainImg.classList.remove('hidden'); 
+            placeholder.classList.add('hidden'); 
+        } else { 
+            mainImg.classList.add('hidden'); 
+            placeholder.classList.remove('hidden'); 
+        }
+    }
+
+    function nextTrack() {
+        currentIndex++;
+        // Si llegamos al final de la cola, volvemos a empezar y barajamos de nuevo si el shuffle está ON
+        if (currentIndex >= playbackQueue.length) {
+            currentIndex = 0;
+            if (isShuffle) createQueue(); 
+        }
+        playTrack(playbackQueue[currentIndex]);
+    }
+
+    function prevTrack() {
+        currentIndex--;
+        if (currentIndex < 0) currentIndex = playbackQueue.length - 1;
+        playTrack(playbackQueue[currentIndex]);
+    }
+
+    function toggleShuffle() {
+        isShuffle = !isShuffle;
+        shuffleBtn.classList.toggle('active');
+        shuffleBtn.innerText = isShuffle ? "ALEATORIO: ON" : "ALEATORIO: OFF";
+        
+        // Al cambiar el modo, regeneramos la cola desde la canción actual para no perder el hilo
+        const currentTrackIndex = playbackQueue[currentIndex];
+        createQueue();
+        // Reposicionar el currentIndex donde quedó la canción que está sonando
+        currentIndex = playbackQueue.indexOf(currentTrackIndex);
+    }
+
+    audioPlayer.addEventListener('timeupdate', () => {
+        if (!isNaN(audioPlayer.duration)) {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            seekSlider.value = progress;
+            currentTimeEl.innerText = formatTime(audioPlayer.currentTime);
+            durationTimeEl.innerText = formatTime(audioPlayer.duration);
+        }
+    });
+
+    seekSlider.addEventListener('input', () => {
+        const seekTo = audioPlayer.duration * (seekSlider.value / 100);
+        audioPlayer.currentTime = seekTo;
+    });
+
+    function formatTime(seconds) {
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60);
+        return `${min}:${sec < 10 ? '0' + sec : sec}`;
+    }
+
+    function togglePlay() { audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause(); }
+    function toggleMute() { audioPlayer.muted = !audioPlayer.muted; muteBtn.classList.toggle('active'); muteBtn.innerText = audioPlayer.muted ? "SILENCIO: ON" : "SILENCIO: OFF"; }
+
+    audioPlayer.onplay = () => playPauseBtn.innerText = "⏸";
+    audioPlayer.onpause = () => playPauseBtn.innerText = "▶";
+    audioPlayer.onended = () => nextTrack();
+
+// --- ADICIÓN: ESCUCHADOR GLOBAL DE CLICS PARA PANTALLA COMPLETA ---
+document.addEventListener('click', function(event) {
+    // Filtramos si el clic se hizo en un <button>, un <a>, o en la etiqueta de cargar música (.custom-file-upload)
+    // O también en una canción de la lista (.track-item)
+    const target = event.target.closest('button, a, .custom-file-upload, .track-item');
+    
+    if (target) {
+        activarPantallaCompleta();
+    }
+});
+</script>
+</body>
+</html>
