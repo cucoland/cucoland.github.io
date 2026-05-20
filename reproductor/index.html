@@ -739,6 +739,89 @@ document.addEventListener('click', function(event) {
         activarPantallaCompleta();
     }
 });
+
+// --- INTEGRACIÓN CON BLUETOOTH Y MANDOS DE COCHE (MEDIA SESSION API) ---
+
+// Función para actualizar los metadatos en el dispositivo Bluetooth
+function actualizarMediaSession() {
+    if ('mediaSession' in navigator && tracks.length > 0) {
+        const trackActual = tracks[playbackQueue[currentIndex]];
+        
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: trackActual.name,
+            artist: '',
+            album: '',
+            artwork: trackActual.cover ? [
+                { src: trackActual.cover, sizes: '512x512', type: 'image/jpeg' }
+            ] : [
+                { src: 'https://placehold.co/512x512/ffcc00/000000?text=Musica', sizes: '512x512', type: 'image/png' }
+            ]
+        });
+    }
+}
+
+// Configurar los controles físicos / Bluetooth
+function configurarControlesBluetooth() {
+    if ('mediaSession' in navigator) {
+        // Botón Reproducir / Pausa
+        navigator.mediaSession.setActionHandler('play', () => {
+            audioPlayer.play();
+        });
+        
+        navigator.mediaSession.setActionHandler('pause', () => {
+            audioPlayer.pause();
+        });
+
+        // Botón Siguiente Canción (Mando del coche / Auriculares)
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+            nextTrack();
+        });
+
+        // Botón Anterior Canción (Mando del coche / Auriculares)
+        navigator.mediaSession.setActionHandler('previoustrack', () => {
+            prevTrack();
+        });
+    }
+}
+
+// Actualizar también la posición del reproductor en el sistema (opcional pero recomendado)
+function actualizarPosicionMediaSession() {
+    if ('mediaSession' in navigator && !isNaN(audioPlayer.duration)) {
+        navigator.mediaSession.setPositionState({
+            duration: audioPlayer.duration,
+            playbackRate: audioPlayer.playbackRate,
+            position: audioPlayer.currentTime
+        });
+    }
+}
+
+// --- CONECTAR CON TUS FUNCIONES EXISTENTES ---
+
+// Modifica o asegúrate de añadir estas llamadas dentro de tus funciones:
+// 1. Al reproducir una pista nueva (añadir al final de tu función playTrack)
+const originalPlayTrack = playTrack;
+playTrack = function(trackIndex) {
+    originalPlayTrack(trackIndex);
+    actualizarMediaSession();
+    configurarControlesBluetooth();
+};
+
+// 2. Al cambiar el estado de reproducción (añadir a los eventos onplay y onpause)
+audioPlayer.addEventListener('play', () => {
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
+});
+
+audioPlayer.addEventListener('pause', () => {
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+});
+
+// 3. Sincronizar la barra de tiempo con el sistema (añadir dentro de tu listener 'timeupdate')
+audioPlayer.addEventListener('timeupdate', () => {
+    // Cada ciertos segundos actualiza la barra del sistema/coche
+    if (Math.floor(audioPlayer.currentTime) % 2 === 0) {
+        actualizarPosicionMediaSession();
+    }
+});
 </script>
 </body>
 </html>
