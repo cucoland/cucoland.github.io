@@ -7,38 +7,8 @@
     <title>Reproductor mp3 con Letras Sincronizadas</title>
     <style>
 
-/* Estilos para la capa de bienvenida */
-#intro-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: var(--c-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000; /* Asegura que esté por encima de todo */
-}
 
-/* Botón que ocupa el 90% de ancho y alto */
-#start-btn {
-    width: 90vw;
-    height: 90vh;
-    background-color: var(--c-amarillo);
-    color: #000;
-    border: none;
-    border-radius: 20px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-}
 
-#start-btn:hover {
-    background-color: var(--c-amarilloscuro);
-    transform: scale(1.01);
-}
 
 
         :root {
@@ -189,6 +159,7 @@
 
 /* Contenedor dinámico de letras */
 #lyrics-view {
+    position: relative;
     width: 100%;
     height: 100%;
     padding: 15px;
@@ -198,10 +169,35 @@
     flex-direction: column;
     gap: 10px;
     text-align: center;
-    background: rgba(10, 10, 10, 0.95);
+    background: transparent;
     border-radius: 10px;
     /* Quitamos el smooth nativo del contenedor porque ahora lo controlará el JS con precisión */
-    scroll-behavior: auto !important; 
+    scroll-behavior: auto !important;
+    scrollbar-width: none;            /* Oculta el scroll en Firefox */
+    -ms-overflow-style: none;         /* Oculta el scroll en IE y Edge antiguo */
+}
+
+/* Capa de fondo exclusiva para la carátula borrosa/tenue */
+#lyrics-view::before {
+    content: "";
+    position: fixed;
+    top: 50%; left: 0;
+    width: 50%; height: 50%;
+    /* Usamos una variable CSS (--current-cover) que actualizaremos con JavaScript */
+    background-image: var(--current-cover, none);
+    background-size: cover;
+    background-position: center;
+    opacity: 0.3; /* 30% de opacidad */
+    z-index: -1; /* Se coloca detrás de las letras */
+    pointer-events: none; /* No interfiere con el scroll */
+    border-radius: 10px;
+}
+
+
+
+/* Oculta la barra de scroll en Chrome, Safari y Opera */
+#lyrics-view::-webkit-scrollbar {
+    display: none;
 }
 
 .lyric-line {
@@ -214,16 +210,19 @@
 
 .lyric-line.active {
     color: var(--c-amarillo);
-    font-size: 16px;
-    font-weight: bold;
-    transform: scale(1.05);
+    font-size: 18px;
+    transform: scale(1);
     opacity: 1;
+	text-shadow: 
+	0 0.3px 0 var(--c-amarillo),
+	0 -0.3px 0 var(--c-amarillo);
+
 }
 
 .lyric-line.neighbor {
     color: #fff;
-    font-size: 16px;
-    transform: scale(0.98);
+    font-size: 18px;
+    transform: scale(1);
     opacity: 0.85;
 }
         .controls-column {
@@ -571,7 +570,7 @@ function parseAndRenderLyrics(lrcText) {
     currentLyricsParsed = [];
     
     if (!lrcText) {
-        lyricsView.innerHTML = '<div class="lyric-line" style="color: #666; margin-top: auto; margin-bottom: auto;">Letra no disponible en internet</div>';
+        lyricsView.innerHTML = '<div class="lyric-line" style="color: #666; margin-top: auto; margin-bottom: auto;">Letra no disponible en este momento</div>';
         return;
     }
 
@@ -721,16 +720,22 @@ function toggleLyricsView(event) {
     }
 }
 
-    function updateMainDisplay(coverUrl) {
-        if (coverUrl) { 
-            mainImg.src = coverUrl; 
-            mainImg.classList.remove('hidden'); 
-            placeholder.classList.add('hidden'); 
-        } else { 
-            mainImg.classList.add('hidden'); 
-            placeholder.classList.remove('hidden'); 
-        }
+function updateMainDisplay(coverUrl) {
+    if (coverUrl) { 
+        mainImg.src = coverUrl; 
+        mainImg.classList.remove('hidden'); 
+        placeholder.classList.add('hidden'); 
+        
+        // NUEVA LÍNEA: Pasa la URL de la portada al contenedor de letras
+        lyricsView.style.setProperty('--current-cover', `url('${coverUrl}')`);
+    } else { 
+        mainImg.classList.add('hidden'); 
+        placeholder.classList.remove('hidden'); 
+        
+        // NUEVA LÍNEA: Quita la imagen si no hay portada disponible
+        lyricsView.style.setProperty('--current-cover', 'none');
     }
+}
 
     function nextTrack() {
         currentIndex++;
