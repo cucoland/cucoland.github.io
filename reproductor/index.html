@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="Reproductor mp3" content="yes">
     <title>Reproductor mp3 con Letras Sincronizadas</title>
     <style>
 
@@ -322,9 +322,7 @@
 </head>
 <body>
 
-<div id="intro-overlay">
-    <button id="start-btn" onclick="iniciarReproductor()">ENTRAR AL REPRODUCTOR</button>
-</div>
+
 
     <div id="top-section">
         <ul id="playlist"></ul>
@@ -397,11 +395,6 @@ function activarPantallaCompleta() {
     } else if (docElm.msRequestFullscreen) { /* IE/Edge */
         docElm.msRequestFullscreen();
     }
-}
-
-function iniciarReproductor() {
-    activarPantallaCompleta();
-    document.getElementById('intro-overlay').style.display = 'none';
 }
 
 
@@ -740,6 +733,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
+
 // --- INTEGRACIÓN CON BLUETOOTH Y MANDOS DE COCHE (MEDIA SESSION API) ---
 
 // Función para actualizar los metadatos en el dispositivo Bluetooth
@@ -749,8 +743,8 @@ function actualizarMediaSession() {
         
         navigator.mediaSession.metadata = new MediaMetadata({
             title: trackActual.name,
-            artist: '',
-            album: '',
+            artist: 'Reproductor Local',
+            album: 'Mi Música',
             artwork: trackActual.cover ? [
                 { src: trackActual.cover, sizes: '512x512', type: 'image/jpeg' }
             ] : [
@@ -822,6 +816,8 @@ audioPlayer.addEventListener('timeupdate', () => {
         actualizarPosicionMediaSession();
     }
 });
+
+
 </script>
 </body>
 </html>
