@@ -186,36 +186,46 @@
         }
         .placeholder-circle { background-color: var(--c-amarillo); border-radius: 50%;  height: 80%; }
 
-        /* Contenedor dinámico de letras */
-        #lyrics-view {
-            width: 100%;
-            height: 100%;
-            padding: 15px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            text-align: center;
-            scroll-behavior: smooth;
-            background: rgba(10, 10, 10, 0.95);
-            border-radius: 10px;
-        }
-        
-        .lyric-line {
-            font-size: 16px;
-            color: #666;
-            transition: color 0.3s, font-size 0.3s, transform 0.3s;
-            transform: scale(0.95);
-        }
-        
-        .lyric-line.active {
-            color: var(--c-amarillo);
-            font-size: 20px;
-            font-weight: bold;
-            transform: scale(1.05);
-        }
 
+/* Contenedor dinámico de letras */
+#lyrics-view {
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    background: rgba(10, 10, 10, 0.95);
+    border-radius: 10px;
+    /* Quitamos el smooth nativo del contenedor porque ahora lo controlará el JS con precisión */
+    scroll-behavior: auto !important; 
+}
+
+.lyric-line {
+    font-size: 16px;
+    color: #555;
+    transition: color 1.2s ease-in-out, font-size 1.2s ease-in-out, transform 1.2s ease-in-out, opacity 1.2s ease-in-out;
+    transform: scale(0.92);
+    opacity: 1;
+}
+
+.lyric-line.active {
+    color: var(--c-amarillo);
+    font-size: 16px;
+    font-weight: bold;
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+.lyric-line.neighbor {
+    color: #fff;
+    font-size: 16px;
+    transform: scale(0.98);
+    opacity: 0.85;
+}
         .controls-column {
             width: 50%; height: 100%;
             display: flex; flex-direction: column;
@@ -615,12 +625,15 @@ function parseAndRenderLyrics(lrcText) {
     }
 }
 
+// Variable global para evitar que dos animaciones de scroll colisionen
+let lyricScrollAnimationId = null;
+
 function syncLyrics(currentTime) {
     if (currentLyricsParsed.length === 0 || currentLyricsParsed[0].time === -1) return;
 
     let activeIndex = -1;
 
-    // Encontrar qué línea corresponde al segundo actual
+    // Buscamos la línea correspondiente (bajamos a +0.4 para emparejar la anticipación con la transición lenta)
     for (let i = 0; i < currentLyricsParsed.length; i++) {
         if ((currentTime + 1) >= currentLyricsParsed[i].time) {
             activeIndex = i;
@@ -630,22 +643,71 @@ function syncLyrics(currentTime) {
     }
 
     if (activeIndex !== -1) {
-        // Quitar clase activa a todas las líneas
-        document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('active'));
-        
+        // Verificar si la línea ya está activa para no reiniciar la animación innecesariamente
         const activeLineEl = document.getElementById(`lyric-line-${activeIndex}`);
+        if (activeLineEl && activeLineEl.classList.contains('active')) return;
+
+        // Limpiar clases previas
+        document.querySelectorAll('.lyric-line').forEach(el => {
+            el.classList.remove('active', 'neighbor');
+        });
+        
+        // Asignar nuevas clases (activarán las transiciones CSS de 1.2s)
         if (activeLineEl) {
             activeLineEl.classList.add('active');
             
-            // Auto-scrollear suavemente para centrar la letra activa
             if (showLyrics) {
                 const containerHeight = lyricsView.clientHeight;
                 const lineOffsetTop = activeLineEl.offsetTop;
                 const lineHeight = activeLineEl.clientHeight;
-                lyricsView.scrollTop = lineOffsetTop - (containerHeight / 2) + (lineHeight / 2);
+
+                // Destino del scroll centrado
+                const targetScroll = lineOffsetTop - (containerHeight / 2) + (lineHeight / 2);
+                
+                // Ejecutar scroll cinemático personalizado de 1200 milisegundos (el doble de tiempo)
+                smoothScrollTo(lyricsView, targetScroll, 1200);
             }
         }
+
+        // Línea anterior
+        if (activeIndex > 0) {
+            const prevLineEl = document.getElementById(`lyric-line-${activeIndex - 1}`);
+            if (prevLineEl) prevLineEl.classList.add('neighbor');
+        }
+
+        // Línea posterior
+        if (activeIndex < currentLyricsParsed.length - 1) {
+            const nextLineEl = document.getElementById(`lyric-line-${activeIndex + 1}`);
+            if (nextLineEl) nextLineEl.classList.add('neighbor');
+        }
     }
+}
+
+// Función auxiliar para un desplazamiento milimétrico controlado por tiempo
+function smoothScrollTo(element, target, duration) {
+    const start = element.scrollTop;
+    const change = target - start;
+    const startTime = performance.now();
+
+    if (lyricScrollAnimationId) cancelAnimationFrame(lyricScrollAnimationId);
+
+    function animateScroll(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+
+        // Ecuación de suavizado cuadrático (Ease-in-out)
+        const easeInOutQuad = progress < 0.5 
+            ? 2 * progress * progress 
+            : -1 + (4 - 2 * progress) * progress;
+
+        element.scrollTop = start + change * easeInOutQuad;
+
+        if (progress < 1) {
+            lyricScrollAnimationId = requestAnimationFrame(animateScroll);
+        }
+    }
+
+    lyricScrollAnimationId = requestAnimationFrame(animateScroll);
 }
 
 function toggleLyricsView(event) {
