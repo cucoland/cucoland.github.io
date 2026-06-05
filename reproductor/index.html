@@ -6,54 +6,40 @@
     <meta name="Reproductor mp3" content="yes">
     <title>Reproductor mp3 con Letras Sincronizadas</title>
     <style>
-
-
-
-
-
         :root {
             --c-bg: #000;
             --c-gris: #888;
+	    --c-grismedio: #555;
             --c-grisoscuro: #333;
             --c-amarillo: #ffcc00;
-	    --c-amarilloscuro: #e6b800;
+            --c-amarilloscuro: #e6b800;
             --c-texto: #fff;
         }
 
-/* --- Personalización del Scrollbar --- */
+        /* --- Personalización del Scrollbar --- */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--c-amarillo) var(--c-grisoscuro);
+        }
 
-/* 1. Estándar para Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--c-amarillo) var(--c-grisoscuro);
-}
+        ::-webkit-scrollbar {
+            width: 15px;  
+            height: 15px; 
+        }
 
-/* 2. Para Chrome, Edge y Safari (Webkit) */
+        ::-webkit-scrollbar-track {
+            background: var(--c-bg); 
+        }
 
-/* Tamaño de la barra */
-::-webkit-scrollbar {
-    width: 15px;  /* Ancho para scroll vertical */
-    height: 15px; /* Alto para scroll horizontal */
-}
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--c-amarillo);
+            border-radius: 10px;
+            border: 2px solid var(--c-bg); 
+        }
 
-/* Fondo de la barra (el carril) */
-::-webkit-scrollbar-track {
-    background: var(--c-bg); 
-}
-
-/* La pieza que se mueve (el "pulgar") */
-::-webkit-scrollbar-thumb {
-    background-color: var(--c-amarillo);
-    border-radius: 10px;
-    border: 2px solid var(--c-bg); /* Crea un efecto de margen */
-
-}
-
-/* Color cuando pasas el ratón por encima */
-::-webkit-scrollbar-thumb:hover {
-    background-color: var(--c-amarilloscuro); /* Un amarillo un poco más oscuro */
-}
-
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--c-amarilloscuro); 
+        }
 
         body, html {
             margin: 0; padding: 0;
@@ -67,14 +53,14 @@
         }
 
         /* 1. LISTA DE CANCIONES (50% ALTO) */
-#top-section {
-    height: 50vh;
-    overflow-y: auto;
-    background-color: var(--c-grisoscuro);
-    border-bottom: none; /* Quitamos el borde sólido para que el degradado luzca mejor */
-    position: relative;
-    z-index: 1;
-}
+        #top-section {
+            height: 50vh;
+            overflow-y: auto;
+            background-color: var(--c-grisoscuro);
+            border-bottom: none; 
+            position: relative;
+            z-index: 1;
+        }
 
         #playlist { list-style: none; padding: 0; margin: 0; }
         .track-item {
@@ -84,53 +70,48 @@
         }
         .track-item:hover, .custom-file-upload:hover, .btn-rect:hover, .btn-rect.active:hover { background-color: var(--c-amarilloscuro); color: white;}
         .track-item.active { background-color: #000; color: var(--c-amarillo); }
-/* Círculo para la lista de canciones */
-.list-placeholder {
-    width: 45px;
-    height: 45px;
-    background-color: var(--c-amarillo);
-    border-radius: 50%;
-    margin-right: 12px;
-    flex-shrink: 0; /* Evita que se deforme */
-}
 
-/* Ajuste para la imagen de la lista para que sea circular también */
-.track-item img {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%; /* Cambiado a 50% para que coincida con el círculo */
-    margin-right: 12px;
-    object-fit: cover;
-}
+        .list-placeholder {
+            width: 45px;
+            height: 45px;
+            background-color: var(--c-amarillo);
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0; 
+        }
+
+        .track-item img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%; 
+            margin-right: 12px;
+            object-fit: cover;
+        }
+
         /* 2. ZONA REPRODUCTOR */
-#middle-section {
-    flex: 1;
-    height: 50vh;
-    display: flex;
-    flex-direction: column;
-    overflow: visible; /* CAMBIADO de hidden a visible para que el before se vea */
-    position: relative;
-    background-color: #000; /* Color base del reproductor */
-    z-index: 10; 
-}
+        #middle-section {
+            flex: 1;
+            height: 50vh;
+            display: flex;
+            flex-direction: column;
+            overflow: visible; 
+            position: relative;
+            background-color: #000; 
+            z-index: 10; 
+        }
 
-/* 3. El degradado mejorado */
-#middle-section::before {
-
-    content: "";
-    position: absolute;
-    top: -5vh; /* Esto lo sube al área de la lista */
-    left: 0;
-    width: 100%;
-    height: 5vh;
-    /* Usamos el color de fondo del reproductor (negro) hacia transparente */
-    background: linear-gradient(to top, 
-        rgba(0, 0, 0, 1) 0%, 
-        rgba(0, 0, 0, 0) 100%);
-    pointer-events: none;
-    z-index: 9999; /* Valor muy alto para estar sobre las letras de la lista */
-    display: block;
-}
+        #middle-section::before {
+            content: "";
+            position: absolute;
+            top: -5vh; 
+            left: 0;
+            width: 100%;
+            height: 5vh;
+            background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+            z-index: 9999; 
+            display: block;
+        }
 
         .player-main-row {
             display: flex;
@@ -141,13 +122,20 @@
             overflow: hidden;
         }
 
-        #current-cover-container {
-            width: 50%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            padding: 5px; box-sizing: border-box;
-            cursor: pointer; /* Indica que es cliqueable */
-            position: relative;
-        }
+#current-cover-container {
+    width: 50%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 5px; box-sizing: border-box;
+    cursor: pointer; /* Indica que es cliqueable */
+    position: relative;
+    /* Añadimos transición para que el cambio de ancho sea suave */
+    transition: width 0.5s ease-in-out; 
+}
+
+/* Nueva clase que aplicaremos con JavaScript */
+#current-cover-container.lyrics-expanded {
+    width: 70%;
+}
 
         #current-cover { height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; }
         #current-cover img, .placeholder-circle {
@@ -157,99 +145,92 @@
         .placeholder-circle { background-color: var(--c-amarillo); border-radius: 50%;  height: 80%; }
 
 
-/* Contenedor dinámico de letras */
-#lyrics-view {
-    width: 100%;
-    height: 100%;
-    padding: 15px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-    border-radius: 10px;
-    scroll-behavior: auto !important;
-    scrollbar-width: none;            
-    -ms-overflow-style: none;         
+        /* Contenedor dinámico de letras */
+        #lyrics-view {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+            border-radius: 10px;
+            scroll-behavior: auto !important;
+            scrollbar-width: none;            
+            -ms-overflow-style: none;         
 
-    /* --- NUEVA LOGICA DE FONDO FIJO --- */
-    /* Cargamos la variable de la carátula */
-    background-image: var(--current-cover, none);
-    background-size: cover;
-    background-position: center;
-    
-    /* TRUCO CLAVE: Ancla el fondo a la pantalla/reproductor, no al scroll interno */
-    background-attachment: scroll; 
-    
-    /* Controlamos la opacidad: mezclamos la imagen con un fondo negro al 70% */
-    background-color: rgba(0, 0, 0, 0.7); 
-    background-blend-mode: multiply;
-}
-
-
-
-
-/* Oculta la barra de scroll en Chrome, Safari y Opera */
-#lyrics-view::-webkit-scrollbar {
-    display: none;
-}
-
-.lyric-line {
-    font-size: 16px;
-    color: #888;
-    transition: color 1.2s ease-in-out, font-size 1.2s ease-in-out, transform 1.2s ease-in-out, opacity 1.2s ease-in-out;
-    transform: scale(0.92);
-    opacity: 1;
-}
-
-.lyric-line.active {
-    color: var(--c-amarillo);
-    font-size: 18px;
-    transform: scale(1);
-    opacity: 1;
-	text-shadow: 
-	0 0.3px 0 var(--c-amarillo),
-	0 -0.3px 0 var(--c-amarillo);
-
-}
-
-.lyric-line.neighbor {
-    color: #fff;
-    font-size: 18px;
-    transform: scale(1);
-    opacity: 0.85;
-}
-        .controls-column {
-            width: 50%; height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: center; gap: 15px;
-            padding: 10px; box-sizing: border-box;
-	align-items: anchor-center;
+            /* --- CONFIGURACIÓN DE CARÁTULA COMO FONDO CONGELADO --- */
+            background-image: var(--current-cover, none);
+            background-size: cover;
+            background-position: center;
+            background-attachment: scroll; 
+            background-color: rgba(0, 0, 0, 0.7); 
+            background-blend-mode: multiply;
         }
 
+        #lyrics-view::-webkit-scrollbar {
+            display: none;
+        }
+
+        .lyric-line {
+            font-size: 16px;
+            color: #555;
+            transition: color 1.2s ease-in-out, font-size 1.2s ease-in-out, transform 1.2s ease-in-out, opacity 1.2s ease-in-out;
+            transform: scale(0.92);
+            opacity: 1;
+        }
+
+        .lyric-line.active {
+            color: var(--c-amarillo);
+            font-size: 18px;
+            transform: scale(1);
+            opacity: 1;
+            text-shadow: 0 0.3px 0 var(--c-amarillo), 0 -0.3px 0 var(--c-amarillo);
+        }
+
+        .lyric-line.neighbor {
+            color: #fff;
+            font-size: 18px;
+            transform: scale(1);
+            opacity: 0.85;
+        }
+
+.controls-column {
+    flex: 1; /* En lugar de width: 50%, ocupará el espacio restante (50% o 30%) */
+    height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center; gap: 10px;
+    padding: 10px; box-sizing: border-box;
+    padding-left: 0px;
+    align-items: anchor-center;
+}
+
         .nav-buttons { display: flex; gap: 8px; justify-content: center; }
+        .nav-buttons:hover { color: black; }
         .extra-buttons { display: flex; flex-direction: column; gap: 5px; }
 
         .btn-circle {
-            width: 45px; height: 45px; border-radius: 50%;
-            border: none; background: var(--c-amarillo); color: white;
+            width: 45px; height: 45px; border-radius: 20%;
+            border: none; background: var(--c-amarillo); color: var(--c-grismedio);
             font-size: 18px; cursor: pointer;
         }
 
-	.btn-circle:hover {
-		background: white; color: var(--c-gris);
+        .btn-circle:hover {
+            background: white; color: var(--c-gris);
         }
-
 
         .btn-rect {
             width: 150px; padding: 8px; border-radius: 4px;
             border: 1px solid #444; background: transparent;
             color: white; font-size: 11px; cursor: pointer;
-
-
         }
         .btn-rect.active { background: var(--c-amarillo); color: black; }
+
+
+	#btn-rect-menos, #btn-rect-mas  { font-size: 20px; color: var(--c-amarillo);}
+	#btn-rect-menos:hover, #btn-rect-mas:hover  { color: var(--c-texto);}
 
         /* SLIDER PERSONALIZADO */
         #progress-container {
@@ -326,8 +307,6 @@
 </head>
 <body>
 
-
-
     <div id="top-section">
         <ul id="playlist"></ul>
     </div>
@@ -345,10 +324,16 @@
             </div>
 
             <div class="controls-column">
+                <div class="time-offset-control" style="display: flex; align-items: center; justify-content: center; border: 1px solid var(--c-grisoscuro); border-radius: 4px;">
+                    <button id="btn-rect-menos" class="btn-rect" style="width: 35px; height: 35px; padding: 5px; font-weight: bold;" onclick="ajustarDesfase(-1)">-</button>
+                    <span id="offset-display" style="font-size: 12px; color: var(--c-amarillo); min-width: 80px; text-align: center; font-weight: bold;">Sinc: 0.0s</span>
+                    <button id="btn-rect-mas" class="btn-rect" style="width: 35px; height: 35px; padding: 5px; font-weight: bold;" onclick="ajustarDesfase(1)">+</button>
+                </div>
+
                 <div class="nav-buttons">
-                    <button class="btn-circle" onclick="prevTrack()">⏮</button>
+                    <button class="btn-circle" id="prevTrack-btn" onclick="prevTrack()">⏮</button>
                     <button class="btn-circle" id="play-pause-btn" onclick="togglePlay()">▶</button>
-                    <button class="btn-circle" onclick="nextTrack()">⏭</button>
+                    <button class="btn-circle" id="nextTrack-btn" onclick="nextTrack()">⏭</button>
                 </div>
 
                 <div class="extra-buttons">
@@ -367,43 +352,42 @@
         </div>
 
         <div id="song-info">Carga la carpeta de música</div>
+    </div>
  
-
     <div id="bottom-bar">
         <label class="custom-file-upload">
            <input type="file" id="fileInput" accept="audio/*" webkitdirectory directory multiple style="display:none">
-    CARGAR MÚSICA
+           CARGAR MÚSICA
         </label>
     </div>
-    
 
     <audio id="audio-player"></audio>
 
 <script>
+    function activarPantallaCompleta() {
+        // Control de seguridad: Si no hay canciones cargadas en la lista, no hace nada
+        if (tracks.length === 0) return;
 
-function activarPantallaCompleta() {
-    const isFullscreen = document.fullscreenElement || 
-                         document.webkitFullscreenElement || 
-                         document.mozFullScreenElement || 
-                         document.msFullscreenElement;
+        const isFullscreen = document.fullscreenElement || 
+                             document.webkitFullscreenElement || 
+                             document.mozFullScreenElement || 
+                             document.msFullscreenElement;
 
-    if (isFullscreen) return;
+        if (isFullscreen) return;
 
-    const docElm = document.documentElement;
-    if (docElm.requestFullscreen) {
-        docElm.requestFullscreen();
-    } else if (docElm.mozRequestFullScreen) { /* Firefox */
-        docElm.mozRequestFullScreen();
-    } else if (docElm.webkitRequestFullscreen) { /* Chrome, Safari y Opera */
-        docElm.webkitRequestFullscreen();
-    } else if (docElm.msRequestFullscreen) { /* IE/Edge */
-        docElm.msRequestFullscreen();
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+            docElm.requestFullscreen();
+        } else if (docElm.mozRequestFullScreen) { 
+            docElm.mozRequestFullScreen();
+        } else if (docElm.webkitRequestFullscreen) { 
+            docElm.webkitRequestFullscreen();
+        } else if (docElm.msRequestFullscreen) { 
+            docElm.msRequestFullscreen();
+        }
     }
-}
 
-
-
-const audioPlayer = document.getElementById('audio-player');
+    const audioPlayer = document.getElementById('audio-player');
     const playPauseBtn = document.getElementById('play-pause-btn');
     const shuffleBtn = document.getElementById('shuffle-btn');
     shuffleBtn.classList.add('active');
@@ -424,40 +408,41 @@ const audioPlayer = document.getElementById('audio-player');
     let currentIndex = 0;
     let isShuffle = true;
     let playbackQueue = []; 
-    let currentLyricsParsed = []; // Guardará las líneas con sus tiempos [{time: X, text: Y}]
+    let currentLyricsParsed = []; 
     let showLyrics = false;
+    let lyricsOffset = 0.0; // Almacena el desfase manual en segundos
 
-    shuffleBtn.classList.add('active');
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
 
-document.getElementById('fileInput').addEventListener('change', (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+        const audioFiles = files.filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.mp3'));
+        if (audioFiles.length === 0) {
+            alert("No se encontraron archivos de audio en la carpeta seleccionada.");
+            return;
+        }
 
-    const audioFiles = files.filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.mp3'));
-    if (audioFiles.length === 0) {
-        alert("No se encontraron archivos de audio en la carpeta seleccionada.");
-        return;
-    }
-    
-    setTimeout(() => {
-        activarPantallaCompleta();
-    }, 100);
+        // Se mapean los tracks primero para asegurar que la lista deje de estar vacía
+        tracks = audioFiles.map(file => ({ 
+            file, 
+            name: file.name.replace(/\.[^/.]+$/, ""), 
+            cover: null,
+            lyrics: null
+        }));
+        
+        createQueue();
+        renderPlaylist();
+        
+        // Ahora sí se intenta la pantalla completa tras poblar el array de canciones
+        setTimeout(() => {
+            activarPantallaCompleta();
+        }, 100);
 
-    tracks = audioFiles.map(file => ({ 
-        file, 
-        name: file.name.replace(/\.[^/.]+$/, ""), 
-        cover: null,
-        lyrics: null
-    }));
-    
-    createQueue();
-    renderPlaylist();
-    
-    if (tracks.length > 0) {
-        currentIndex = 0;
-        playTrack(playbackQueue[0]);
-    }
-});
+        if (tracks.length > 0) {
+            currentIndex = 0;
+            playTrack(playbackQueue[0]);
+        }
+    });
 
     function createQueue() {
         playbackQueue = tracks.map((_, index) => index);
@@ -469,268 +454,303 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
         }
     }
 
-function renderPlaylist() {
-    playlistElement.innerHTML = '';
-    tracks.forEach((track, index) => {
-        const li = document.createElement('li');
-        li.className = 'track-item';
-        li.id = `track-${index}`;
-        li.innerHTML = `
-            <div class="list-placeholder" id="placeholder-list-${index}"></div>
-            <img src="" id="img-list-${index}" class="hidden">
-            <span>${track.name}</span>
-        `;
-        li.onclick = () => {
-            const queuePos = playbackQueue.indexOf(index);
-            currentIndex = queuePos;
-            playTrack(index);
-        };
-        playlistElement.appendChild(li);
-        fetchCoverAndLyrics(track.name, index);
-    });
-}
-
-async function fetchCoverAndLyrics(term, index) {
-    // 1. Buscar portada en iTunes
-    try {
-        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=1`);
-        const data = await response.json();
-        
-        if (data.results.length > 0) {
-            const url = data.results[0].artworkUrl100.replace('100x100', '600x600');
-            tracks[index].cover = url;
-
-            const imgList = document.getElementById(`img-list-${index}`);
-            const placeholderList = document.getElementById(`placeholder-list-${index}`);
-
-            if (imgList && placeholderList) {
-                imgList.src = url;
-                imgList.classList.remove('hidden'); 
-                placeholderList.classList.add('hidden'); 
-            }
-
-            if (playbackQueue[currentIndex] === index) updateMainDisplay(url);
-        }
-    } catch (e) { 
-        console.log("Cover not found for index:", index); 
+    function renderPlaylist() {
+        playlistElement.innerHTML = '';
+        tracks.forEach((track, index) => {
+            const li = document.createElement('li');
+            li.className = 'track-item';
+            li.id = `track-${index}`;
+            li.innerHTML = `
+                <div class="list-placeholder" id="placeholder-list-${index}"></div>
+                <img src="" id="img-list-${index}" class="hidden">
+                <span>${track.name}</span>
+            `;
+            li.onclick = () => {
+                const queuePos = playbackQueue.indexOf(index);
+                currentIndex = queuePos;
+                playTrack(index);
+            };
+            playlistElement.appendChild(li);
+            fetchCoverAndLyrics(track.name, index);
+        });
     }
 
-    // 2. Buscar letra sincronizada en LRCLIB (API Secundaria Gratuita)
-    try {
-        const response = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(term)}`);
-        const data = await response.json();
-        
-        if (data && data.length > 0) {
-            // Buscamos la primera que tenga letra sincronizada (syncedLyrics)
-            const match = data.find(item => item.syncedLyrics) || data[0];
-            if (match.syncedLyrics) {
-                tracks[index].lyrics = match.syncedLyrics;
-            } else if (match.plainLyrics) {
-                tracks[index].lyrics = match.plainLyrics; // Fallback estática si no hay sincronizada
-            }
+    async function fetchCoverAndLyrics(term, index) {
+        // 1. INTENTAR BUSCAR LA CARÁTULA (ITUNES)
+        try {
+            const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=song&limit=1`);
+            const data = await response.json();
             
-            // Si es la canción actual, recargar las letras inmediatamente
+            if (data.results.length > 0) {
+                const url = data.results[0].artworkUrl100.replace('100x100', '600x600');
+                tracks[index].cover = url;
+
+                const imgList = document.getElementById(`img-list-${index}`);
+                const placeholderList = document.getElementById(`placeholder-list-${index}`);
+
+                if (imgList && placeholderList) {
+                    imgList.src = url;
+                    imgList.classList.remove('hidden'); 
+                    placeholderList.classList.add('hidden'); 
+                }
+
+                if (playbackQueue[currentIndex] === index) updateMainDisplay(url);
+            }
+        } catch (e) { 
+            console.log("Cover not found for index:", index); 
+        }
+
+        // 2. INTENTAR BUSCAR LA LETRA EN LRCLIB (PLAN A: SINCRONIZADA)
+        try {
+            const response = await fetch(`https://lrclib.net/api/search?q=${encodeURIComponent(term)}`);
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                const match = data.find(item => item.syncedLyrics) || data[0];
+                if (match.syncedLyrics) {
+                    tracks[index].lyrics = match.syncedLyrics;
+                } else if (match.plainLyrics) {
+                    tracks[index].lyrics = match.plainLyrics; 
+                }
+                
+                if (playbackQueue[currentIndex] === index) {
+                    parseAndRenderLyrics(tracks[index].lyrics);
+                }
+                return; // Si encontramos letra en LRCLIB, salimos de la función con éxito
+            }
+        } catch (e) {
+            console.log("LRCLIB failed or lyrics not found, trying fallback...");
+        }
+
+        // 3. PLAN B: SI LRCLIB FALLA O NO TIENE LA LETRA, BUSCAMOS EN LYRICS.OVH (TEXTO PLANO)
+        try {
+            // Dividimos el nombre del archivo intentando separar "Artista - Canción"
+            let artist = "Unknown";
+            let song = term;
+            if (term.includes("-")) {
+                const parts = term.split("-");
+                artist = parts[0].trim();
+                song = parts[1].trim();
+            }
+
+            const response = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(song)}`);
+            const data = await response.json();
+
+            if (data && data.lyrics) {
+                tracks[index].lyrics = data.lyrics; // Guardamos la letra plana encontrada
+                
+                if (playbackQueue[currentIndex] === index) {
+                    parseAndRenderLyrics(tracks[index].lyrics);
+                }
+            } else {
+                // Si ninguna de las dos APIs tiene la letra
+                if (playbackQueue[currentIndex] === index) {
+                    parseAndRenderLyrics(null);
+                }
+            }
+        } catch (error) {
+            console.log("Fallback API also failed for index:", index);
             if (playbackQueue[currentIndex] === index) {
-                parseAndRenderLyrics(tracks[index].lyrics);
+                parseAndRenderLyrics(null);
             }
         }
-    } catch (e) {
-        console.log("Lyrics not found for index:", index);
     }
-}
 
-function playTrack(trackIndex) {
-    if (trackIndex === undefined) return;
-    
-    activarPantallaCompleta();
-    
-    const track = tracks[trackIndex];
-    audioPlayer.src = URL.createObjectURL(track.file);
-    songInfo.innerText = track.name;
-    
-    document.querySelectorAll('.track-item').forEach(el => el.classList.remove('active'));
-    const activeItem = document.getElementById(`track-${trackIndex}`);
-    if(activeItem) activeItem.classList.add('active');
-    
-    updateMainDisplay(track.cover);
-    
-    // Resetear y parsear letras de la nueva canción
-    parseAndRenderLyrics(track.lyrics);
-    
-    audioPlayer.play();
-}
+    function playTrack(trackIndex) {
+        if (trackIndex === undefined) return;
+        
+        // Reseteo del contador y visor de sincronización
+        lyricsOffset = 0.0;
+        const offsetDisplay = document.getElementById('offset-display');
+        if (offsetDisplay) offsetDisplay.innerText = "Sinc: 0.0s";
+        
+        // Se elimina la invocación automática a activarPantallaCompleta() desde aquí
+        
+        const track = tracks[trackIndex];
+        audioPlayer.src = URL.createObjectURL(track.file);
+        songInfo.innerText = track.name;
+        
+        document.querySelectorAll('.track-item').forEach(el => el.classList.remove('active'));
+        const activeItem = document.getElementById(`track-${trackIndex}`);
+        if(activeItem) activeItem.classList.add('active');
+        
+        updateMainDisplay(track.cover);
+        parseAndRenderLyrics(track.lyrics);
+        
+        audioPlayer.play();
+    }
 
 function parseAndRenderLyrics(lrcText) {
-    lyricsView.innerHTML = '';
-    currentLyricsParsed = [];
-    
-    if (!lrcText) {
-        lyricsView.innerHTML = '<div class="lyric-line" style="color: #666; margin-top: auto; margin-bottom: auto;">Letra no disponible en este momento</div>';
-        return;
-    }
-
-    // Detectar si es formato LRC (tiene marcas de tiempo tipo [00:12.34])
-    const lines = lrcText.split('\n');
-    const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
-    let hasTimeTags = false;
-
-    lines.forEach(line => {
-        const match = timeRegex.exec(line);
-        if (match) {
-            hasTimeTags = true;
-            const minutes = parseInt(match[1]);
-            const seconds = parseInt(match[2]);
-            const milliseconds = parseInt(match[3]);
-            
-            // Convertir todo a segundos totales
-            const totalSeconds = minutes * 60 + seconds + (milliseconds / (match[3].length === 2 ? 100 : 1000));
-            const text = line.replace(timeRegex, '').trim();
-            
-            if (text) {
-                currentLyricsParsed.push({ time: totalSeconds, text: text });
-            }
-        } else {
-            // Si es texto plano limpio
-            const cleanText = line.trim();
-            if (cleanText) {
-                currentLyricsParsed.push({ time: -1, text: cleanText });
-            }
-        }
-    });
-
-    // Renderizar en el DOM
-    if (hasTimeTags) {
-        currentLyricsParsed.forEach((lineObj, idx) => {
-            const div = document.createElement('div');
-            div.className = 'lyric-line';
-            div.id = `lyric-line-${idx}`;
-            div.innerText = lineObj.text;
-            lyricsView.appendChild(div);
-        });
-    } else {
-        // Mostrar texto plano con scroll normal si no está sincronizado
-        currentLyricsParsed.forEach(lineObj => {
-            const div = document.createElement('div');
-            div.className = 'lyric-line';
-            div.style.color = '#fff';
-            div.innerText = lineObj.text;
-            lyricsView.appendChild(div);
-        });
-    }
-}
-
-// Variable global para evitar que dos animaciones de scroll colisionen
-let lyricScrollAnimationId = null;
-
-function syncLyrics(currentTime) {
-    if (currentLyricsParsed.length === 0 || currentLyricsParsed[0].time === -1) return;
-
-    let activeIndex = -1;
-
-    // Buscamos la línea correspondiente (bajamos a +0.4 para emparejar la anticipación con la transición lenta)
-    for (let i = 0; i < currentLyricsParsed.length; i++) {
-        if ((currentTime + 1) >= currentLyricsParsed[i].time) {
-            activeIndex = i;
-        } else {
-            break;
-        }
-    }
-
-    if (activeIndex !== -1) {
-        // Verificar si la línea ya está activa para no reiniciar la animación innecesariamente
-        const activeLineEl = document.getElementById(`lyric-line-${activeIndex}`);
-        if (activeLineEl && activeLineEl.classList.contains('active')) return;
-
-        // Limpiar clases previas
-        document.querySelectorAll('.lyric-line').forEach(el => {
-            el.classList.remove('active', 'neighbor');
-        });
+        lyricsView.innerHTML = '';
+        currentLyricsParsed = [];
         
-        // Asignar nuevas clases (activarán las transiciones CSS de 1.2s)
-        if (activeLineEl) {
-            activeLineEl.classList.add('active');
-            
-            if (showLyrics) {
-                const containerHeight = lyricsView.clientHeight;
-                const lineOffsetTop = activeLineEl.offsetTop;
-                const lineHeight = activeLineEl.clientHeight;
+        if (!lrcText) {
+            lyricsView.innerHTML = '<div class="lyric-line" style="color: #666; margin-top: auto; margin-bottom: auto;">Letra no disponible en este momento</div>';
+            return;
+        }
 
-                // Destino del scroll centrado
-                const targetScroll = lineOffsetTop - (containerHeight / 2) + (lineHeight / 2);
+        const lines = lrcText.split('\n');
+        const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
+        let hasTimeTags = false;
+
+        lines.forEach(line => {
+            const match = timeRegex.exec(line);
+            if (match) {
+                hasTimeTags = true;
+                const minutes = parseInt(match[1]);
+                const seconds = parseInt(match[2]);
+                const milliseconds = parseInt(match[3]);
                 
-                // Ejecutar scroll cinemático personalizado de 1200 milisegundos (el doble de tiempo)
-                smoothScrollTo(lyricsView, targetScroll, 1200);
+                const totalSeconds = minutes * 60 + seconds + (milliseconds / (match[3].length === 2 ? 100 : 1000));
+                const text = line.replace(timeRegex, '').trim();
+                
+                if (text) {
+                    currentLyricsParsed.push({ time: totalSeconds, text: text });
+                }
+            } else {
+                const cleanText = line.trim();
+                if (cleanText) {
+                    currentLyricsParsed.push({ time: -1, text: cleanText });
+                }
+            }
+        });
+
+        if (hasTimeTags) {
+            // Renderizado para letras SINCRO (LRCLIB)
+            currentLyricsParsed.forEach((lineObj, idx) => {
+                const div = document.createElement('div');
+                div.className = 'lyric-line';
+                div.id = `lyric-line-${idx}`;
+                div.innerText = lineObj.text;
+                lyricsView.appendChild(div);
+            });
+        } else {
+            // Renderizado para letras PLANAS (Lyrics.ovh / Fallback)
+            // Añadimos un contenedor interno para que el scroll de la letra estática funcione perfecto
+            const staticContainer = document.createElement('div');
+            staticContainer.style.cssText = "display: flex; flex-direction: column; gap: 8px; width: 100%; margin: auto 0;";
+            
+            currentLyricsParsed.forEach(lineObj => {
+                const div = document.createElement('div');
+                div.className = 'lyric-line';
+                div.style.color = '#fff'; // Forzamos color blanco visible estático
+                div.style.opacity = '1';
+                div.style.transform = 'scale(1)';
+                div.innerText = lineObj.text;
+                staticContainer.appendChild(div);
+            });
+            lyricsView.appendChild(staticContainer);
+        }
+    }
+
+    let lyricScrollAnimationId = null;
+
+    function syncLyrics(currentTime) {
+        if (currentLyricsParsed.length === 0 || currentLyricsParsed[0].time === -1) return;
+
+        let activeIndex = -1;
+
+        // Se incorpora lyricsOffset al cálculo de posición en tiempo de reproducción
+        for (let i = 0; i < currentLyricsParsed.length; i++) {
+            if ((currentTime + 1 + lyricsOffset) >= currentLyricsParsed[i].time) {
+                activeIndex = i;
+            } else {
+                break;
             }
         }
 
-        // Línea anterior
-        if (activeIndex > 0) {
-            const prevLineEl = document.getElementById(`lyric-line-${activeIndex - 1}`);
-            if (prevLineEl) prevLineEl.classList.add('neighbor');
-        }
+        if (activeIndex !== -1) {
+            const activeLineEl = document.getElementById(`lyric-line-${activeIndex}`);
+            if (activeLineEl && activeLineEl.classList.contains('active')) return;
 
-        // Línea posterior
-        if (activeIndex < currentLyricsParsed.length - 1) {
-            const nextLineEl = document.getElementById(`lyric-line-${activeIndex + 1}`);
-            if (nextLineEl) nextLineEl.classList.add('neighbor');
-        }
-    }
-}
+            document.querySelectorAll('.lyric-line').forEach(el => {
+                el.classList.remove('active', 'neighbor');
+            });
+            
+            if (activeLineEl) {
+                activeLineEl.classList.add('active');
+                
+                if (showLyrics) {
+                    const containerHeight = lyricsView.clientHeight;
+                    const lineOffsetTop = activeLineEl.offsetTop;
+                    const lineHeight = activeLineEl.clientHeight;
 
-// Función auxiliar para un desplazamiento milimétrico controlado por tiempo
-function smoothScrollTo(element, target, duration) {
-    const start = element.scrollTop;
-    const change = target - start;
-    const startTime = performance.now();
+                    const targetScroll = lineOffsetTop - (containerHeight / 2) + (lineHeight / 2);
+                    smoothScrollTo(lyricsView, targetScroll, 1200);
+                }
+            }
 
-    if (lyricScrollAnimationId) cancelAnimationFrame(lyricScrollAnimationId);
+            if (activeIndex > 0) {
+                const prevLineEl = document.getElementById(`lyric-line-${activeIndex - 1}`);
+                if (prevLineEl) prevLineEl.classList.add('neighbor');
+            }
 
-    function animateScroll(currentTime) {
-        const elapsedTime = currentTime - startTime;
-        const progress = Math.min(elapsedTime / duration, 1);
-
-        // Ecuación de suavizado cuadrático (Ease-in-out)
-        const easeInOutQuad = progress < 0.5 
-            ? 2 * progress * progress 
-            : -1 + (4 - 2 * progress) * progress;
-
-        element.scrollTop = start + change * easeInOutQuad;
-
-        if (progress < 1) {
-            lyricScrollAnimationId = requestAnimationFrame(animateScroll);
+            if (activeIndex < currentLyricsParsed.length - 1) {
+                const nextLineEl = document.getElementById(`lyric-line-${activeIndex + 1}`);
+                if (nextLineEl) nextLineEl.classList.add('neighbor');
+            }
         }
     }
 
-    lyricScrollAnimationId = requestAnimationFrame(animateScroll);
-}
+    function smoothScrollTo(element, target, duration) {
+        const start = element.scrollTop;
+        const change = target - start;
+        const startTime = performance.now();
+
+        if (lyricScrollAnimationId) cancelAnimationFrame(lyricScrollAnimationId);
+
+        function animateScroll(currentTime) {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+
+            const easeInOutQuad = progress < 0.5 
+                ? 2 * progress * progress 
+                : -1 + (4 - 2 * progress) * progress;
+
+            element.scrollTop = start + change * easeInOutQuad;
+
+            if (progress < 1) {
+                lyricScrollAnimationId = requestAnimationFrame(animateScroll);
+            }
+        }
+
+        lyricScrollAnimationId = requestAnimationFrame(animateScroll);
+    }
+
+    function ajustarDesfase(valor) {
+        lyricsOffset += valor;
+        const signo = lyricsOffset > 0 ? "+" : "";
+        document.getElementById('offset-display').innerText = `Sinc: ${signo}${lyricsOffset.toFixed(1)}s`;
+        syncLyrics(audioPlayer.currentTime);
+    }
 
 function toggleLyricsView(event) {
     showLyrics = !showLyrics;
+    const coverContainer = document.getElementById('current-cover-container');
+
     if (showLyrics) {
         currentCover.classList.add('hidden');
         lyricsView.classList.remove('hidden');
+        coverContainer.classList.add('lyrics-expanded'); // Amplía al 70%
     } else {
         lyricsView.classList.add('hidden');
         currentCover.classList.remove('hidden');
+        coverContainer.classList.remove('lyrics-expanded'); // Vuelve al 50%
     }
 }
 
-function updateMainDisplay(coverUrl) {
-    if (coverUrl) { 
-        mainImg.src = coverUrl; 
-        mainImg.classList.remove('hidden'); 
-        placeholder.classList.add('hidden'); 
-        
-        // NUEVA LÍNEA: Pasa la URL de la portada al contenedor de letras
-        lyricsView.style.setProperty('--current-cover', `url('${coverUrl}')`);
-    } else { 
-        mainImg.classList.add('hidden'); 
-        placeholder.classList.remove('hidden'); 
-        
-        // NUEVA LÍNEA: Quita la imagen si no hay portada disponible
-        lyricsView.style.setProperty('--current-cover', 'none');
+    function updateMainDisplay(coverUrl) {
+        if (coverUrl) { 
+            mainImg.src = coverUrl; 
+            mainImg.classList.remove('hidden'); 
+            placeholder.classList.add('hidden'); 
+            lyricsView.style.setProperty('--current-cover', `url('${coverUrl}')`);
+        } else { 
+            mainImg.classList.add('hidden'); 
+            placeholder.classList.remove('hidden'); 
+            lyricsView.style.setProperty('--current-cover', 'none');
+        }
     }
-}
 
     function nextTrack() {
         currentIndex++;
@@ -763,8 +783,6 @@ function updateMainDisplay(coverUrl) {
             seekSlider.value = progress;
             currentTimeEl.innerText = formatTime(audioPlayer.currentTime);
             durationTimeEl.innerText = formatTime(audioPlayer.duration);
-            
-            // Sincronizar las letras dinámicamente
             syncLyrics(audioPlayer.currentTime);
         }
     });
@@ -787,99 +805,70 @@ function updateMainDisplay(coverUrl) {
     audioPlayer.onpause = () => playPauseBtn.innerText = "▶";
     audioPlayer.onended = () => nextTrack();
 
-// --- ESCUCHADOR GLOBAL DE CLICS PARA PANTALLA COMPLETA ---
-document.addEventListener('click', function(event) {
-    const target = event.target.closest('button, a, .custom-file-upload, .track-item');
-    if (target) {
-        activarPantallaCompleta();
+    document.addEventListener('click', function(event) {
+        const target = event.target.closest('button, a, .custom-file-upload, .track-item');
+        // Se añade la validación tracks.length > 0 para impedir el fullscreen antes de la carga de canciones
+        if (target && tracks.length > 0) {
+            activarPantallaCompleta();
+        }
+    });
+
+    function actualizarMediaSession() {
+        if ('mediaSession' in navigator && tracks.length > 0) {
+            const trackActual = tracks[playbackQueue[currentIndex]];
+            
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: trackActual.name,
+                artist: 'Reproductor Local',
+                album: 'Mi Música',
+                artwork: trackActual.cover ? [
+                    { src: trackActual.cover, sizes: '512x512', type: 'image/jpeg' }
+                ] : [
+                    { src: 'https://placehold.co/512x512/ffcc00/000000?text=Musica', sizes: '512x512', type: 'image/png' }
+                ]
+            });
+        }
     }
-});
 
-
-// --- INTEGRACIÓN CON BLUETOOTH Y MANDOS DE COCHE (MEDIA SESSION API) ---
-
-// Función para actualizar los metadatos en el dispositivo Bluetooth
-function actualizarMediaSession() {
-    if ('mediaSession' in navigator && tracks.length > 0) {
-        const trackActual = tracks[playbackQueue[currentIndex]];
-        
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: trackActual.name,
-            artist: 'Reproductor Local',
-            album: 'Mi Música',
-            artwork: trackActual.cover ? [
-                { src: trackActual.cover, sizes: '512x512', type: 'image/jpeg' }
-            ] : [
-                { src: 'https://placehold.co/512x512/ffcc00/000000?text=Musica', sizes: '512x512', type: 'image/png' }
-            ]
-        });
+    function configurarControlesBluetooth() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => { audioPlayer.play(); });
+            navigator.mediaSession.setActionHandler('pause', () => { audioPlayer.pause(); });
+            navigator.mediaSession.setActionHandler('nexttrack', () => { nextTrack(); });
+            navigator.mediaSession.setActionHandler('previoustrack', () => { prevTrack(); });
+        }
     }
-}
 
-// Configurar los controles físicos / Bluetooth
-function configurarControlesBluetooth() {
-    if ('mediaSession' in navigator) {
-        // Botón Reproducir / Pausa
-        navigator.mediaSession.setActionHandler('play', () => {
-            audioPlayer.play();
-        });
-        
-        navigator.mediaSession.setActionHandler('pause', () => {
-            audioPlayer.pause();
-        });
-
-        // Botón Siguiente Canción (Mando del coche / Auriculares)
-        navigator.mediaSession.setActionHandler('nexttrack', () => {
-            nextTrack();
-        });
-
-        // Botón Anterior Canción (Mando del coche / Auriculares)
-        navigator.mediaSession.setActionHandler('previoustrack', () => {
-            prevTrack();
-        });
+    function actualizarPosicionMediaSession() {
+        if ('mediaSession' in navigator && !isNaN(audioPlayer.duration)) {
+            navigator.mediaSession.setPositionState({
+                duration: audioPlayer.duration,
+                playbackRate: audioPlayer.playbackRate,
+                position: audioPlayer.currentTime
+            });
+        }
     }
-}
 
-// Actualizar también la posición del reproductor en el sistema (opcional pero recomendado)
-function actualizarPosicionMediaSession() {
-    if ('mediaSession' in navigator && !isNaN(audioPlayer.duration)) {
-        navigator.mediaSession.setPositionState({
-            duration: audioPlayer.duration,
-            playbackRate: audioPlayer.playbackRate,
-            position: audioPlayer.currentTime
-        });
-    }
-}
+    const originalPlayTrack = playTrack;
+    playTrack = function(trackIndex) {
+        originalPlayTrack(trackIndex);
+        actualizarMediaSession();
+        configurarControlesBluetooth();
+    };
 
-// --- CONECTAR CON TUS FUNCIONES EXISTENTES ---
+    audioPlayer.addEventListener('play', () => {
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
+    });
 
-// Modifica o asegúrate de añadir estas llamadas dentro de tus funciones:
-// 1. Al reproducir una pista nueva (añadir al final de tu función playTrack)
-const originalPlayTrack = playTrack;
-playTrack = function(trackIndex) {
-    originalPlayTrack(trackIndex);
-    actualizarMediaSession();
-    configurarControlesBluetooth();
-};
+    audioPlayer.addEventListener('pause', () => {
+        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
+    });
 
-// 2. Al cambiar el estado de reproducción (añadir a los eventos onplay y onpause)
-audioPlayer.addEventListener('play', () => {
-    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
-});
-
-audioPlayer.addEventListener('pause', () => {
-    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
-});
-
-// 3. Sincronizar la barra de tiempo con el sistema (añadir dentro de tu listener 'timeupdate')
-audioPlayer.addEventListener('timeupdate', () => {
-    // Cada ciertos segundos actualiza la barra del sistema/coche
-    if (Math.floor(audioPlayer.currentTime) % 2 === 0) {
-        actualizarPosicionMediaSession();
-    }
-});
-
-
+    audioPlayer.addEventListener('timeupdate', () => {
+        if (Math.floor(audioPlayer.currentTime) % 2 === 0) {
+            actualizarPosicionMediaSession();
+        }
+    });
 </script>
 </body>
 </html>
