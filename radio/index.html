@@ -1,1 +1,255 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="icon" href="https://www.kissfm.es/wp-content/uploads/2020/09/favicon_KISS.jpg" sizes="32x32">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Player - Doble Columna</title>
+    <style>
+        :root {
+            --bg-color: #3a3a3a;
+            --box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        }
+
+        body {
+            margin: 0;
+            padding-top: 20px;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            background-color: var(--bg-color); 
+            background-image: 
+                linear-gradient(45deg, transparent 48%, #555 49%, #555 50%, #555 51%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, #555 49%, #777 50%, #555 51%, transparent 52%);
+            background-size: 10px 10px;
+            box-shadow: inset 0 0 100px #000;
+            display: flow;
+            justify-content: center;
+            text-align: center;
+        }
+
+.main-wrapper {
+    margin: 0 auto; /* Asegura que el contenedor mismo esté centrado */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    max-width: 1312px;
+    width: 100%;
+    justify-content: center; /* ESTA ES LA CLAVE: centra las columnas */
+    align-items: flex-start; /* Alinea las columnas por la parte superior */
+}
+
+        /* Contenedor que agrupa dos emisoras en vertical */
+        .station-group {
+	    margin: 0;
+            text-align: center;
+	    height: 395px;
+
+
+        }
+
+        .boxes, .none {
+	margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.2rem;
+	    margin-top: 0.5rem;
+            border-radius: 15px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            min-height: 158px;
+	    width: 278px;
+
+        }
+	
+	.none {
+	box-shadow: unset;
+	}
+	
+        .boxes:hover, #spotify-box:hover {
+            transform: scale(1.02);
+        }
+
+        /* Colores */
+        #kissfm-box { background: linear-gradient(135deg, #000, #e60000); }
+        #dial-box { background: #ffffff; color: #51a20c; }
+        #spotify-box { background: #1DB954; color: black; }
+        #galega-box { background: white; color: #0077bb; }
+        #C100-box { background: #ff0080; color: white; }
+        #europa-box { background: #000; color: #ff4729; }
+        #rockfm-box { background: #fff; color: #003a75; }
+        #laindie-box { background: #403437; color: white; }
+        #indiefm-box { background: #fff; color: #a7cdcc; }
+        #cuarentaclassic-box { background: #fff; color: #65c4db; }
+        #loscuarenta-box { background: #000; color: #fff; }
+
+
+
+
+        .logo-img {
+            max-height: 55px;
+            max-width: 85%;
+            margin-bottom: 8px;
+            object-fit: contain;
+        }
+
+        audio {
+            width: 100%;
+            height: 35px;
+            margin: 8px 0;
+        }
+
+        /* Inversión para controles en fondos claros */
+        #dial-box audio, #galega-box audio, #rockfm-box audio, #indiefm-box audio, #cuarentaclassic-box audio {
+            filter: invert(100%) hue-rotate(180deg);
+        }
+
+        span {
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+
+        }
+
+        @media (max-width: 300px) {
+            .station-group { flex: 1 1 100%; }
+        }
+
+		#spotify-box { /* Color corporativo Spotify*/
+		margin: 0;
+		padding-left: 0.5rem;
+		padding-right: 0.5rem;
+	    	margin-top: 0.5rem;
+		width: 300px;
+
+            border-radius: 15px;
+
+		}
+
+		.imagen-spotify {
+		max-width: 130px;
+		height: auto; /* Mantiene la proporción */
+		padding: 5px;
+		filter: brightness(0.2) contrast(1.5);
+		}
+
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        
+        <div class="station-group">
+            <div id="kissfm-box" class="boxes">
+                <img src="https://www.kissfm.es/wp-content/uploads/2024/10/Logo-KISS-FM_Negativo-Color.png" class="logo-img" alt="Kiss FM">
+                <audio controls preload="none">
+                    <source src="https://kissfm.kissfmradio.cires21.com/kissfm.mp3" type="audio/mpeg">
+                </audio>
+                <span>Kiss FM</span>
+            </div>
+
+            <div id="dial-box" class="boxes">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Cadena_Dial_2019_logo.svg/500px-Cadena_Dial_2019_logo.svg.png" class="logo-img" alt="Dial">
+                <audio controls preload="none">
+                    <source src="https://21223.live.streamtheworld.com/CADENADIAL.mp3" type="audio/mpeg">
+                </audio>
+                <span>Cadena Dial</span>
+            </div>
+        </div>
+	<div class="station-group">
+			<div id="spotify-box" alt="Spotify">
+			<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/2024_Spotify_Logo.svg/500px-2024_Spotify_Logo.svg.png" alt="Spotify" class="imagen-spotify">
+			<iframe src="https://open.spotify.com/embed/playlist/0F4lyUFMNX1DaVob4l5qSQ?utm_source=generator&theme=0" /* width="100%" height="352" */ frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+			loading="lazy">
+			</iframe>
+			</div>
+	</div>
+        <div class="station-group">
+            <div id="C100-box" class="boxes">
+                <img src="https://cdn.instant.audio/images/logos/emisora-org-es/cadena-cien.png" class="logo-img" alt="C100">
+                <audio id="C100Player" controls preload="metadata"></audio>
+                <span>Cadena 100</span>
+            </div>
+
+            <div id="galega-box" class="boxes">
+                <img src="https://www.agalegaaudio.gal/radio-galega-icon.png" class="logo-img" alt="Radio Galega">
+                <audio id="galegaPlayer" controls preload="none"></audio>
+                <span>Radio Galega Música</span>
+            </div>
+        </div>
+
+        <div class="station-group">
+            <div id="europa-box" class="boxes">
+                <img src="https://image.europafm.com/clipping/cmsimages01/2025/03/05/EEB71CEB-60C9-4C55-B895-EE2C384AB001.png" class="logo-img" alt="Europa FM">
+                <audio id="EuropaFMPlayer" controls preload="none"></audio>
+                <span>Europa FM</span>
+            </div>
+            <div id="rockfm-box" class="boxes">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/0/01/RockFM_Logo.svg" class="logo-img" alt="Rock FM">
+                <audio id="RockFMPlayer" controls preload="none"></audio>
+                <span>Rock FM</span>
+            </div>
+        </div>
+
+  
+            <div id="laindie-box" class="boxes">
+                <img src="https://media.emisorasmusicales.net/wp-content/uploads/2020/04/04135806/LaIndie-5.svg" class="logo-img" alt="La Indie Radio">
+                <audio controls preload="none">
+                    <source src="https://stream.emisorasmusicales.net/radio/8130/laindie-alicante.mp3" type="audio/mpeg">
+                </audio>
+                <span>La Indie Radio</span>
+            </div>
+
+            <div id="indiefm-box" class="boxes">
+                <img src="https://indiefmonline.es/wp-content/uploads/2021/08/LOGO-INDIE-FM-TRANSPARENTE.png" class="logo-img" alt="Indie FM">
+                <audio controls preload="none">
+                    <source src="https://stream.mediasector.es/radio/8130/radio.mp3" type="audio/mpeg">
+                </audio>
+                <span>Indie FM</span>
+            </div>
+
+            <div id="cuarentaclassic-box" class="boxes">
+                <img src="https://cdn.aptoide.com/imgs/4/9/e/49edc2bc2ba4ca3019f59f0aee086710_icon.png" class="logo-img" alt="Los 40 Classic">
+                <audio controls preload="none">
+                    <source src="https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CLASSIC_SC.mp3" type="audio/mpeg">
+                </audio>
+                <span>Los 40 Classic</span>
+            </div>
+
+            <div id="loscuarenta-box" class="boxes">
+                <img src="https://imgsvr.radiocut.site/get/thumb/600/600/radio_logos/af/27/af275da5-8067-4d3d-b1a9-3cf74ed4b3c4.jpg" class="logo-img" alt="Los 40">
+                <audio controls preload="none">
+                    <source src="https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SC.mp3" type="audio/mpeg">
+                </audio>
+                <span>Los 40</span>
+            </div>
+
+
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script>
+        function setupHlsPlayer(elementId, streamUrl) {
+            const audio = document.getElementById(elementId);
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(streamUrl);
+                hls.attachMedia(audio);
+            } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+                audio.src = streamUrl;
+            }
+        }
+
+        setupHlsPlayer('EuropaFMPlayer', "https://atres-live.europafm.com/live/europafm/master.m3u8");
+        setupHlsPlayer('C100Player', "https://cadena100-cope.flumotion.com/playlist.m3u8");
+        setupHlsPlayer('galegaPlayer', "https://crtvg-radiogalega-musica-hls.flumotion.cloud/playlist.m3u8");
+        setupHlsPlayer('RockFMPlayer', "https://rockfm-cope.flumotion.com/playlist.m3u8");
+    </script>
+</body>
+</html>
