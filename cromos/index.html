@@ -1,1 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Cromos Mundial 2026</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #8a1538; 
+            --tengo-color: #2c3e50; 
+            --falta-color: #ffffff; 
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: var(--bg-color);
+	    color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 5px 0 10px 0;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        /* Menú Superior de Países y Logos */
+        .menu-paises {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .btn-pais {
+            width: 35px;
+            height: 25px;
+            padding: 0;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            background-color: #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .btn-pais img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .btn-pais.activo {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(138, 21, 56, 0.5);
+        }
+
+        /* Sección de Cromos Inferior */
+        .contenedor-cromos {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        .titulo-seccion {
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+.cuadricula-cromos {
+    display: grid;
+    /* Ajusta automáticamente el número de columnas según el espacio disponible */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap: 5px;
+}
+
+        .btn-cromo {
+            height: 40px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.1s, color 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            -webkit-tap-highlight-color: transparent; /* Elimina destello azul en móviles */
+        }
+
+        /* Estados de los cromos */
+        .btn-cromo.falta {
+            background-color: var(--falta-color);
+            color: #c4c4c4;
+        }
+
+        .btn-cromo.tengo {
+            background-color: var(--tengo-color);
+            color: #ffffff;
+            border-color: var(--tengo-color);
+        }
+
+        /* Contador discreto */
+        .contador-discreto {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .contador-discreto span {
+            margin: 0 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Cromos Panini World Cup 2026</h1>
+
+    <div class="menu-paises" id="menuPaises"></div>
+
+    <div class="contenedor-cromos">
+        <div class="titulo-seccion" id="paisActual">Cargando...</div>
+        <div class="cuadricula-cromos" id="cuadriculaCromos"></div>
+    </div>
+
+    <div class="contador-discreto">
+        Me faltan: <span id="totalTengo" style="color: var(--tengo-color);">0</span> | 
+        Tengo: <span id="totalFaltan" style="color: #c0392b;">0</span> &nbsp;&nbsp;&nbsp; 
+        <button id="btnReset" style="margin-top: 15px; background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+            Reset en blanco
+        </button> &nbsp;&nbsp;&nbsp; 
+        <button id="btnReset2" style="margin-top: 15px; background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+            Reset en oscuro
+        </button>
+    </div>
+
+    <script>
+        const listadoSecciones = [
+
+            { id: "MEX", nombre: "México", codigoBandera: "mx" },
+            { id: "RSA", nombre: "Sudáfrica", codigoBandera: "za" },
+            { id: "KOR", nombre: "Corea del Sur", codigoBandera: "kr" },
+            { id: "CZE", nombre: "República Checa", codigoBandera: "cz" },
+
+            { id: "CAN", nombre: "Canadá", codigoBandera: "ca" },
+            { id: "BIH", nombre: "Bosnia-Herzegovina", codigoBandera: "ba" },
+            { id: "QAT", nombre: "Qatar", codigoBandera: "qa" },
+            { id: "SUI", nombre: "Suiza", codigoBandera: "ch" },
+
+            { id: "BRA", nombre: "Brasil", codigoBandera: "br" },
+            { id: "MAR", nombre: "Marruecos", codigoBandera: "ma" },
+            { id: "HAI", nombre: "Haití", codigoBandera: "ht" },
+            { id: "SCO", nombre: "Escocia", codigoBandera: "gb-sct" },
+
+            { id: "USA", nombre: "Estados Unidos", codigoBandera: "us" },
+            { id: "PAR", nombre: "Paraguay", codigoBandera: "py" },
+            { id: "AUS", nombre: "Australia", codigoBandera: "au" },
+            { id: "TUR", nombre: "Turquía", codigoBandera: "tr" },
+
+            { id: "GER", nombre: "Alemania", codigoBandera: "de" },
+            { id: "CUW", nombre: "Curaçao", codigoBandera: "cw" },
+            { id: "CIV", nombre: "Costa de Marfil", codigoBandera: "ci" },
+            { id: "ECU", nombre: "Ecuador", codigoBandera: "ec" },
+
+            { id: "NED", nombre: "Países Bajos", codigoBandera: "nl" },
+            { id: "JPN", nombre: "Japón", codigoBandera: "jp" },
+            { id: "SWE", nombre: "Suecia", codigoBandera: "se" },
+            { id: "TUN", nombre: "Túnez", codigoBandera: "tn" },
+
+            { id: "BEL", nombre: "Bélgica", codigoBandera: "be" },
+            { id: "EGY", nombre: "Egipto", codigoBandera: "eg" },
+            { id: "IRN", nombre: "Irán", codigoBandera: "ir" },
+            { id: "NZL", nombre: "Nueva Zelanda", codigoBandera: "nz" },
+
+            { id: "ESP", nombre: "España", codigoBandera: "es" },
+            { id: "CPV", nombre: "Cabo Verde", codigoBandera: "cv" },
+            { id: "KSA", nombre: "Arabia Saudí", codigoBandera: "sa" },
+            { id: "URU", nombre: "Uruguay", codigoBandera: "uy" },
+
+            { id: "FRA", nombre: "Francia", codigoBandera: "fr" },
+            { id: "SEN", nombre: "Senegal", codigoBandera: "sn" },
+            { id: "IRQ", nombre: "Iraq", codigoBandera: "iq" },
+            { id: "NOR", nombre: "Noruega", codigoBandera: "no" },
+
+            { id: "ARG", nombre: "Argentina", codigoBandera: "ar" },
+            { id: "ALG", nombre: "Argelia", codigoBandera: "dz" },
+            { id: "AUS", nombre: "Austria", codigoBandera: "at" },
+            { id: "JOR", nombre: "Jordania", codigoBandera: "jo" },
+
+            { id: "POR", nombre: "Portugal", codigoBandera: "pt" },
+            { id: "COD", nombre: "Congo", codigoBandera: "cd" },
+            { id: "UZB", nombre: "Uzbequistán", codigoBandera: "uz" },
+            { id: "COL", nombre: "Colombia", codigoBandera: "co" },
+
+            { id: "ENG", nombre: "Inglaterra", codigoBandera: "gb-eng" },
+            { id: "CRO", nombre: "Croacia", codigoBandera: "hr" },
+            { id: "GHA", nombre: "Ghana", codigoBandera: "gh" },
+            { id: "PAN", nombre: "Panamá", codigoBandera: "pa" },
+
+ 	        { id: "FWC", nombre: "FIFA", esEspecial: true, urlImagen: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_FIFA.svg/1280px-Flag_of_FIFA.svg.png" },
+            { id: "CC", nombre: "Coca Cola", esEspecial: true, urlImagen: "https://st3.depositphotos.com/1050070/13129/i/950/depositphotos_131293830-stock-photo-coca-cola-logo-on-computer.jpg" }
+        ];
+
+        let seccionSeleccionada = listadoSecciones[0].id;
+        let coleccion = JSON.parse(localStorage.getItem('coleccionMundial2026')) || {};
+
+        function inicializarDatos() {
+            listadoSecciones.forEach(sec => {
+                const maxCromos = (sec.id === 'CC') ? 12 : 20;
+                const inicio = (sec.id === 'FWC') ? 0 : 1;
+                const fin = (sec.id === 'FWC') ? 19 : maxCromos;
+
+                for (let i = inicio; i <= fin; i++) {
+                    const clave = `${sec.id}-${i}`;
+                    if (coleccion[clave] === undefined) {
+                        coleccion[clave] = false; 
+                    }
+                }
+            });
+            guardarEnStorage();
+        }
+
+        function guardarEnStorage() {
+            localStorage.setItem('coleccionMundial2026', JSON.stringify(coleccion));
+        }
+
+        function renderizarMenu() {
+            const menu = document.getElementById('menuPaises');
+            menu.innerHTML = '';
+
+            listadoSecciones.forEach(sec => {
+                const boton = document.createElement('button');
+                boton.className = `btn-pais ${sec.id === seccionSeleccionada ? 'activo' : ''}`;
+                boton.title = sec.nombre;
+                boton.onclick = () => cambiarSeccion(sec.id);
+
+                const img = document.createElement('img');
+                if (sec.esEspecial) {
+                    img.src = sec.urlImagen;
+                    img.alt = sec.id;
+                    img.style.objectFit = "contain";
+                    img.style.padding = "2px";
+                } else {
+                    img.src = `https://flagcdn.com/w40/${sec.codigoBandera}.png`;
+                    img.alt = sec.nombre;
+                }
+
+                boton.appendChild(img);
+                menu.appendChild(boton);
+            });
+        }
+
+        function cambiarSeccion(idSeccion) {
+            seccionSeleccionada = idSeccion;
+            
+            document.querySelectorAll('.btn-pais').forEach((btn, index) => {
+                if (listadoSecciones[index].id === idSeccion) {
+                    btn.classList.add('activo');
+                } else {
+                    btn.classList.remove('activo');
+                }
+            });
+
+            const secActual = listadoSecciones.find(s => s.id === idSeccion);
+            document.getElementById('paisActual').innerText = `${secActual.nombre} (${secActual.id})`;
+
+            renderizarCromos();
+        }
+
+function renderizarCromos() {
+    const cuadricula = document.getElementById('cuadriculaCromos');
+    cuadricula.innerHTML = '';
+
+    const maxCromos = (seccionSeleccionada === 'CC') ? 12 : 20;
+    const inicio = (seccionSeleccionada === 'FWC') ? 0 : 1;
+    const fin = (seccionSeleccionada === 'FWC') ? 19 : maxCromos;
+
+    // Listado con los nombres de los jugadores de Coca-Cola
+    const nombresCocaCola = {
+        1: "Lamine Yamal",
+        2: "Joshua Kimmich",
+        3: "Eduardo Camavinga",
+        4: "Josko Gvardiol",
+        5: "Federico Valverde",
+        6: "Virgil van Dijk",
+        7: "Alphonso Davies",
+        8: "Raúl Jiménez",
+        9: "William Saliba",
+        10: "Lautaro Martínez",
+        11: "Harry Kane",
+        12: "Antonee Robinson"
+    };
+
+    for (let i = inicio; i <= fin; i++) {
+        const claveCromo = `${seccionSeleccionada}-${i}`;
+        const loTengo = coleccion[claveCromo];
+
+        const botonCromo = document.createElement('button');
+        botonCromo.className = `btn-cromo ${loTengo ? 'tengo' : 'falta'}`;
+        
+        // Si la sección es Coca-Cola (CC), ponemos "CC" + número + Nombre del jugador
+        if (seccionSeleccionada === 'CC' && nombresCocaCola[i]) {
+            botonCromo.innerText = `${seccionSeleccionada}${i} ${nombresCocaCola[i]}`;
+            // Reducimos un poco la fuente si el nombre es muy largo para que quepa bien en el botón
+            botonCromo.style.fontSize = "0.7rem"; 
+        } else {
+            // Para el resto de países se mantiene el formato estándar (ej: MEX1)
+            botonCromo.innerText = `${seccionSeleccionada}${i}`;
+            botonCromo.style.fontSize = "0.85rem";
+        }
+        
+        botonCromo.onclick = () => alternarCromo(claveCromo);
+
+        cuadricula.appendChild(botonCromo);
+    }
+}
+
+	function alternarCromo(claveCromo) {
+            // Evaluamos si el cromo actual está marcado como "tengo" (false)
+            if (coleccion[claveCromo] === false) {
+                const confirmarAsignacion = confirm(`¿Quieres marcar el cromo ${claveCromo} como PENDIENTE?`);
+                // Si el usuario hace clic en "Cancelar", salimos de la función sin cambiar nada
+                if (!confirmarAsignacion) {
+                    return; 
+                }
+            }
+
+            // Si aceptó el cuadro de diálogo, cambia el estado
+            coleccion[claveCromo] = !coleccion[claveCromo];
+            guardarEnStorage();
+            renderizarCromos();
+            actualizarContadores();
+        }
+
+        function actualizarContadores() {
+            let tengo = 0;
+            let faltan = 0;
+
+            listadoSecciones.forEach(sec => {
+                const maxCromos = (sec.id === 'CC') ? 12 : 20;
+                const inicio = (sec.id === 'FWC') ? 0 : 1;
+                const fin = (sec.id === 'FWC') ? 19 : maxCromos;
+
+                for (let i = inicio; i <= fin; i++) {
+                    const clave = `${sec.id}-${i}`;
+                    if (coleccion[clave] === true) {
+                        tengo++;
+                    } else {
+                        faltan++;
+                    }
+                }
+            });
+
+            document.getElementById('totalTengo').innerText = tengo;
+            document.getElementById('totalFaltan').innerText = faltan;
+        }
+
+        function resetearColeccion() {
+            const confirmar = confirm("¿Estás seguro de que quieres reiniciar toda tu colección? Esta acción no se puede deshacer.");
+            if (confirmar) {
+                Object.keys(coleccion).forEach(clave => {
+                    coleccion[clave] = false;
+                });
+                guardarEnStorage();
+                renderizarCromos();
+                actualizarContadores();
+            }
+        }
+
+        function resetearColeccion2() {
+            const confirmar = confirm("¿Estás seguro de que quieres reiniciar toda tu colección? Esta acción no se puede deshacer.");
+            if (confirmar) {
+                Object.keys(coleccion).forEach(clave => {
+                    coleccion[clave] = true;
+                });
+                guardarEnStorage();
+                renderizarCromos();
+                actualizarContadores();
+            }
+        }
+
+        // Inicialización limpia
+        inicializarDatos();
+        renderizarMenu();
+        cambiarSeccion(seccionSeleccionada);
+        actualizarContadores();
+
+        // Asignación de evento de reinicio
+        document.getElementById('btnReset').onclick = resetearColeccion;
+        document.getElementById('btnReset2').onclick = resetearColeccion2;
+    </script>
+</body>
+</html>
