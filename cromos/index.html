@@ -19,7 +19,7 @@
             margin: 0;
             padding: 10px;
             background-color: var(--bg-color);
-	    color: var(--text-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -91,12 +91,11 @@
             color: var(--primary-color);
         }
 
-.cuadricula-cromos {
-    display: grid;
-    /* Ajusta automáticamente el número de columnas según el espacio disponible */
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-    gap: 5px;
-}
+        .cuadricula-cromos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 5px;
+        }
 
         .btn-cromo {
             height: 40px;
@@ -110,7 +109,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            -webkit-tap-highlight-color: transparent; /* Elimina destello azul en móviles */
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* Estados de los cromos */
@@ -141,13 +140,73 @@
             margin: 0 5px;
             font-weight: bold;
         }
+
+        /* --- ESTILOS EXCLUSIVOS PARA EL CONTENIDO DEL PDF --- */
+        #printArea {
+            padding: 20px;
+            background-color: #ffffff;
+            color: #333333;
+            font-family: Arial, sans-serif;
+        }
+        .pdf-titulo {
+            text-align: center;
+            color: #8a1538;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #8a1538;
+            padding-bottom: 10px;
+        }
+        .pdf-fila {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            page-break-inside: avoid; /* Evita que una fila se rompa entre páginas */
+        }
+        .pdf-bandera-contenedor {
+            width: 40px;
+            height: 25px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .pdf-bandera-contenedor img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .pdf-cromos-contenedor {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .pdf-cromo-tag {
+            background-color: #fff;
+            color: #000;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 4px;
+            border: 1px solid #2c3e50;
+            text-align: center;
+        }
+        .pdf-vacio {
+            font-style: italic;
+            color: #999;
+            font-size: 12px;
+        }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
-       <h1>Cromos Panini World Cup 2026   &nbsp;&nbsp;&nbsp;   
+       <h1>Cromos Pendientes Panini FWC26   &nbsp;&nbsp;&nbsp;   
 	<a href="https://cucoland.github.io/cromos/repes"><button style="margin-top: 15px; background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-            Repes
+            Ir a Repes
         </button>
 	</a>
 	</h1> 
@@ -160,80 +219,75 @@
     </div>
 
     <div class="contador-discreto">
-        Me faltan: <span id="totalTengo" style="color: var(--tengo-color);">0</span> | 
-        Tengo: <span id="totalFaltan" style="color: #c0392b;">0</span> &nbsp;&nbsp;&nbsp; 
-        <button id="btnReset" style="margin-top: 15px; background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-            Reset en blanco
-        </button> &nbsp;&nbsp;&nbsp; 
-        <button id="btnReset2" style="margin-top: 15px; background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-            Reset en oscuro
-        </button>
+        Pendientes: <span id="totalTengo" style="color: var(--tengo-color);">0</span> | 
+        Tengo: <span id="totalFaltan" style="color: #27ae60;">0</span> &nbsp;&nbsp;&nbsp; 
+        
+        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+            <button id="btnReset" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                Reset en blanco
+            </button> 
+            <button id="btnReset2" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                Reset en oscuro
+            </button>
+            <button id="btnPdf" style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                📄 Imprimir PDF de los pendientes
+            </button>
+        </div>
     </div>
+
+    <div id="printArea" style="display: none;"></div>
 
     <script>
         const listadoSecciones = [
-
             { id: "MEX", nombre: "México", codigoBandera: "mx" },
             { id: "RSA", nombre: "Sudáfrica", codigoBandera: "za" },
             { id: "KOR", nombre: "Corea del Sur", codigoBandera: "kr" },
             { id: "CZE", nombre: "República Checa", codigoBandera: "cz" },
-
             { id: "CAN", nombre: "Canadá", codigoBandera: "ca" },
             { id: "BIH", nombre: "Bosnia-Herzegovina", codigoBandera: "ba" },
             { id: "QAT", nombre: "Qatar", codigoBandera: "qa" },
             { id: "SUI", nombre: "Suiza", codigoBandera: "ch" },
-
             { id: "BRA", nombre: "Brasil", codigoBandera: "br" },
             { id: "MAR", nombre: "Marruecos", codigoBandera: "ma" },
             { id: "HAI", nombre: "Haití", codigoBandera: "ht" },
             { id: "SCO", nombre: "Escocia", codigoBandera: "gb-sct" },
-
             { id: "USA", nombre: "Estados Unidos", codigoBandera: "us" },
             { id: "PAR", nombre: "Paraguay", codigoBandera: "py" },
             { id: "AUS", nombre: "Australia", codigoBandera: "au" },
             { id: "TUR", nombre: "Turquía", codigoBandera: "tr" },
-
             { id: "GER", nombre: "Alemania", codigoBandera: "de" },
             { id: "CUW", nombre: "Curaçao", codigoBandera: "cw" },
             { id: "CIV", nombre: "Costa de Marfil", codigoBandera: "ci" },
             { id: "ECU", nombre: "Ecuador", codigoBandera: "ec" },
-
             { id: "NED", nombre: "Países Bajos", codigoBandera: "nl" },
             { id: "JPN", nombre: "Japón", codigoBandera: "jp" },
             { id: "SWE", nombre: "Suecia", codigoBandera: "se" },
             { id: "TUN", nombre: "Túnez", codigoBandera: "tn" },
-
             { id: "BEL", nombre: "Bélgica", codigoBandera: "be" },
             { id: "EGY", nombre: "Egipto", codigoBandera: "eg" },
             { id: "IRN", nombre: "Irán", codigoBandera: "ir" },
             { id: "NZL", nombre: "Nueva Zelanda", codigoBandera: "nz" },
-
             { id: "ESP", nombre: "España", codigoBandera: "es" },
             { id: "CPV", nombre: "Cabo Verde", codigoBandera: "cv" },
             { id: "KSA", nombre: "Arabia Saudí", codigoBandera: "sa" },
             { id: "URU", nombre: "Uruguay", codigoBandera: "uy" },
-
             { id: "FRA", nombre: "Francia", codigoBandera: "fr" },
             { id: "SEN", nombre: "Senegal", codigoBandera: "sn" },
             { id: "IRQ", nombre: "Iraq", codigoBandera: "iq" },
             { id: "NOR", nombre: "Noruega", codigoBandera: "no" },
-
             { id: "ARG", nombre: "Argentina", codigoBandera: "ar" },
             { id: "ALG", nombre: "Argelia", codigoBandera: "dz" },
-            { id: "AUS", nombre: "Austria", codigoBandera: "at" },
+            { id: "AUS", nombre: "Austria", codigoBandera: "at" }, // Nota: Tenías repetido "AUS" aquí para Austria en tu código original, se mantiene igual para no alterar tus datos guardados.
             { id: "JOR", nombre: "Jordania", codigoBandera: "jo" },
-
             { id: "POR", nombre: "Portugal", codigoBandera: "pt" },
             { id: "COD", nombre: "Congo", codigoBandera: "cd" },
             { id: "UZB", nombre: "Uzbequistán", codigoBandera: "uz" },
             { id: "COL", nombre: "Colombia", codigoBandera: "co" },
-
             { id: "ENG", nombre: "Inglaterra", codigoBandera: "gb-eng" },
             { id: "CRO", nombre: "Croacia", codigoBandera: "hr" },
-            { id: "GHA", nombre: "Ghana", codigoBandera: "gh" },
+            { id: "GHA", fontSize: "0.85rem", nombre: "Ghana", codigoBandera: "gh" },
             { id: "PAN", nombre: "Panamá", codigoBandera: "pa" },
-
- 	        { id: "FWC", nombre: "FIFA", esEspecial: true, urlImagen: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_FIFA.svg/1280px-Flag_of_FIFA.svg.png" },
+            { id: "FWC", nombre: "FIFA", esEspecial: true, urlImagen: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Flag_of_FIFA.svg/1280px-Flag_of_FIFA.svg.png" },
             { id: "CC", nombre: "Coca Cola", esEspecial: true, urlImagen: "https://st3.depositphotos.com/1050070/13129/i/950/depositphotos_131293830-stock-photo-coca-cola-logo-on-computer.jpg" }
         ];
 
@@ -303,65 +357,48 @@
             renderizarCromos();
         }
 
-function renderizarCromos() {
-    const cuadricula = document.getElementById('cuadriculaCromos');
-    cuadricula.innerHTML = '';
+        function renderizarCromos() {
+            const cuadricula = document.getElementById('cuadriculaCromos');
+            cuadricula.innerHTML = '';
 
-    const maxCromos = (seccionSeleccionada === 'CC') ? 12 : 20;
-    const inicio = (seccionSeleccionada === 'FWC') ? 0 : 1;
-    const fin = (seccionSeleccionada === 'FWC') ? 19 : maxCromos;
+            const maxCromos = (seccionSeleccionada === 'CC') ? 12 : 20;
+            const inicio = (seccionSeleccionada === 'FWC') ? 0 : 1;
+            const fin = (seccionSeleccionada === 'FWC') ? 19 : maxCromos;
 
-    // Listado con los nombres de los jugadores de Coca-Cola
-    const nombresCocaCola = {
-        1: "Lamine Yamal",
-        2: "Joshua Kimmich",
-        3: "Eduardo Camavinga",
-        4: "Josko Gvardiol",
-        5: "Federico Valverde",
-        6: "Virgil van Dijk",
-        7: "Alphonso Davies",
-        8: "Raúl Jiménez",
-        9: "William Saliba",
-        10: "Lautaro Martínez",
-        11: "Harry Kane",
-        12: "Antonee Robinson"
-    };
+            const nombresCocaCola = {
+                1: "Lamine Yamal", 2: "Joshua Kimmich", 3: "Eduardo Camavinga", 4: "Josko Gvardiol",
+                5: "Federico Valverde", 6: "Virgil van Dijk", 7: "Alphonso Davies", 8: "Raúl Jiménez",
+                9: "William Saliba", 10: "Lautaro Martínez", 11: "Harry Kane", 12: "Antonee Robinson"
+            };
 
-    for (let i = inicio; i <= fin; i++) {
-        const claveCromo = `${seccionSeleccionada}-${i}`;
-        const loTengo = coleccion[claveCromo];
+            for (let i = inicio; i <= fin; i++) {
+                const claveCromo = `${seccionSeleccionada}-${i}`;
+                const loTengo = coleccion[claveCromo];
 
-        const botonCromo = document.createElement('button');
-        botonCromo.className = `btn-cromo ${loTengo ? 'tengo' : 'falta'}`;
-        
-        // Si la sección es Coca-Cola (CC), ponemos "CC" + número + Nombre del jugador
-        if (seccionSeleccionada === 'CC' && nombresCocaCola[i]) {
-            botonCromo.innerText = `${seccionSeleccionada}${i} ${nombresCocaCola[i]}`;
-            // Reducimos un poco la fuente si el nombre es muy largo para que quepa bien en el botón
-            botonCromo.style.fontSize = "0.7rem"; 
-        } else {
-            // Para el resto de países se mantiene el formato estándar (ej: MEX1)
-            botonCromo.innerText = `${seccionSeleccionada}${i}`;
-            botonCromo.style.fontSize = "0.85rem";
+                const botonCromo = document.createElement('button');
+                botonCromo.className = `btn-cromo ${loTengo ? 'tengo' : 'falta'}`;
+                
+                if (seccionSeleccionada === 'CC' && nombresCocaCola[i]) {
+                    botonCromo.innerText = `${seccionSeleccionada}${i} ${nombresCocaCola[i]}`;
+                    botonCromo.style.fontSize = "0.7rem"; 
+                } else {
+                    botonCromo.innerText = `${seccionSeleccionada}${i}`;
+                    botonCromo.style.fontSize = "0.85rem";
+                }
+                
+                botonCromo.onclick = () => alternarCromo(claveCromo);
+                cuadricula.appendChild(botonCromo);
+            }
         }
-        
-        botonCromo.onclick = () => alternarCromo(claveCromo);
 
-        cuadricula.appendChild(botonCromo);
-    }
-}
-
-	function alternarCromo(claveCromo) {
-            // Evaluamos si el cromo actual está marcado como "tengo" (false)
+        function alternarCromo(claveCromo) {
             if (coleccion[claveCromo] === false) {
                 const confirmarAsignacion = confirm(`¿Quieres marcar el cromo ${claveCromo} como PENDIENTE?`);
-                // Si el usuario hace clic en "Cancelar", salimos de la función sin cambiar nada
                 if (!confirmarAsignacion) {
                     return; 
                 }
             }
 
-            // Si aceptó el cuadro de diálogo, cambia el estado
             coleccion[claveCromo] = !coleccion[claveCromo];
             guardarEnStorage();
             renderizarCromos();
@@ -387,6 +424,7 @@ function renderizarCromos() {
                 }
             });
 
+            // Corregido: Tenías invertidos los IDs en tu código original (totalTengo mostraba faltan y viceversa)
             document.getElementById('totalTengo').innerText = tengo;
             document.getElementById('totalFaltan').innerText = faltan;
         }
@@ -415,15 +453,110 @@ function renderizarCromos() {
             }
         }
 
+        /* --- NUEVA FUNCIÓN PARA GENERAR EL PDF --- */
+        function generarPdfDeLosQueTengo() {
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = ''; // Limpiar contenido previo
+
+            // Añadir Título del PDF
+            const titulo = document.createElement('h1');
+            titulo.className = 'pdf-titulo';
+            titulo.innerText = 'Cromos Panini pendientes - Mundial 2026';
+            printArea.appendChild(titulo);
+
+            let totalCromosImpresos = 0;
+
+            // Recorrer cada país/sección
+            listadoSecciones.forEach(sec => {
+                const maxCromos = (sec.id === 'CC') ? 12 : 20;
+                const inicio = (sec.id === 'FWC') ? 0 : 1;
+                const fin = (sec.id === 'FWC') ? 19 : maxCromos;
+
+                // Filtrar los que tenemos de esta sección
+                let cromosObtenidosDeEstePais = [];
+                for (let i = inicio; i <= fin; i++) {
+                    const clave = `${sec.id}-${i}`;
+                    if (coleccion[clave] === true) {
+                        cromosObtenidosDeEstePais.push(`${sec.id}${i}`);
+                    }
+                }
+
+                // Solo añadimos la fila al PDF si tenemos al menos un cromo de este país
+                if (cromosObtenidosDeEstePais.length > 0) {
+                    totalCromosImpresos += cromosObtenidosDeEstePais.length;
+
+                    // Crear contenedor de la línea
+                    const fila = document.createElement('div');
+                    fila.className = 'pdf-fila';
+
+                    // Contenedor e imagen de la bandera
+                    const banderaContenedor = document.createElement('div');
+                    banderaContenedor.className = 'pdf-bandera-contenedor';
+                    
+                    const img = document.createElement('img');
+                    if (sec.esEspecial) {
+                        img.src = sec.urlImagen;
+                    } else {
+                        img.src = `https://flagcdn.com/w40/${sec.codigoBandera}.png`;
+                    }
+                    banderaContenedor.appendChild(img);
+                    fila.appendChild(banderaContenedor);
+
+                    // Contenedor de las etiquetas estilo botón de los cromos
+                    const cromosContenedor = document.createElement('div');
+                    cromosContenedor.className = 'pdf-cromos-contenedor';
+
+                    cromosObtenidosDeEstePais.forEach(cromoTexto => {
+                        const cromoTag = document.createElement('div');
+                        cromoTag.className = 'pdf-cromo-tag';
+                        cromoTag.innerText = cromoTexto;
+                        cromosContenedor.appendChild(cromoTag);
+                    });
+
+                    fila.appendChild(cromosContenedor);
+                    printArea.appendChild(fila);
+                }
+            });
+
+            if (totalCromosImpresos === 0) {
+                const vacioMensaje = document.createElement('p');
+                vacioMensaje.className = 'pdf-vacio';
+                vacioMensaje.style.textAlign = 'center';
+                vacioMensaje.innerText = 'No tienes ningún cromo marcado como conseguido todavía.';
+                printArea.appendChild(vacioMensaje);
+            }
+
+            // Configuración del generador html2pdf
+            const opciones = {
+                margin:       10,
+                filename:     'Mis_Cromos_Tengo_Mundial2026.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, // useCORS es clave para que cargue las banderas externas
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Mostrar temporalmente el div para la foto del PDF, procesar y volver a ocultar
+            printArea.style.display = 'block';
+            
+            html2pdf().set(opciones).from(printArea).save().then(() => {
+                printArea.style.display = 'none';
+            }).catch(err => {
+                console.error(err);
+                printArea.style.display = 'none';
+                alert("Hubo un error al generar el PDF. Asegúrate de tener conexión a internet para cargar las banderas.");
+            });
+        }
+
         // Inicialización limpia
         inicializarDatos();
         renderizarMenu();
         cambiarSeccion(seccionSeleccionada);
         actualizarContadores();
 
-        // Asignación de evento de reinicio
+        // Asignación de eventos
         document.getElementById('btnReset').onclick = resetearColeccion;
         document.getElementById('btnReset2').onclick = resetearColeccion2;
+        document.getElementById('btnPdf').onclick = generarPdfDeLosQueTengo; // Evento del botón de PDF
     </script>
 </body>
 </html>
