@@ -141,38 +141,58 @@
             font-weight: bold;
         }
 
-        /* --- ESTILOS EXCLUSIVOS PARA EL CONTENIDO DEL PDF --- */
+        /* --- ESTILOS EXCLUSIVOS OPTIMIZADOS PARA UNA SOLA PÁGINA DE PDF --- */
         #printArea {
-            padding: 20px;
+            padding: 0px; 
             background-color: #ffffff;
             color: #333333;
             font-family: Arial, sans-serif;
+            box-sizing: border-box;
         }
         .pdf-titulo {
             text-align: center;
             color: #8a1538;
-            font-size: 20px;
-            margin-bottom: 20px;
+            font-size: 16px; 
+            margin-top: 0px; 
+            margin-bottom: 12px;
             border-bottom: 2px solid #8a1538;
-            padding-bottom: 10px;
+            padding-bottom: 5px;
         }
+        
+        /* Contenedor dinámico de columnas con flujo VERTICAL */
+        .pdf-columnas-contenedor {
+            display: block; 
+            width: 100%;
+        }
+        
+        /* Se activa si supera los 30 países, ordenando de arriba a abajo antes de saltar de columna */
+        .pdf-columnas-contenedor.doble-columna {
+            column-count: 2;
+            column-gap: 5px;
+            /* Fuerza a equilibrar las columnas de forma compacta */
+            column-fill: auto; 
+            height: 270mm; /* Altura máxima aproximada disponible en un A4 restando el título y márgenes */
+        }
+
         .pdf-fila {
             display: flex;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 5px; 
             border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-            page-break-inside: avoid; /* Evita que una fila se rompa entre páginas */
+            padding-bottom: 4px;
+            /* Evita que un país se divida a la mitad entre columnas */
+            break-inside: avoid; 
+            page-break-inside: avoid;
         }
         .pdf-bandera-contenedor {
-            width: 40px;
-            height: 25px;
-            margin-right: 15px;
+            width: 30px; 
+            height: 18px;
+            margin-right: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-			border: 1px solid #c4c4c4;
+            border: 1px solid #c4c4c4;
         }
         .pdf-bandera-contenedor img {
             width: 100%;
@@ -182,15 +202,15 @@
         .pdf-cromos-contenedor {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
         }
         .pdf-cromo-tag {
             background-color: #fff;
             color: #000;
-            padding: 4px 8px;
-            font-size: 11px;
+            padding: 2px 5px;
+            font-size: 10px; 
             font-weight: bold;
-            border-radius: 4px;
+            border-radius: 3px;
             border: 1px solid #2c3e50;
             text-align: center;
         }
@@ -278,7 +298,7 @@
             { id: "NOR", nombre: "Noruega", codigoBandera: "no" },
             { id: "ARG", nombre: "Argentina", codigoBandera: "ar" },
             { id: "ALG", nombre: "Argelia", codigoBandera: "dz" },
-            { id: "AUS", nombre: "Austria", codigoBandera: "at" }, // Nota: Tenías repetido "AUS" aquí para Austria en tu código original, se mantiene igual para no alterar tus datos guardados.
+            { id: "AUT", nombre: "Austria", codigoBandera: "at" },
             { id: "JOR", nombre: "Jordania", codigoBandera: "jo" },
             { id: "POR", nombre: "Portugal", codigoBandera: "pt" },
             { id: "COD", nombre: "Congo", codigoBandera: "cd" },
@@ -425,7 +445,6 @@
                 }
             });
 
-            // Corregido: Tenías invertidos los IDs en tu código original (totalTengo mostraba faltan y viceversa)
             document.getElementById('totalTengo').innerText = tengo;
             document.getElementById('totalFaltan').innerText = faltan;
         }
@@ -454,26 +473,28 @@
             }
         }
 
-        /* --- NUEVA FUNCIÓN PARA GENERAR EL PDF --- */
+        /* --- FUNCIÓN OPTIMIZADA PARA DOBLE COLUMNA EN FLUJO VERTICAL --- */
         function generarPdfDeLosQueTengo() {
             const printArea = document.getElementById('printArea');
-            printArea.innerHTML = ''; // Limpiar contenido previo
+            printArea.innerHTML = ''; 
 
-            // Añadir Título del PDF
+            // Título sin márgenes superiores
             const titulo = document.createElement('h1');
             titulo.className = 'pdf-titulo';
             titulo.innerText = 'Cromos Panini pendientes - Mundial 2026';
             printArea.appendChild(titulo);
 
-            let totalCromosImpresos = 0;
+            const columnasContenedor = document.createElement('div');
+            columnasContenedor.className = 'pdf-columnas-contenedor';
+            printArea.appendChild(columnasContenedor);
 
-            // Recorrer cada país/sección
+            let totalPaisesConCromos = 0;
+
             listadoSecciones.forEach(sec => {
                 const maxCromos = (sec.id === 'CC') ? 12 : 20;
                 const inicio = (sec.id === 'FWC') ? 0 : 1;
                 const fin = (sec.id === 'FWC') ? 19 : maxCromos;
 
-                // Filtrar los que tenemos de esta sección
                 let cromosObtenidosDeEstePais = [];
                 for (let i = inicio; i <= fin; i++) {
                     const clave = `${sec.id}-${i}`;
@@ -482,15 +503,12 @@
                     }
                 }
 
-                // Solo añadimos la fila al PDF si tenemos al menos un cromo de este país
                 if (cromosObtenidosDeEstePais.length > 0) {
-                    totalCromosImpresos += cromosObtenidosDeEstePais.length;
+                    totalPaisesConCromos++;
 
-                    // Crear contenedor de la línea
                     const fila = document.createElement('div');
                     fila.className = 'pdf-fila';
 
-                    // Contenedor e imagen de la bandera
                     const banderaContenedor = document.createElement('div');
                     banderaContenedor.className = 'pdf-bandera-contenedor';
                     
@@ -503,7 +521,6 @@
                     banderaContenedor.appendChild(img);
                     fila.appendChild(banderaContenedor);
 
-                    // Contenedor de las etiquetas estilo botón de los cromos
                     const cromosContenedor = document.createElement('div');
                     cromosContenedor.className = 'pdf-cromos-contenedor';
 
@@ -515,28 +532,31 @@
                     });
 
                     fila.appendChild(cromosContenedor);
-                    printArea.appendChild(fila);
+                    columnasContenedor.appendChild(fila);
                 }
             });
 
-            if (totalCromosImpresos === 0) {
+            // Si supera las 30 filas, activamos la clase CSS multi-columnas nativa (Flujo Vertical)
+            if (totalPaisesConCromos > 30) {
+                columnasContenedor.classList.add('doble-columna');
+            }
+
+            if (totalPaisesConCromos === 0) {
                 const vacioMensaje = document.createElement('p');
                 vacioMensaje.className = 'pdf-vacio';
                 vacioMensaje.style.textAlign = 'center';
                 vacioMensaje.innerText = 'No tienes ningún cromo marcado como conseguido todavía.';
-                printArea.appendChild(vacioMensaje);
+                columnasContenedor.appendChild(vacioMensaje);
             }
 
-            // Configuración del generador html2pdf
             const opciones = {
-                margin:       10,
-                filename:     'MisCromosPendientes2026.pdf',
+                margin:       [5, 8, 5, 8], 
+                filename:     'MisCromosPendientes.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, // useCORS es clave para que cargue las banderas externas
+                html2canvas:  { scale: 2, useCORS: true }, 
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Mostrar temporalmente el div para la foto del PDF, procesar y volver a ocultar
             printArea.style.display = 'block';
             
             html2pdf().set(opciones).from(printArea).save().then(() => {
@@ -548,16 +568,14 @@
             });
         }
 
-        // Inicialización limpia
         inicializarDatos();
         renderizarMenu();
         cambiarSeccion(seccionSeleccionada);
         actualizarContadores();
 
-        // Asignación de eventos
         document.getElementById('btnReset').onclick = resetearColeccion;
         document.getElementById('btnReset2').onclick = resetearColeccion2;
-        document.getElementById('btnPdf').onclick = generarPdfDeLosQueTengo; // Evento del botón de PDF
+        document.getElementById('btnPdf').onclick = generarPdfDeLosQueTengo;
     </script>
 </body>
 </html>
