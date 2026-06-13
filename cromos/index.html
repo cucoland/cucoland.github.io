@@ -163,7 +163,7 @@
             font-weight: bold;
         }
 
-        /* --- ESTILOS EXCLUSIVOS OPTIMIZADOS PARA UNA SOLA PÁGINA DE PDF --- */
+        /* --- ESTILOS EXCLUSIVOS OPTIMIZADOS PARA EL PRIMER PDF (SOLO PENDIENTES) --- */
         #printArea {
             padding: 0px; 
             background-color: #ffffff;
@@ -180,19 +180,16 @@
             border-bottom: 2px solid #8a1538;
             padding-bottom: 5px;
         }
-        
         .pdf-columnas-contenedor {
             display: block; 
             width: 100%;
         }
-        
         .pdf-columnas-contenedor.doble-columna {
             column-count: 2;
             column-gap: 15px;
             column-fill: auto; 
             height: 270mm; 
         }
-
         .pdf-fila {
             display: flex;
             align-items: center;
@@ -223,19 +220,95 @@
             gap: 3px;
         }
         .pdf-cromo-tag {
-            background-color: #fff;
-            color: #000;
             padding: 2px 5px;
-            font-size: 10px; 
+            font-size: 9px; 
             font-weight: bold;
             border-radius: 3px;
-            border: 1px solid #2c3e50;
             text-align: center;
+            box-sizing: border-box;
+        }
+        .pdf-cromo-tag.tengo-pdf {
+            background-color: #fff;
+            color: ##2c3e50;
+            border: 1px solid #dcdcdc;
+        }
+        .pdf-cromo-tag.falta-pdf {
+            background-color: #f2f2f2;
+            color: #fff;
+            border: 1px solid #dcdcdc;
+
+
         }
         .pdf-vacio {
             font-style: italic;
             color: #999;
             font-size: 12px;
+        }
+
+        /* --- ESTILOS ULTRA COMPACTOS Y ALINEADOS PARA EL SEGUNDO PDF (LISTA COMPLETA 1 HOJA / 1 COLUMNA) --- */
+        #printAreaCompleto {
+            padding: 0px; 
+            background-color: #ffffff;
+            color: #333333;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        #printAreaCompleto .pdf-titulo {
+            font-size: 13px;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            color: #8a1538;
+            border-bottom: 2px solid #8a1538;
+            text-align: center;
+        }
+        #printAreaCompleto .pdf-columnas-contenedor {
+            display: block;
+            width: 100%;
+        }
+        #printAreaCompleto .pdf-fila {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5px;
+            padding-bottom: 1.5px;
+            border-bottom: 1px solid #f0f0f0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #printAreaCompleto .pdf-bandera-contenedor {
+            width: 20px;
+            height: 12px;
+            margin-right: 8px;
+            flex-shrink: 0;
+            border: 1px solid #dcdcdc;
+        }
+
+        #printAreaCompleto .pdf-cromos-grid-fijo {
+height:17px;
+            display: grid;
+            grid-template-columns: repeat(20, 1fr); /* 20 celdas iguales que ocupan todo el ancho de la línea */
+            gap: 1.5px;
+            flex-grow: 1;
+margin-right:10px;
+        }
+        #printAreaCompleto .pdf-cromo-tag {
+            padding: 1px 0px; /* Sin padding horizontal para que no desborde */
+            font-size: 8x;
+            font-weight: bold;
+            border-radius: 1.5px;
+            text-align: center;
+            display: block;
+            width: 100%; /* Ocupa el 100% de su celda asignada en el grid */
+            box-sizing: border-box;
+        }
+        #printAreaCompleto .pdf-contador-final {
+            margin-top: 8px;
+            padding-top: 4px;
+            border-top: 2px solid #8a1538;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
         }
     </style>
 
@@ -275,10 +348,14 @@
             <button id="btnPdf" style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
                 📄 Imprimir PDF de los pendientes
             </button>
+            <button id="btnPdfCompleto" style="background-color: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                📄 Imprimir Lista Completa (1 Hoja)
+            </button>
         </div>
     </div>
 
     <div id="printArea" style="display: none;"></div>
+    <div id="printAreaCompleto" style="display: none;"></div>
 
     <script>
         const listadoSecciones = [
@@ -412,9 +489,7 @@
             cambiarSeccion(listadoSecciones[nuevoIndice].id);
         }
 
-        /* --- OYENTE DE EVENTOS DE TECLADO --- */
         window.addEventListener('keydown', function(evento) {
-            // Evita que las flechas se activen accidentalmente mientras se interactúa con ventanas emergentes (confirm)
             if (evento.key === "ArrowLeft") {
                 paisAnterior();
             } else if (evento.key === "ArrowRight") {
@@ -470,7 +545,7 @@
             actualizarContadores();
         }
 
-        function actualizarContadores() {
+        function obtenerTotales() {
             let tengo = 0;
             let faltan = 0;
 
@@ -488,9 +563,13 @@
                     }
                 }
             });
+            return { tengo, faltan };
+        }
 
-            document.getElementById('totalTengo').innerText = tengo;
-            document.getElementById('totalFaltan').innerText = faltan;
+        function actualizarContadores() {
+            const totales = obtenerTotales();
+            document.getElementById('totalTengo').innerText = totales.tengo;
+            document.getElementById('totalFaltan').innerText = totales.faltan;
         }
 
         function resetearColeccion() {
@@ -568,7 +647,7 @@
 
                     cromosObtenidosDeEstePais.forEach(cromoTexto => {
                         const cromoTag = document.createElement('div');
-                        cromoTag.className = 'pdf-cromo-tag';
+                        cromoTag.className = 'pdf-cromo-tag tengo-pdf';
                         cromoTag.innerText = cromoTexto;
                         cromosContenedor.appendChild(cromoTag);
                     });
@@ -609,6 +688,97 @@
             });
         }
 
+        function generarPdfListaCompleta() {
+            const printArea = document.getElementById('printAreaCompleto');
+            printArea.innerHTML = ''; 
+
+            const titulo = document.createElement('h1');
+            titulo.className = 'pdf-titulo';
+            titulo.innerText = 'Lista Completa Colección Panini - Mundial 2026';
+            printArea.appendChild(titulo);
+
+            const columnasContenedor = document.createElement('div');
+            columnasContenedor.className = 'pdf-columnas-contenedor';
+            printArea.appendChild(columnasContenedor);
+
+            listadoSecciones.forEach(sec => {
+                const maxCromos = (sec.id === 'CC') ? 12 : 20;
+                const inicio = (sec.id === 'FWC') ? 0 : 1;
+                const fin = (sec.id === 'FWC') ? 19 : maxCromos;
+
+                const fila = document.createElement('div');
+                fila.className = 'pdf-fila';
+
+                // 1. Bandera del País
+                const banderaContenedor = document.createElement('div');
+                banderaContenedor.className = 'pdf-bandera-contenedor';
+                
+                const img = document.createElement('img');
+                if (sec.esEspecial) {
+                    img.src = sec.urlImagen;
+                } else {
+                    img.src = `https://flagcdn.com/w40/${sec.codigoBandera}.png`;
+                }
+                banderaContenedor.appendChild(img);
+                fila.appendChild(banderaContenedor);
+
+                // 2. Grid Fijo de 20 espacios iguales
+                const gridContenedor = document.createElement('div');
+                gridContenedor.className = 'pdf-cromos-grid-fijo';
+
+                for (let i = 0; i < 20; i++) {
+                    const numeroCromo = (sec.id === 'FWC') ? i : (i + 1);
+                    const esCromoValido = (sec.id === 'CC') ? (numeroCromo <= 12) : (numeroCromo <= 20);
+
+                    const celdaGrid = document.createElement('div');
+
+                    if (esCromoValido) {
+                        const clave = `${sec.id}-${numeroCromo}`;
+                        const cromoTag = document.createElement('div');
+                        cromoTag.className = 'pdf-cromo-tag';
+                        cromoTag.innerText = `${sec.id}${numeroCromo}`;
+
+                        if (coleccion[clave] === true) {
+                            cromoTag.classList.add('tengo-pdf'); // Pendiente / Oscuro
+                        } else {
+                            cromoTag.classList.add('falta-pdf');  // Restante / Gris Claro
+                        }
+                        celdaGrid.appendChild(cromoTag);
+                    }
+                    
+                    gridContenedor.appendChild(celdaGrid);
+                }
+
+                fila.appendChild(gridContenedor);
+                columnasContenedor.appendChild(fila);
+            });
+
+            // Contador de cromos al final de la hoja
+            const totales = obtenerTotales();
+            const contadorFinal = document.createElement('div');
+            contadorFinal.className = 'pdf-contador-final';
+            contadorFinal.innerHTML = `Pendientes (Oscuros): <span>${totales.tengo}</span> | Faltan (Gris Claro): <span>${totales.faltan}</span>`;
+            printArea.appendChild(contadorFinal);
+
+            const opciones = {
+                margin:       [3, 5, 3, 5], 
+                filename:     'ListaCompletaCromos.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            printArea.style.display = 'block';
+            
+            html2pdf().set(opciones).from(printArea).save().then(() => {
+                printArea.style.display = 'none';
+            }).catch(err => {
+                console.error(err);
+                printArea.style.display = 'none';
+                alert("Hubo un error al generar el PDF de la lista completa.");
+            });
+        }
+
         inicializarDatos();
         renderizarMenu();
         cambiarSeccion(seccionSeleccionada);
@@ -617,6 +787,7 @@
         document.getElementById('btnReset').onclick = resetearColeccion;
         document.getElementById('btnReset2').onclick = resetearColeccion2;
         document.getElementById('btnPdf').onclick = generarPdfDeLosQueTengo;
+        document.getElementById('btnPdfCompleto').onclick = generarPdfListaCompleta;
     </script>
 </body>
 </html>
