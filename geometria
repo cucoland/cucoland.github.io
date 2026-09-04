@@ -1,1 +1,1029 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de Plantillas Papercraft - Tronco de Pirámide</title>
+    <style>
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #333;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 340px;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 0.8rem;
+            margin: 0 0 5px 0;
+            color: #1a365d;
+            border-bottom: 2px solid #3182ce;
+            padding-top: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .form-group label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, select, .sidebar select {
+            width: 100%;
+            padding: 2px;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            background: white;
+            transition: all 0.2s;
+	height: 20px;
+        }
+
+        .form-group input:focus, .sidebar select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2b6cb0;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background-color: #e2e8f0;
+        }
+
+        .page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 1mm;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+        }
+	
+	select {
+
+	}
+
+        svg {
+            width: 100%;
+            height: 100%;
+            user-select: none;
+        }
+
+        .cut-line {
+            stroke: var(--cut-color, #cccccc);
+            stroke-width: var(--cut-width, 0.2px);
+            stroke-dasharray: var(--cut-dash, none);
+            pointer-events: none;
+        }
+
+        .fold-line {
+            stroke: var(--fold-color, #cccccc);
+            stroke-width: var(--fold-width, 0.1px);
+            stroke-dasharray: var(--fold-dash, 1 3);
+            pointer-events: none;
+            stroke-linecap: round;
+        }
+
+        .paintable-face {
+            cursor: pointer;
+            pointer-events: all;
+            transition: fill 0.15s;
+            paint-order: stroke fill;
+        }
+
+        .paintable-face:hover {
+            opacity: 0.85;
+            stroke: #3182ce;
+            stroke-width: 0.4px;
+        }
+
+        .paintable-face.selected-face {
+            stroke: #e53e3e !important;
+            stroke-width: 0.6px !important;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #edf2f7;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        #paintColor, #cutColor, #foldColor {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: 1px solid black;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+        #paintColor::-webkit-color-swatch-wrapper, #cutColor::-webkit-color-swatch-wrapper, #foldColor::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        #paintColor::-webkit-color-swatch, #cutColor::-webkit-color-swatch, #foldColor::-webkit-color-swatch {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar no-print">
+
+        <h2>Parámetros del Tronco</h2>
+        <div class="form-row-3">
+            <div class="form-group">
+                <label for="numSides">Nº Lados:</label>
+                <input type="number" id="numSides" value="8" min="3" max="32">
+            </div>
+            <div class="form-group">
+                <label for="height">Altura Tronco (mm):</label>
+                <input type="number" id="height" value="30" min="5" step="1">
+            </div>
+            <div class="form-group">
+                <label for="tabWidth">Alto pestañas:</label>
+                <input type="number" id="tabWidth" value="6" min="2" max="10">
+            </div>
+
+
+
+            <div class="form-group">	
+                <label for="rSmall">Radio Menor (mm):</label>
+                <input type="number" id="rSmall" value="40" min="5" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="sSmall">Lado Menor (mm):</label>
+                <input type="number" id="sSmall" value="30.61" min="1" step="0.1">
+            </div>
+            <div class="form-group">
+	    </div>
+            <div class="form-group">
+                <label for="rLarge">Radio Mayor (mm):</label>
+                <input type="number" id="rLarge" value="50" min="5" step="0.1">
+            </div>
+            <div class="form-group">
+                <label for="sLarge">Lado Mayor (mm):</label>
+                <input type="number" id="sLarge" value="38.27" min="1" step="0.1">
+            </div>
+            <div class="form-group">
+	    </div>
+
+        </div>
+
+<h2>Opciones de Hoja</h2>
+        <div class="form-row-2">
+            <div class="form-group">
+                <label for="pageScale">Escala:</label>
+                <input type="number" id="pageScale" value="100" min="20" max="200" step="5">
+            </div>
+            <div class="form-group">
+                <label for="rotAngle">Rotación (°):</label>
+                <input type="number" id="rotAngle" value="0" min="-180" max="180" step="2">
+            </div>
+        </div>
+        <div class="form-row-2" style="margin-top: 5px;">
+            <div class="form-group">
+                <label for="offsetX">Desplazar X:</label>
+                <input type="number" id="offsetX" value="0" min="-150" max="150" step="2">
+            </div>
+            <div class="form-group">
+                <label for="offsetY">Desplazar Y:</label>
+                <input type="number" id="offsetY" value="0" min="-150" max="150" step="2">
+            </div>
+        </div>
+
+        <h2>Relleno de Caras</h2>
+        <div class="form-group">
+            <label for="fillMode">Tipo de Relleno:</label>
+            <select id="fillMode">
+                <option value="color">Color Plano</option>
+                <option value="image">Imagen Individual</option>
+            </select>
+        </div>
+
+        <div id="colorControls" class="color-picker-container">
+            <input type="color" id="paintColor" value="#ffffff">
+            <label for="paintColor">Haz clic en una cara para aplicar color.</label>
+        </div>
+
+        <div id="imageControls" style="display: none; flex-direction: column; gap: 8px; background: #edf2f7; padding: 8px; border-radius: 4px;">
+            <div class="form-group">
+                <label for="imgUpload">Cargar Imagen:</label>
+                <input type="file" id="imgUpload" accept="image/*">
+            </div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label for="imgScale">Escala (%):</label>
+                    <input type="number" id="imgScale" value="100" min="10" max="500" step="5">
+                </div>
+                <div class="form-group">
+                    <label for="imgRot">Rotación (°):</label>
+                    <input type="number" id="imgRot" value="0" min="-360" max="360" step="5">
+                </div>
+            </div>
+            <div class="form-row-2">
+                <div class="form-group">
+                    <label for="imgOffX">Offset X (mm):</label>
+                    <input type="number" id="imgOffX" value="0" min="-100" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="imgOffY">Offset Y (mm):</label>
+                    <input type="number" id="imgOffY" value="0" min="-100" max="100" step="1">
+                </div>
+            </div>
+            <span style="font-size: 0.65rem; color: #4a5568;">Haz clic en cualquier cara para seleccionarla y modificar la posición de su imagen en tiempo real.</span>
+        </div>
+
+        <h2>Estilo de Líneas</h2>
+        <div class="form-row-2">
+            <div class="form-group">
+                <label for="cutColor">
+                Línea Corte:
+                <input type="color" id="cutColor" value="#1a202c">
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="foldColor">
+                Línea Doblez:
+                <input type="color" id="foldColor" value="#cccccc">
+                </label>
+            </div>
+        </div>
+
+<div class="form-row-2">
+            <div class="form-group">
+                <label for="cutWidth">Corte:</label>
+                <input type="number" id="cutWidth" value="0.2" min="0.01" max="2" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="cutDash">Estilo:</label>
+                <select id="cutDash">
+                    <option value="none">⎯⎯⎯⎯⎯</option>
+                    <option value="1 3">‒ ‒ ‒</option>
+                    <option value="0.5 1.5">·······</option>
+		    <option value="invisible"></option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="foldWidth">Doblez:</label>
+                <input type="number" id="foldWidth" value="0.2" min="0.01" max="2" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="foldDash">Estilo:</label>
+                <select id="foldDash">
+                    <option value="none">⎯⎯⎯⎯⎯ </option>
+                    <option value="1 3" selected>‒ ‒ ‒ </option>
+                    <option value="0.5 1.5">······· </option>
+		    <option value="invisible"></option>
+                </select>
+            </div>
+        </div>
+        <br>
+
+        <button class="btn btn-primary" onclick="window.print()">
+            🖨️ Imprimir / Guardar PDF
+        </button>
+    </div>
+
+    <div class="main-content">
+        <div class="page" id="pageContainer">
+            <svg id="svgCanvas" viewBox="0 0 210 297" xmlns="http://www.w3.org/2000/svg">
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const colorMap = new Map();
+        const imageMap = new Map();
+        let selectedFaceKey = null;
+
+        let isUpdatingInputs = false;
+
+        function updateGeometryInputs(source) {
+            if (isUpdatingInputs) return;
+            isUpdatingInputs = true;
+
+            const N = parseInt(document.getElementById('numSides').value) || 8;
+            const sinVal = Math.sin(Math.PI / N);
+
+            let rSmall = parseFloat(document.getElementById('rSmall').value) || 40;
+            let sSmall = parseFloat(document.getElementById('sSmall').value) || 30.61;
+            let rLarge = parseFloat(document.getElementById('rLarge').value) || 50;
+            let sLarge = parseFloat(document.getElementById('sLarge').value) || 38.27;
+
+            if (source === 'numSides') {
+                sSmall = 2 * rSmall * sinVal;
+                sLarge = 2 * rLarge * sinVal;
+                document.getElementById('sSmall').value = sSmall.toFixed(2);
+                document.getElementById('sLarge').value = sLarge.toFixed(2);
+            } else if (source === 'rSmall') {
+                sSmall = 2 * rSmall * sinVal;
+                document.getElementById('sSmall').value = sSmall.toFixed(2);
+            } else if (source === 'sSmall') {
+                rSmall = sSmall / (2 * sinVal);
+                document.getElementById('rSmall').value = rSmall.toFixed(2);
+            } else if (source === 'rLarge') {
+                sLarge = 2 * rLarge * sinVal;
+                document.getElementById('sLarge').value = sLarge.toFixed(2);
+            } else if (source === 'sLarge') {
+                rLarge = sLarge / (2 * sinVal);
+                document.getElementById('rLarge').value = rLarge.toFixed(2);
+            }
+
+            isUpdatingInputs = false;
+        }
+
+        document.getElementById('numSides').addEventListener('input', () => { updateGeometryInputs('numSides'); generatePapercraft(); });
+        document.getElementById('rSmall').addEventListener('input', () => { updateGeometryInputs('rSmall'); generatePapercraft(); });
+        document.getElementById('sSmall').addEventListener('input', () => { updateGeometryInputs('sSmall'); generatePapercraft(); });
+        document.getElementById('rLarge').addEventListener('input', () => { updateGeometryInputs('rLarge'); generatePapercraft(); });
+        document.getElementById('sLarge').addEventListener('input', () => { updateGeometryInputs('sLarge'); generatePapercraft(); });
+
+        document.getElementById('fillMode').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            document.getElementById('colorControls').style.display = mode === 'color' ? 'flex' : 'none';
+            document.getElementById('imageControls').style.display = mode === 'image' ? 'flex' : 'none';
+        });
+
+        ['imgScale', 'imgRot', 'imgOffX', 'imgOffY'].forEach(id => {
+            const inputElem = document.getElementById(id);
+            inputElem.addEventListener('input', () => {
+                if (selectedFaceKey && imageMap.has(selectedFaceKey)) {
+                    const imgData = imageMap.get(selectedFaceKey);
+                    imgData.scale = parseFloat(document.getElementById('imgScale').value) || 100;
+                    imgData.rot = parseFloat(document.getElementById('imgRot').value) || 0;
+                    imgData.offX = parseFloat(document.getElementById('imgOffX').value) || 0;
+                    imgData.offY = parseFloat(document.getElementById('imgOffY').value) || 0;
+                    
+                    generatePapercraft();
+                }
+            });
+        });
+
+        function resetImageControls() {
+            document.getElementById('imgScale').value = 100;
+            document.getElementById('imgRot').value = 0;
+            document.getElementById('imgOffX').value = 0;
+            document.getElementById('imgOffY').value = 0;
+        }
+
+function updateLineStyles() {
+    const cutColor = document.getElementById('cutColor').value;
+    const foldColor = document.getElementById('foldColor').value;
+    const cutWidth = document.getElementById('cutWidth').value;
+    const foldWidth = document.getElementById('foldWidth').value;
+    const cutDash = document.getElementById('cutDash').value;
+    const foldDash = document.getElementById('foldDash').value;
+
+    document.documentElement.style.setProperty('--cut-color', cutDash === 'invisible' ? 'transparent' : cutColor);
+    document.documentElement.style.setProperty('--fold-color', foldDash === 'invisible' ? 'transparent' : foldColor);
+    document.documentElement.style.setProperty('--cut-width', cutWidth + 'px');
+    document.documentElement.style.setProperty('--fold-width', foldWidth + 'px');
+    document.documentElement.style.setProperty('--cut-dash', (cutDash === 'none' || cutDash === 'invisible') ? 'none' : cutDash);
+    document.documentElement.style.setProperty('--fold-dash', (foldDash === 'none' || foldDash === 'invisible') ? 'none' : foldDash);
+}
+
+        ['cutColor', 'foldColor', 'cutWidth', 'foldWidth', 'cutDash', 'foldDash'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) {
+                elem.addEventListener('input', updateLineStyles);
+                elem.addEventListener('change', updateLineStyles);
+            }
+        });
+
+        updateLineStyles();
+
+        function applyPaint(element, key) {
+            element.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const mode = document.getElementById('fillMode').value;
+
+                if (mode === 'color') {
+                    const selectedColor = document.getElementById('paintColor').value;
+                    imageMap.delete(key);
+                    if (colorMap.get(key) === selectedColor) {
+                        colorMap.delete(key);
+                    } else {
+                        colorMap.set(key, selectedColor);
+                    }
+                    generatePapercraft();
+                } else if (mode === 'image') {
+                    selectedFaceKey = key;
+                    const fileInput = document.getElementById('imgUpload');
+
+                    if (fileInput.files && fileInput.files[0]) {
+                        resetImageControls();
+                        
+                        const reader = new FileReader();
+                        reader.onload = function (evt) {
+                            imageMap.set(key, {
+                                src: evt.target.result,
+                                scale: 100,
+                                rot: 0,
+                                offX: 0,
+                                offY: 0
+                            });
+                            colorMap.delete(key);
+                            generatePapercraft();
+                        };
+                        reader.readAsDataURL(fileInput.files[0]);
+                    } else if (imageMap.has(key)) {
+                        const imgData = imageMap.get(key);
+                        document.getElementById('imgScale').value = imgData.scale;
+                        document.getElementById('imgRot').value = imgData.rot;
+                        document.getElementById('imgOffX').value = imgData.offX;
+                        document.getElementById('imgOffY').value = imgData.offY;
+                        generatePapercraft();
+                    }
+                }
+            });
+        }
+
+        function renderPolygonFace(container, points, faceKey, defs) {
+            let ptsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+
+            if (imageMap.has(faceKey)) {
+                let imgData = imageMap.get(faceKey);
+                let clipId = `clip_${faceKey}`;
+
+                let clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clipPath.setAttribute('id', clipId);
+
+                let clipPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                clipPoly.setAttribute('points', ptsStr);
+                clipPath.appendChild(clipPoly);
+                defs.appendChild(clipPath);
+
+                let cx = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+                let cy = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+
+                let xs = points.map(p => p.x);
+                let ys = points.map(p => p.y);
+                let w = Math.max(...xs) - Math.min(...xs);
+                let h = Math.max(...ys) - Math.min(...ys);
+                let baseSize = Math.max(w, h) * 1.5;
+                let size = baseSize * (imgData.scale / 100);
+
+                let gImgGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                gImgGroup.setAttribute('clip-path', `url(#${clipId})`);
+
+                let img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', imgData.src);
+                img.setAttribute('x', cx - size / 2);
+                img.setAttribute('y', cy - size / 2);
+                img.setAttribute('width', size);
+                img.setAttribute('height', size);
+                img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+
+                let baseRot = 180;
+                let finalRot = baseRot + imgData.rot;
+
+                let transformStr = `translate(${imgData.offX}, ${imgData.offY}) rotate(${finalRot}, ${cx}, ${cy})`;
+                img.setAttribute('transform', transformStr);
+
+                gImgGroup.appendChild(img);
+                container.appendChild(gImgGroup);
+            }
+
+            let polyElement = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polyElement.setAttribute('points', ptsStr);
+            polyElement.setAttribute('class', 'paintable-face fold-line' + (selectedFaceKey === faceKey ? ' selected-face' : ''));
+
+            if (imageMap.has(faceKey)) {
+                polyElement.setAttribute('fill', 'transparent');
+            } else {
+                polyElement.setAttribute('fill', colorMap.get(faceKey) || '#ffffff');
+            }
+
+            applyPaint(polyElement, faceKey);
+            container.appendChild(polyElement);
+        }
+
+        function generatePapercraft() {
+            const N = parseInt(document.getElementById('numSides').value) || 8;
+            const r1 = parseFloat(document.getElementById('rSmall').value) || 35;
+            const r2 = parseFloat(document.getElementById('rLarge').value) || 55;
+            const H = parseFloat(document.getElementById('height').value) || 40;
+            const tabW = parseFloat(document.getElementById('tabWidth').value) || 6;
+            const scale = (parseFloat(document.getElementById('pageScale').value) || 100) / 100;
+            const rotDeg = parseFloat(document.getElementById('rotAngle').value) || 0;
+
+            const svg = document.getElementById('svgCanvas');
+            svg.innerHTML = '';
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svg.appendChild(defs);
+
+            const alpha = (2 * Math.PI) / N;
+            const s1 = 2 * r1 * Math.sin(Math.PI / N);
+            const s2 = 2 * r2 * Math.sin(Math.PI / N);
+
+            const ap1 = r1 * Math.cos(Math.PI / N);
+            const ap2 = r2 * Math.cos(Math.PI / N);
+            const L = Math.sqrt(Math.pow(ap2 - ap1, 2) + Math.pow(H, 2));
+
+            let dTheta = (s2 - s1) / L;
+            let R1, R2;
+
+            const isPrism = Math.abs(s2 - s1) < 0.001;
+            if (!isPrism) {
+                R1 = s1 / dTheta;
+                R2 = s2 / dTheta;
+            }
+
+            const n1 = Math.ceil(N / 2);
+            const n2 = N - n1;
+
+            const midIdx1 = Math.floor((n1 - 1) / 2);
+            const midIdx2 = Math.floor(n2 / 2);
+
+            function getStripVertices(nFaces, isInverted = false) {
+                let innerPts = [];
+                let outerPts = [];
+
+                if (!isPrism) {
+                    const startAngle = - (nFaces * dTheta) / 2;
+                    for (let i = 0; i <= nFaces; i++) {
+                        let ang = startAngle + i * dTheta - Math.PI / 2;
+                        if (!isInverted) {
+                            innerPts.push({ x: (R1 * Math.cos(ang)), y: (R1 * Math.sin(ang)) + R1 });
+                            outerPts.push({ x: (R2 * Math.cos(ang)), y: (R2 * Math.sin(ang)) + R1 });
+                        } else {
+                            innerPts.push({ x: (R1 * Math.cos(ang)), y: -(R1 * Math.sin(ang)) - R1 });
+                            outerPts.push({ x: (R2 * Math.cos(ang)), y: -(R2 * Math.sin(ang)) - R1 });
+                        }
+                    }
+                } else {
+                    const totalW = nFaces * s1;
+                    const startX = -totalW / 2;
+                    for (let i = 0; i <= nFaces; i++) {
+                        if (!isInverted) {
+                            innerPts.push({ x: startX + i * s1, y: 0 });
+                            outerPts.push({ x: startX + i * s1, y: L });
+                        } else {
+                            innerPts.push({ x: startX + i * s1, y: 0 });
+                            outerPts.push({ x: startX + i * s1, y: -L });
+                        }
+                    }
+                }
+                return { innerPts, outerPts };
+            }
+
+            function getPolygonPoints(r) {
+                let pts = [];
+                for (let i = 0; i < N; i++) {
+                    let ang = i * alpha - Math.PI / 2 + Math.PI / N;
+                    pts.push({ x: r * Math.cos(ang), y: r * Math.sin(ang) });
+                }
+                return pts;
+            }
+
+            const poly1Pts = getPolygonPoints(r1);
+            const poly2Pts = getPolygonPoints(r2);
+
+            const strip1Data = getStripVertices(n1, isPrism);
+
+            let minY1 = Infinity;
+            strip1Data.innerPts.forEach(p => { if (p.y < minY1) minY1 = p.y; });
+            strip1Data.outerPts.forEach(p => { if (p.y < minY1) minY1 = p.y; });
+
+            const topPadding = 15;
+            const yStrip1 = -minY1 + topPadding;
+
+const offsetX = parseFloat(document.getElementById('offsetX').value) || 0;
+            const offsetY = parseFloat(document.getElementById('offsetY').value) || 0;
+
+            const gMain = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            // Sumamos offsetX al centro predeterminado de la página (105 mm)
+            gMain.setAttribute('transform', `translate(${105 + offsetX}, ${offsetY}) scale(${scale}) rotate(${rotDeg})`);
+            svg.appendChild(gMain);
+
+            const pCenterA1 = strip1Data.innerPts[midIdx1];
+            const pCenterB1 = strip1Data.innerPts[midIdx1 + 1];
+            const midX1 = (pCenterA1.x + pCenterB1.x) / 2;
+            const midY1 = (pCenterA1.y + pCenterB1.y) / 2 + yStrip1;
+            const stripEdgeAngle1 = Math.atan2(pCenterB1.y - pCenterA1.y, pCenterB1.x - pCenterA1.x);
+
+            const polyEdgeTopIdx = Math.floor((N - 1) / 2);
+            const pPolyTopA = poly1Pts[polyEdgeTopIdx];
+            const pPolyTopB = poly1Pts[(polyEdgeTopIdx + 1) % N];
+
+            const polyMidTopX = (pPolyTopA.x + pPolyTopB.x) / 2;
+            const polyMidTopY = (pPolyTopA.y + pPolyTopB.y) / 2;
+            const polyEdgeTopAngle = Math.atan2(pPolyTopB.y - pPolyTopA.y, pPolyTopB.x - pPolyTopA.x);
+
+            const rotNeeded1 = (stripEdgeAngle1 - polyEdgeTopAngle) * (180 / Math.PI);
+            
+            let polyEdgeBotIdx = (polyEdgeTopIdx + Math.floor(N / 2)) % N;
+            if (N % 4 === 3) {
+                polyEdgeBotIdx = (polyEdgeBotIdx + 1) % N;
+            }
+
+            const strip2Data = getStripVertices(n2, !isPrism);
+            const pCenterA2 = strip2Data.innerPts[midIdx2];
+            const pCenterB2 = strip2Data.innerPts[midIdx2 + 1];
+            const midStrip2X = (pCenterA2.x + pCenterB2.x) / 2;
+            const midStrip2Y = (pCenterA2.y + pCenterB2.y) / 2;
+            const stripEdgeAngle2 = Math.atan2(pCenterB2.y - pCenterA2.y, pCenterB2.x - pCenterA2.x);
+
+            const rad = rotNeeded1 * (Math.PI / 180);
+            const cosR = Math.cos(rad);
+            const sinR = Math.sin(rad);
+
+            function transformPoint(pt) {
+                let dx = pt.x - polyMidTopX;
+                let dy = pt.y - polyMidTopY;
+                let rx = dx * cosR - dy * sinR;
+                let ry = dx * sinR + dy * cosR;
+                return { x: midX1 + rx, y: midY1 + ry };
+            }
+
+            const pBotA = transformPoint(poly1Pts[polyEdgeBotIdx]);
+            const pBotB = transformPoint(poly1Pts[(polyEdgeBotIdx + 1) % N]);
+            const midPolyBotX = (pBotA.x + pBotB.x) / 2;
+            const midPolyBotY = (pBotA.y + pBotB.y) / 2;
+            const polyEdgeBotAngle = Math.atan2(pBotA.y - pBotB.y, pBotA.x - pBotB.x);
+            const rotNeeded2 = (polyEdgeBotAngle - stripEdgeAngle2) * (180 / Math.PI);
+
+            const pStrip2ExtA = strip2Data.outerPts[midIdx2];
+            const pStrip2ExtB = strip2Data.outerPts[midIdx2 + 1];
+
+            const rad2 = rotNeeded2 * (Math.PI / 180);
+            const cosR2 = Math.cos(rad2);
+            const sinR2 = Math.sin(rad2);
+
+            function transformPointStrip2(pt) {
+                let dx = pt.x - midStrip2X;
+                let dy = pt.y - midStrip2Y;
+                let rx = dx * cosR2 - dy * sinR2;
+                let ry = dx * sinR2 + dy * cosR2;
+                return { x: midPolyBotX + rx, y: midPolyBotY + ry };
+            }
+
+            const globalS2ExtA = transformPointStrip2(pStrip2ExtA);
+            const globalS2ExtB = transformPointStrip2(pStrip2ExtB);
+            const globalS2ExtMidX = (globalS2ExtA.x + globalS2ExtB.x) / 2;
+            const globalS2ExtMidY = (globalS2ExtA.y + globalS2ExtB.y) / 2;
+            
+            const globalS2ExtAngle = Math.atan2(globalS2ExtB.y - globalS2ExtA.y, globalS2ExtB.x - globalS2ExtA.x);
+
+            const poly2AttachIdx = Math.floor((N - 1) / 2);
+            const pPoly2A = poly2Pts[poly2AttachIdx];
+            const pPoly2B = poly2Pts[(poly2AttachIdx + 1) % N];
+            const poly2MidX = (pPoly2A.x + pPoly2B.x) / 2;
+            const poly2MidY = (pPoly2A.y + pPoly2B.y) / 2;
+            const poly2EdgeAngle = Math.atan2(pPoly2B.y - pPoly2A.y, pPoly2B.x - pPoly2A.x);
+
+            const rotNeededPoly2 = (globalS2ExtAngle - poly2EdgeAngle) * (180 / Math.PI);
+
+            const gPoly1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gPoly1.setAttribute('transform', `translate(${midX1}, ${midY1}) rotate(${rotNeeded1}) translate(${-polyMidTopX}, ${-polyMidTopY})`);
+
+            const gStrip1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gStrip1.setAttribute('transform', `translate(0, ${yStrip1})`);
+
+            const gStrip2 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gStrip2.setAttribute('transform', `translate(${midPolyBotX}, ${midPolyBotY}) rotate(${rotNeeded2}) translate(${-midStrip2X}, ${-midStrip2Y})`);
+
+            const gPoly2 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gPoly2.setAttribute('transform', `translate(${globalS2ExtMidX}, ${globalS2ExtMidY}) rotate(${rotNeededPoly2}) translate(${-poly2MidX}, ${-poly2MidY})`);
+
+            gMain.appendChild(gPoly1);
+            gMain.appendChild(gPoly2);
+            gMain.appendChild(gStrip1);
+            gMain.appendChild(gStrip2);
+
+            for (let i = 0; i < N; i++) {
+                if (i !== polyEdgeTopIdx && i !== polyEdgeBotIdx) {
+                    let pA = poly1Pts[i];
+                    let pB = poly1Pts[(i + 1) % N];
+                    let dx = pB.x - pA.x;
+                    let dy = pB.y - pA.y;
+                    let len = Math.hypot(dx, dy);
+                    let nx = dy / len;
+                    let ny = -dx / len;
+
+                    let tA = { x: pA.x + nx * tabW + (dx / len) * (tabW * 0.6), y: pA.y + ny * tabW + (dy / len) * (tabW * 0.6) };
+                    let tB = { x: pB.x + nx * tabW - (dx / len) * (tabW * 0.6), y: pB.y + ny * tabW - (dy / len) * (tabW * 0.6) };
+
+                    let tabPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                    tabPoly.setAttribute('points', `${pA.x},${pA.y} ${tA.x},${tA.y} ${tB.x},${tB.y} ${pB.x},${pB.y}`);
+                    tabPoly.setAttribute('class', 'cut-line');
+                    tabPoly.setAttribute('fill', 'none');
+                    gPoly1.appendChild(tabPoly);
+
+                    let tabFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    tabFold.setAttribute('x1', pA.x); tabFold.setAttribute('y1', pA.y);
+                    tabFold.setAttribute('x2', pB.x); tabFold.setAttribute('y2', pB.y);
+                    tabFold.setAttribute('class', 'fold-line');
+                    gPoly1.appendChild(tabFold);
+                }
+            }
+
+            renderPolygonFace(gPoly1, poly1Pts, 'poly1', defs);
+
+            drawStrip(gStrip1, strip1Data.innerPts, strip1Data.outerPts, n1, 'strip1', tabW, midIdx1, defs);
+            drawStrip(gStrip2, strip2Data.innerPts, strip2Data.outerPts, n2, 'strip2', tabW, midIdx2, defs);
+
+            for (let i = 0; i < N; i++) {
+                if (i !== poly2AttachIdx) {
+                    let pA = poly2Pts[i];
+                    let pB = poly2Pts[(i + 1) % N];
+                    let dx = pB.x - pA.x;
+                    let dy = pB.y - pA.y;
+                    let len = Math.hypot(dx, dy);
+                    let nx = dy / len;
+                    let ny = -dx / len;
+
+                    let tA = { x: pA.x + nx * tabW + (dx / len) * (tabW * 0.6), y: pA.y + ny * tabW + (dy / len) * (tabW * 0.6) };
+                    let tB = { x: pB.x + nx * tabW - (dx / len) * (tabW * 0.6), y: pB.y + ny * tabW - (dy / len) * (tabW * 0.6) };
+
+                    let tabPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                    tabPoly.setAttribute('points', `${pA.x},${pA.y} ${tA.x},${tA.y} ${tB.x},${tB.y} ${pB.x},${pB.y}`);
+                    tabPoly.setAttribute('class', 'cut-line');
+                    tabPoly.setAttribute('fill', 'none');
+                    gPoly2.appendChild(tabPoly);
+
+                    let tabFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    tabFold.setAttribute('x1', pA.x); tabFold.setAttribute('y1', pA.y);
+                    tabFold.setAttribute('x2', pB.x); tabFold.setAttribute('y2', pB.y);
+                    tabFold.setAttribute('class', 'fold-line');
+                    gPoly2.appendChild(tabFold);
+                }
+            }
+
+            renderPolygonFace(gPoly2, poly2Pts, 'poly2', defs);
+        }
+
+        function drawStrip(container, innerPts, outerPts, nFaces, stripKey, tabW, attachIdx, defs) {
+            for (let i = 0; i < nFaces; i++) {
+                let p1 = innerPts[i];
+                let p2 = innerPts[i + 1];
+                let p3 = outerPts[i + 1];
+                let p4 = outerPts[i];
+
+                let faceKey = `${stripKey}_face_${i}`;
+                let clipId = `clip_${faceKey}`;
+
+                let clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clipPath.setAttribute('id', clipId);
+
+                let clipPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                clipPolygon.setAttribute('points', `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+                clipPath.appendChild(clipPolygon);
+                defs.appendChild(clipPath);
+
+                let cx = (p1.x + p2.x + p3.x + p4.x) / 4;
+                let cy = (p1.y + p2.y + p3.y + p4.y) / 4;
+
+                if (imageMap.has(faceKey)) {
+                    let imgData = imageMap.get(faceKey);
+                    
+                    let gImgGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    gImgGroup.setAttribute('clip-path', `url(#${clipId})`);
+
+                    let img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', imgData.src);
+
+                    let baseSize = Math.max(Math.hypot(p2.x - p1.x, p2.y - p1.y), Math.hypot(p4.x - p1.x, p4.y - p1.y)) * 2;
+                    let size = baseSize * (imgData.scale / 100);
+
+                    img.setAttribute('x', cx - size / 2);
+                    img.setAttribute('y', cy - size / 2);
+                    img.setAttribute('width', size);
+                    img.setAttribute('height', size);
+                    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+
+                    let lenInner = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    let lenOuter = Math.hypot(p3.x - p4.x, p3.y - p4.y);
+
+                    let baseAngle;
+                    if (lenOuter >= lenInner) {
+                        baseAngle = Math.atan2(p3.y - p4.y, p3.x - p4.x) * (180 / Math.PI);
+                        if (stripKey === 'strip1') {
+                            baseAngle += 180;
+                        }
+                    } else {
+                        baseAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+                        if (stripKey === 'strip2') {
+                            baseAngle += 180;
+                        }
+                    }
+
+                    let finalRot = baseAngle + imgData.rot;
+
+                    let transformStr = `translate(${imgData.offX}, ${imgData.offY}) rotate(${finalRot}, ${cx}, ${cy})`;
+                    img.setAttribute('transform', transformStr);
+
+                    gImgGroup.appendChild(img);
+                    container.appendChild(gImgGroup);
+                }
+
+                let face = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                face.setAttribute('points', `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+                face.setAttribute('class', 'paintable-face fold-line' + (selectedFaceKey === faceKey ? ' selected-face' : ''));
+
+                if (imageMap.has(faceKey)) {
+                    face.setAttribute('fill', 'transparent');
+                } else {
+                    face.setAttribute('fill', colorMap.get(faceKey) || '#ffffff');
+                }
+
+                applyPaint(face, faceKey);
+                container.appendChild(face);
+
+                if (i > 0) {
+                    let divLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    divLine.setAttribute('x1', p1.x); divLine.setAttribute('y1', p1.y);
+                    divLine.setAttribute('x2', p4.x); divLine.setAttribute('y2', p4.y);
+                    divLine.setAttribute('class', 'fold-line');
+                    container.appendChild(divLine);
+                }
+            }
+
+            for (let i = 0; i < nFaces; i++) {
+                let topClass = ((stripKey === 'strip1' || stripKey === 'strip2') && i === attachIdx) ? 'fold-line' : 'cut-line';
+                let botClass = (stripKey === 'strip2' && i === attachIdx) ? 'fold-line' : 'cut-line';
+
+                let lTop = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lTop.setAttribute('x1', innerPts[i].x); lTop.setAttribute('y1', innerPts[i].y);
+                lTop.setAttribute('x2', innerPts[i+1].x); lTop.setAttribute('y2', innerPts[i+1].y);
+                lTop.setAttribute('class', topClass);
+                container.appendChild(lTop);
+
+                let lBot = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lBot.setAttribute('x1', outerPts[i].x); lBot.setAttribute('y1', outerPts[i].y);
+                lBot.setAttribute('x2', outerPts[i+1].x); lBot.setAttribute('y2', outerPts[i+1].y);
+                lBot.setAttribute('class', botClass);
+                container.appendChild(lBot);
+            }
+
+            if (stripKey === 'strip1') {
+                let pInLeft = innerPts[0];
+                let pOutLeft = outerPts[0];
+                let dxL = pOutLeft.x - pInLeft.x;
+                let dyL = pOutLeft.y - pInLeft.y;
+                let lenL = Math.hypot(dxL, dyL);
+                let nxL = dyL / lenL;
+                let nyL = -dxL / lenL;
+
+                let tAL = { x: pInLeft.x + nxL * tabW + (dxL / lenL) * (tabW * 0.6), y: pInLeft.y + nyL * tabW + (dyL / lenL) * (tabW * 0.6) };
+                let tBL = { x: pOutLeft.x + nxL * tabW - (dxL / lenL) * (tabW * 0.6), y: pOutLeft.y + nyL * tabW - (dyL / lenL) * (tabW * 0.6) };
+
+                let tabLeft = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                tabLeft.setAttribute('points', `${pInLeft.x},${pInLeft.y} ${tAL.x},${tAL.y} ${tBL.x},${tBL.y} ${pOutLeft.x},${pOutLeft.y}`);
+                tabLeft.setAttribute('class', 'cut-line');
+                tabLeft.setAttribute('fill', 'none');
+                container.appendChild(tabLeft);
+
+                let lLeftFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lLeftFold.setAttribute('x1', pInLeft.x); lLeftFold.setAttribute('y1', pInLeft.y);
+                lLeftFold.setAttribute('x2', pOutLeft.x); lLeftFold.setAttribute('y2', pOutLeft.y);
+                lLeftFold.setAttribute('class', 'fold-line');
+                container.appendChild(lLeftFold);
+            } else {
+                let lLeft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lLeft.setAttribute('x1', innerPts[0].x); lLeft.setAttribute('y1', innerPts[0].y);
+                lLeft.setAttribute('x2', outerPts[0].x); lLeft.setAttribute('y2', outerPts[0].y);
+                lLeft.setAttribute('class', 'cut-line');
+                container.appendChild(lLeft);
+            }
+
+            if (stripKey === 'strip2') {
+                let pInRight = innerPts[nFaces];
+                let pOutRight = outerPts[nFaces];
+                let dxR = pOutRight.x - pInRight.x;
+                let dyR = pOutRight.y - pInRight.y;
+                let lenR = Math.hypot(dxR, dyR);
+                let nxR = dyR / lenR;
+                let nyR = -dxR / lenR;
+
+                let tAR = { x: pInRight.x + nxR * tabW + (dxR / lenR) * (tabW * 0.6), y: pInRight.y + nyR * tabW + (dyR / lenR) * (tabW * 0.6) };
+                let tBR = { x: pOutRight.x + nxR * tabW - (dxR / lenR) * (tabW * 0.6), y: pOutRight.y + nyR * tabW - (dyR / lenR) * (tabW * 0.6) };
+
+                let tabRight = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                tabRight.setAttribute('points', `${pInRight.x},${pInRight.y} ${tAR.x},${tAR.y} ${tBR.x},${tBR.y} ${pOutRight.x},${pOutRight.y}`);
+                tabRight.setAttribute('class', 'cut-line');
+                tabRight.setAttribute('fill', 'none');
+                container.appendChild(tabRight);
+
+                let lRightFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lRightFold.setAttribute('x1', pInRight.x); lRightFold.setAttribute('y1', pInRight.y);
+                lRightFold.setAttribute('x2', pOutRight.x); lRightFold.setAttribute('y2', pOutRight.y);
+                lRightFold.setAttribute('class', 'fold-line');
+                container.appendChild(lRightFold);
+            } else {
+                let lRight = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lRight.setAttribute('x1', innerPts[nFaces].x); lRight.setAttribute('y1', innerPts[nFaces].y);
+                lRight.setAttribute('x2', outerPts[nFaces].x); lRight.setAttribute('y2', outerPts[nFaces].y);
+                lRight.setAttribute('class', 'cut-line');
+                container.appendChild(lRight);
+            }
+        }
+
+const inputs = document.querySelectorAll('.sidebar input');
+        inputs.forEach(input => {
+            if (!['imgScale', 'imgRot', 'imgOffX', 'imgOffY', 'numSides', 'rSmall', 'sSmall', 'rLarge', 'sLarge'].includes(input.id)) {
+                input.addEventListener('input', generatePapercraft);
+            }
+        });
+
+        generatePapercraft();
+    </script>
+</body>
+</html>
