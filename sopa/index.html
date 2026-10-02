@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sopa de Letras Perfecta</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --primary: #4f46e5; --success: #10b981; --bg: #f1f5f9; }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            margin: 0;
+        }
+
+        .no-print { 
+            width: 100%; 
+            max-width: 750px; 
+            background: white; 
+            padding: 1.5rem; 
+            border-radius: 1rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            margin-bottom: 30px;             
+            box-sizing: border-box;
+        }
+
+
+        /* Contenedor principal de exportación */
+        #printable-content {
+            background: white;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 750px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 8px;
+        }
+
+        textarea { 
+            width: 100%; 
+            height: 100px; 
+            margin: 10px 0; 
+            padding: 12px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 0.5rem; 
+            resize: none; 
+            box-sizing: border-box; 
+        }
+
+        .button-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .full-width { grid-column: span 3; }
+
+        button { border: none; padding: 12px; border-radius: 0.5rem; cursor: pointer; font-weight: 600; color: white; transition: all 0.2s; }
+        .btn-main { background: var(--primary); }
+        .btn-sec { background: #64748b; }
+        .btn-sol { background: #f59e0b; }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+
+        /* La Sopa */
+        #sopa-grid { 
+            display: grid; 
+            gap: 1px; 
+            background: #94a3b8; 
+            border: 2px solid #94a3b8;
+            margin-bottom: 30px;
+        }
+        
+        .cell { 
+            width: 26px; 
+            height: 26px; 
+            background: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+            font-family: monospace; 
+            font-size: 1rem; 
+        }
+
+        .is-solution { color: var(--success); background: #f0fdf4; }
+        #sopa-grid.hide-sol .is-solution { color: #1e293b; background: white; }
+
+        /* Lista de palabras optimizada para PDF */
+        .word-list { 
+            margin-top: 30px; 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 8px; 
+            width: 100%; 
+            max-width: 800px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+        }
+        
+        .word-tag { 
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem; 
+            text-align: center;
+            text-transform: uppercase;
+            color: #475569;
+            break-inside: avoid; /* Evita que una palabra se corte entre columnas */
+        }
+
+        @media print { 
+            .no-print { display: none !important; } 
+            body { background: white; }
+            #printable-content { box-shadow: none; padding: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <h2>Generador de Sopa Ultra-Densa</h2>
+    <textarea id="wordInput" placeholder="Palabra1, Palabra2, Palabra3..."></textarea>
+    <div class="button-group">
+        <button class="btn-main full-width" onclick="generate()">Generar Sopa Centrada</button>
+        <button class="btn-sec" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn-sec" onclick="exportPDF()">📄 Guardar PDF</button>
+        <button id="toggleBtn" class="btn-sol" onclick="toggleSolution()" style="display:none">Revelar Solución</button>
+    </div>
+    <div id="errorMessage" style="color:red; display:none; margin-top:10px; text-align:center;"></div>
+</div>
+
+<div id="printable-content">
+    <h2 id="pdf-title" style="margin-bottom:20px;">SOPA DE LETRAS</h2>
+    <div id="sopa-grid" class="hide-sol"></div>
+    <div id="word-list" class="word-list"></div>
+</div>
+
+<script>
+const DIRECTIONS = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+let solSet = new Set();
+
+function generate() {
+    const input = document.getElementById('wordInput').value.trim();
+    const gridDiv = document.getElementById('sopa-grid');
+    const listDiv = document.getElementById('word-list');
+    const err = document.getElementById('errorMessage');
+    
+    err.style.display = "none";
+    gridDiv.innerHTML = "";
+    listDiv.innerHTML = "";
+    solSet.clear();
+    gridDiv.classList.add('hide-sol');
+    document.getElementById('toggleBtn').innerText = "Revelar Solución";
+
+    let words = [...new Set(input.toUpperCase().split(/[\s,]+/).filter(w => w.length > 1))];
+    if (words.length < 6 || words.length > 50) {
+        err.innerText = "Error: Introduce entre 6 y 50 palabras.";
+        err.style.display = "block";
+        return;
+    }
+
+    const sortedWords = [...words].sort((a, b) => a.localeCompare(b, 'es'));
+    words.sort((a, b) => b.length - a.length);
+
+    let totalChars = words.join('').length;
+    let size = Math.max(words[0].length, Math.floor(Math.sqrt(totalChars * 1.3)));
+    
+    let grid = null;
+    while (!grid && size < 55) {
+        grid = tryCreateDenseGrid(words, size);
+        if (!grid) size++; 
+    }
+
+    render(grid, size, sortedWords);
+    document.getElementById('toggleBtn').style.display = "block";
+}
+
+function tryCreateDenseGrid(words, size) {
+    let grid = Array(size).fill().map(() => Array(size).fill(''));
+    let currentSol = new Set();
+
+    for (let word of words) {
+        let placed = false;
+        let attempts = 0;
+        while (!placed && attempts < 1000) {
+            const dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+            const r = Math.floor(Math.random() * size);
+            const c = Math.floor(Math.random() * size);
+            if (canPlace(grid, word, r, c, dir, size)) {
+                for (let i = 0; i < word.length; i++) {
+                    let nr = r + (dir[0] * i), nc = c + (dir[1] * i);
+                    grid[nr][nc] = word[i];
+                    currentSol.add(`${nr}-${nc}`);
+                }
+                placed = true;
+            }
+            attempts++;
+        }
+        if (!placed) return null;
+    }
+    solSet = currentSol;
+    return grid;
+}
+
+function canPlace(grid, word, r, c, dir, size) {
+    for (let i = 0; i < word.length; i++) {
+        let nR = r + (dir[0] * i), nC = c + (dir[1] * i);
+        if (nR < 0 || nR >= size || nC < 0 || nC >= size) return false;
+        if (grid[nR][nC] !== '' && grid[nR][nC] !== word[i]) return false;
+    }
+    return true;
+}
+
+function render(grid, size, sortedWords) {
+    const gridDiv = document.getElementById('sopa-grid');
+    gridDiv.style.gridTemplateColumns = `repeat(${size}, 26px)`;
+    const abc = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+
+    grid.forEach((row, r) => row.forEach((char, c) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (solSet.has(`${r}-${c}`)) cell.classList.add('is-solution');
+        cell.innerText = char || abc[Math.floor(Math.random() * abc.length)];
+        gridDiv.appendChild(cell);
+    }));
+
+    sortedWords.forEach(w => {
+        const item = document.createElement('span');
+        item.className = 'word-tag';
+        item.innerText =  w;
+        document.getElementById('word-list').appendChild(item);
+    });
+}
+
+function toggleSolution() {
+    const grid = document.getElementById('sopa-grid');
+    grid.classList.toggle('hide-sol');
+    document.getElementById('toggleBtn').innerText = grid.classList.contains('hide-sol') ? "Revelar Solución" : "Ocultar Solución";
+}
+
+async function exportPDF() {
+    const element = document.getElementById('printable-content');
+    const opt = {
+        margin: 10,
+        filename: 'sopa-letras.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Pequeña pausa para asegurar que el DOM está listo
+    await html2pdf().set(opt).from(element).save();
+}
+</script>
+</body>
+</html>
