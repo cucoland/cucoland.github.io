@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vectorizer Editor — Imagen a SVG</title>
+<script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #1a1d24;
+    --border: #2a2f3a;
+    --accent: #5b8def;
+    --accent2: #3dd68c;
+    --text: #e8eaed;
+    --muted: #9aa0a6;
+    --danger: #f07178;
+    --warn: #e6c07b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  header h1 span { color: var(--accent); }
+  .header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; position: relative; }
+  button, .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  button:hover, .btn:hover { background: #4a7de0; }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: #2a2f3a; color: var(--text); }
+  button.secondary:hover { background: #363c4a; }
+  button.danger { background: var(--danger); }
+  button.danger:hover { background: #d65a62; }
+  button.success { background: var(--accent2); color: #0f1115; }
+  button.success:hover { background: #32c07a; }
+  button.small { padding: 4px 8px; font-size: 0.72rem; }
+  .dropdown { position: relative; display: inline-block; }
+  .dropdown-menu {
+    position: absolute; top: 110%; right: 0; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 6px; min-width: 170px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 50; overflow: hidden;
+  }
+  .dropdown-menu button { width: 100%; border-radius: 0; background: transparent; color: var(--text); justify-content: flex-start; }
+  .dropdown-menu button:hover { background: #2a2f3a; }
+
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 250px 1fr 1fr;
+    gap: 0;
+    min-height: 0;
+  }
+  @media (max-width: 1100px) {
+    .main { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+  }
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 12px;
+    overflow-y: auto;
+    max-height: calc(100vh - 54px);
+  }
+  .sidebar h2 {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 12px 0 6px;
+  }
+  .sidebar h2:first-child { margin-top: 0; }
+  .control-group { margin-bottom: 8px; }
+  .control-group.hidden { display: none !important; }
+  .control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    margin-bottom: 3px;
+    color: var(--text);
+    cursor: help;
+  }
+  .control-group label span.value {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); height: 5px; }
+  input[type="color"] {
+    width: 100%; height: 26px; border: 1px solid var(--border);
+    border-radius: 4px; background: transparent; cursor: pointer;
+  }
+  input[type="checkbox"] { accent-color: var(--accent); margin-right: 6px; }
+  .checkbox-row { display: flex; align-items: center; font-size: 0.75rem; margin-bottom: 8px; }
+  select {
+    width: 100%; background: #12151a; color: var(--text);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 5px 6px; font-size: 0.78rem;
+  }
+  details { margin-bottom: 6px; border: 1px solid var(--border); border-radius: 6px; background: #12151a; }
+  details summary {
+    cursor: pointer; padding: 7px 9px; font-size: 0.72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);
+    list-style: none; display: flex; align-items: center; justify-content: space-between;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: '▸'; transition: transform 0.15s; }
+  details[open] summary::after { transform: rotate(90deg); }
+  details .details-body { padding: 2px 9px 9px; }
+  details details { margin-top: 6px; background: #0f1115; }
+
+  .seg-group { display: flex; gap: 4px; margin-bottom: 8px; }
+  .seg {
+    flex: 1 1 0; background: #12151a; border: 1px solid var(--border); color: var(--text);
+    padding: 7px 3px; font-size: 0.68rem; border-radius: 5px; text-align: center;
+    cursor: pointer; line-height: 1.2;
+  }
+  .seg:hover { border-color: var(--accent); }
+  .seg.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .palette-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; min-height: 24px; }
+  #palette-swatches input.swatch {
+    width: 22px !important; height: 22px !important; border-radius: 4px; border: 1px solid var(--border);
+    cursor: pointer; padding: 0; background: none;
+  }
+  #palette-swatches input.swatch::-webkit-color-swatch-wrapper { padding: 0; }
+  #palette-swatches input.swatch::-webkit-color-swatch { border: none; border-radius: 3px; }
+  #palette-swatches input.swatch:hover { outline: 1px solid var(--accent); }
+  .palette-empty { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+  .hint { font-size: 0.68rem; color: var(--muted); line-height: 1.4; margin: 4px 0 8px; }
+
+  .panel { display: flex; flex-direction: column; border-right: 1px solid var(--border); min-height: 320px; background: #12151a; }
+  .panel:last-child { border-right: none; }
+  .panel-header {
+    padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--border);
+    font-size: 0.8rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .zoom-controls { display: flex; align-items: center; gap: 3px; }
+  .zoom-btn { padding: 2px 8px; font-size: 0.75rem; background: #2a2f3a; border-radius: 4px; }
+  .zoom-btn:hover { background: #363c4a; }
+  .zoom-level { font-size: 0.68rem; color: var(--muted); min-width: 34px; text-align: center; }
+
+  .panel-body {
+    flex: 1; position: relative; overflow: hidden; padding: 0;
+    background-image:
+      linear-gradient(45deg, #1a1d24 25%, transparent 25%),
+      linear-gradient(-45deg, #1a1d24 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #1a1d24 75%),
+      linear-gradient(-45deg, transparent 75%, #1a1d24 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  }
+  .viewport { position: absolute; inset: 0; overflow: hidden; cursor: grab; }
+  .viewport.dragging { cursor: grabbing; }
+  .zoom-anchor { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 24px; }
+  .zoom-stage { transform-origin: center center; will-change: transform; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .zoom-stage img { display: block; width: 100%; height: 100%; object-fit: contain; box-shadow: 0 4px 24px rgba(0,0,0,0.4); pointer-events: none; }
+  #svg-output { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+  #svg-output svg { width: 100%; height: 100%; cursor: crosshair; }
+  #svg-output svg path, #svg-output svg polygon, #svg-output svg circle, #svg-output svg rect, #svg-output svg ellipse {
+    transition: opacity 0.1s, stroke-width 0.1s;
+  }
+  #svg-output svg .selected {
+    outline: 2px solid var(--accent); outline-offset: 2px; filter: drop-shadow(0 0 4px var(--accent));
+  }
+  .drop-zone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 34px 20px;
+    text-align: center; color: var(--muted); cursor: pointer;
+    transition: border-color 0.2s, background 0.2s; width: 280px; pointer-events: all;
+  }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(91, 141, 239, 0.08); }
+  .drop-zone p { margin-top: 8px; font-size: 0.85rem; }
+  .status { font-size: 0.72rem; color: var(--muted); padding: 5px 14px; background: var(--panel); border-top: 1px solid var(--border); }
+  .toolbar-edit { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .toolbar-edit button { padding: 5px 8px; font-size: 0.72rem; }
+  .info-box {
+    background: #0f1115; border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+    font-size: 0.72rem; color: var(--muted); line-height: 1.4; margin-top: 6px;
+  }
+  .info-box strong { color: var(--text); }
+  #node-list {
+    max-height: 100px; overflow-y: auto; font-size: 0.7rem; background: #0f1115;
+    border: 1px solid var(--border); border-radius: 4px; padding: 5px; margin-top: 4px;
+  }
+  #node-list div { padding: 3px 5px; cursor: pointer; border-radius: 3px; }
+  #node-list div:hover { background: #2a2f3a; }
+  .hidden { display: none !important; }
+  .loading-overlay {
+    position: absolute; inset: 0; background: rgba(15,17,21,0.75);
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 12px; z-index: 10; font-size: 0.85rem;
+  }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🖋 <span>Vectorizer</span> Editor</h1>
+  <div class="header-actions">
+    <button id="btn-load" class="secondary">📂 Cargar imagen</button>
+    <button id="btn-vectorize" class="success" disabled title="Se actualiza automáticamente al cambiar los ajustes; usa esto para forzar un refresco inmediato">⚡ Actualizar ahora</button>
+    <div class="dropdown">
+      <button id="btn-export" class="secondary" disabled>⬇ Exportar ▾</button>
+      <div class="dropdown-menu hidden" id="export-menu">
+        <button id="btn-export-svg">Descargar como SVG</button>
+        <button id="btn-export-eps">Descargar como EPS</button>
+      </div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" hidden />
+  </div>
+</header>
+
+<div class="main">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2>Tipo de imagen de salida</h2>
+    <div class="seg-group" id="seg-output-type">
+      <div class="seg active" data-value="photo" title="Fotografía: muchos colores, degradados suaves">Foto</div>
+      <div class="seg" data-value="logo" title="Logo / clip art: colores planos, bordes nítidos">Logo</div>
+      <div class="seg" data-value="sketch" title="Boceto / B&amp;N: arte lineal en dos tonos">Boceto</div>
+      <div class="seg" data-value="silhouette" title="Silueta: un solo color, estilo corte láser">Silueta</div>
+    </div>
+
+    <h2>Calidad</h2>
+    <div class="seg-group" id="seg-quality">
+      <div class="seg" data-value="low">Baja</div>
+      <div class="seg active" data-value="medium">Media</div>
+      <div class="seg" data-value="high">Alta</div>
+    </div>
+
+    <h2>Paleta de colores</h2>
+    <div class="control-group">
+      <label title="Número de colores que se intentarán detectar al vectorizar">Nº colores sugeridos <span class="value" id="val-ctl-colors">16</span></label>
+      <input type="range" id="ctl-colors" min="2" max="64" step="1" value="16" />
+    </div>
+    <div class="palette-row" id="palette-swatches"><span class="palette-empty">Vectoriza una imagen para ver su paleta</span></div>
+    <div class="hint">Clic en un color para cambiarlo al instante (sin re-vectorizar).</div>
+    <button id="btn-regen-palette" class="secondary small">🎨 Regenerar paleta</button>
+
+    <details open>
+      <summary>Ajustes de trazado</summary>
+      <div class="details-body">
+        <div class="control-group">
+          <label title="Cuánto se ciñe el trazo a los píxeles originales. Más detalle = más nodos">Detalle <span class="value" id="val-ctl-detail">50</span></label>
+          <input type="range" id="ctl-detail" min="0" max="100" step="1" value="50" />
+        </div>
+        <div class="control-group">
+          <label title="Suaviza el ruido de la imagen antes de vectorizar (blur previo)">Suavizado de ruido <span class="value" id="val-ctl-noise">0</span></label>
+          <input type="range" id="ctl-noise" min="0" max="10" step="1" value="0" />
+        </div>
+        <div class="control-group">
+          <label title="Elimina motas y trazados diminutos (speckle removal)">Eliminar motas <span class="value" id="val-ctl-speckle">8</span></label>
+          <input type="range" id="ctl-speckle" min="0" max="50" step="1" value="8" />
+        </div>
+        <div class="control-group">
+          <label title="Diferencia RGB máxima entre píxeles contiguos para considerarlos parte del mismo rango de color. 0 = color exacto; valores mayores unen variaciones de color cercanas.">Tolerancia de color contiguo <span class="value" id="val-ctl-color-tolerance">12</span></label>
+          <input type="range" id="ctl-color-tolerance" min="0" max="100" step="1" value="12" />
+        </div>
+        <div class="control-group">
+          <label title="0 = esquinas marcadas y angulosas · 100 = esquinas muy redondeadas">Ángulo de esquina <span class="value" id="val-ctl-corner">50</span></label>
+          <input type="range" id="ctl-corner" min="0" max="100" step="1" value="50" />
+        </div>
+
+        <div class="control-group" id="row-edge-threshold">
+          <label title="Sensibilidad de detección de bordes para el boceto">Umbral de línea <span class="value" id="val-ctl-edge-threshold">90</span></label>
+          <input type="range" id="ctl-edge-threshold" min="10" max="300" step="5" value="90" />
+        </div>
+        <div class="control-group" id="row-silhouette-threshold">
+          <label title="Umbral de brillo que separa la silueta del fondo">Umbral silueta <span class="value" id="val-ctl-silhouette-threshold">128</span></label>
+          <input type="range" id="ctl-silhouette-threshold" min="0" max="255" step="1" value="128" />
+        </div>
+        <div class="control-group" id="row-silhouette-color">
+          <label>Color de silueta</label>
+          <input type="color" id="ctl-silhouette-color" value="#111111" />
+        </div>
+        <div class="checkbox-row hidden" id="row-invert">
+          <input type="checkbox" id="ctl-invert" />
+          <label for="ctl-invert" style="margin:0;">Invertir figura / fondo</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="ctl-downscale" checked />
+          <label for="ctl-downscale" style="margin:0;">Reducir tamaño automáticamente (rendimiento)</label>
+        </div>
+
+        <details>
+          <summary>Modo experto (ImageTracer)</summary>
+          <div class="details-body">
+            <div class="checkbox-row">
+              <input type="checkbox" id="ctl-expert" />
+              <label for="ctl-expert" style="margin:0;">Usar valores manuales</label>
+            </div>
+            <div class="control-group">
+              <label>ltres <span class="value" id="val-ctl-ltres">1</span></label>
+              <input type="range" id="ctl-ltres" min="0.01" max="10" step="0.01" value="1" />
+            </div>
+            <div class="control-group">
+              <label>qtres <span class="value" id="val-ctl-qtres">1</span></label>
+              <input type="range" id="ctl-qtres" min="0.01" max="10" step="0.01" value="1" />
+            </div>
+            <div class="control-group">
+              <label>Escala de salida <span class="value" id="val-ctl-scale">1</span></label>
+              <input type="range" id="ctl-scale" min="0.5" max="4" step="0.1" value="1" />
+            </div>
+            <div class="control-group">
+              <label>Grosor de trazo base <span class="value" id="val-ctl-strokewidth">0</span></label>
+              <input type="range" id="ctl-strokewidth" min="0" max="8" step="0.5" value="0" />
+            </div>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <details>
+      <summary>Editor de trazados</summary>
+      <div class="details-body">
+        <div class="info-box">
+          Clic en un trazado del SVG para seleccionarlo.<br>
+          <strong>Ctrl/Cmd + clic</strong> para selección múltiple.
+        </div>
+        <div class="control-group" style="margin-top:8px;">
+          <label>Color de relleno</label>
+          <input type="color" id="fill-color" value="#5b8def" />
+        </div>
+        <div class="control-group">
+          <label>Color de trazo (línea)</label>
+          <input type="color" id="stroke-color" value="#000000" />
+        </div>
+        <div class="control-group">
+          <label>Grosor trazo seleccionado <span class="value" id="val-sel-strokewidth">1</span></label>
+          <input type="range" id="sel-strokewidth" min="0" max="20" step="0.5" value="1" />
+        </div>
+        <div class="toolbar-edit">
+          <button id="btn-apply-fill" class="secondary" disabled>Aplicar relleno</button>
+          <button id="btn-apply-stroke" class="secondary" disabled>Aplicar trazo</button>
+          <button id="btn-delete" class="danger" disabled>🗑 Eliminar</button>
+          <button id="btn-undo-delete" class="secondary" disabled>↩ Restaurar</button>
+          <button id="btn-group" class="secondary" disabled>⧉ Agrupar</button>
+          <button id="btn-ungroup" class="secondary" disabled>⧉ Desagrupar</button>
+          <button id="btn-deselect" class="secondary">Deseleccionar</button>
+        </div>
+        <h2 style="margin-top:10px;">Eliminados</h2>
+        <div id="node-list"><em style="color:var(--muted)">Ninguno aún</em></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Info</summary>
+      <div class="details-body">
+        <div class="info-box" id="stats">Carga una imagen y pulsa <strong>Vectorizar</strong>.</div>
+      </div>
+    </details>
+  </aside>
+
+  <!-- PANEL IMAGEN ORIGINAL -->
+  <section class="panel">
+    <div class="panel-header">
+      <span>Imagen de referencia</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="img-info" style="font-size:0.68rem;color:var(--muted)"></span>
+        <div class="zoom-controls" data-panel="ref">
+          <button class="zoom-btn" data-action="out">−</button>
+          <span class="zoom-level" id="zoom-level-ref">100%</span>
+          <button class="zoom-btn" data-action="in">+</button>
+          <button class="zoom-btn" data-action="reset" title="Restablecer zoom">⤾</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="viewport" id="viewport-ref">
+        <div class="zoom-anchor">
+          <div class="zoom-stage" id="stage-ref">
+            <div class="drop-zone" id="drop-zone">
+              <div style="font-size:2.2rem">🖼</div>
+              <p>Arrastra una imagen aquí<br>o haz clic para seleccionar</p>
+              <p style="font-size:0.7rem;margin-top:10px;opacity:0.7">PNG, JPG, WebP, GIF…</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL SVG -->
+  <section class="panel">
+    <div class="panel-header">
+      <span>SVG generado (editable)</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="svg-info" style="font-size:0.68rem;color:var(--muted)"></span>
+        <div class="zoom-controls" data-panel="result">
+          <button class="zoom-btn" data-action="out">−</button>
+          <span class="zoom-level" id="zoom-level-result">100%</span>
+          <button class="zoom-btn" data-action="in">+</button>
+          <button class="zoom-btn" data-action="reset" title="Restablecer zoom">⤾</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="viewport" id="viewport-result">
+        <div class="zoom-anchor">
+          <div class="zoom-stage" id="stage-result">
+            <div id="svg-output">
+              <div style="color:var(--muted);text-align:center;padding:30px;max-width:220px">El SVG se generará automáticamente al cargar una imagen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="loading-overlay hidden" id="loading">
+        <div class="spinner"></div>
+        <div>Vectorizando…</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="status" id="status">Listo. Carga una imagen para empezar.</div>
+
+<script>
+// ========== STATE ==========
+let originalImage = null;
+let originalImageData = null;
+let currentSVG = null;
+let selectedElements = new Set();
+let deletedStack = [];
+let isProcessing = false;
+
+const state = {
+  outputType: 'photo',
+  quality: 'medium'
+};
+const zoomState = {
+  ref: { scale: 1, x: 0, y: 0 }
+};
+// True vector zoom for the result panel: we resize the SVG's own viewBox
+// instead of CSS-scaling a rendered layer, so it never loses sharpness.
+let resultBaseVB = null;
+let resultView = { scale: 1, cx: 0, cy: 0 };
+
+// ========== DOM ==========
+const $ = id => document.getElementById(id);
+const fileInput = $('file-input');
+const dropZone = $('drop-zone');
+const viewportRef = $('viewport-ref');
+const stageRef = $('stage-ref');
+const svgOutput = $('svg-output');
+const statusEl = $('status');
+const loading = $('loading');
+
+function setStatus(msg) { statusEl.textContent = msg; }
+
+// ========== RANGE LABEL BINDING ==========
+function bindRange(id) {
+  const el = $(id);
+  const label = $('val-' + id);
+  if (!el || !label) return;
+  const update = () => { label.textContent = el.value; };
+  el.addEventListener('input', update);
+  update();
+}
+['ctl-colors','ctl-detail','ctl-noise','ctl-speckle','ctl-color-tolerance','ctl-corner','ctl-edge-threshold',
+ 'ctl-silhouette-threshold','ctl-ltres','ctl-qtres','ctl-scale','ctl-strokewidth','sel-strokewidth']
+  .forEach(bindRange);
+
+// ========== SEGMENTED GROUPS ==========
+function setupSegGroup(containerId, onChange) {
+  const container = $(containerId);
+  container.querySelectorAll('.seg').forEach(seg => {
+    seg.addEventListener('click', () => {
+      container.querySelectorAll('.seg').forEach(s => s.classList.remove('active'));
+      seg.classList.add('active');
+      onChange(seg.dataset.value);
+    });
+  });
+}
+
+const rowEdgeThreshold = $('row-edge-threshold');
+const rowSilhouetteThreshold = $('row-silhouette-threshold');
+const rowSilhouetteColor = $('row-silhouette-color');
+const rowInvert = $('row-invert');
+const colorsControlGroup = $('ctl-colors').closest('.control-group');
+
+function applyOutputTypePreset(type) {
+  state.outputType = type;
+  // show/hide type-specific rows
+  rowEdgeThreshold.classList.toggle('hidden', type !== 'sketch');
+  rowSilhouetteThreshold.classList.toggle('hidden', type !== 'silhouette');
+  rowSilhouetteColor.classList.toggle('hidden', type !== 'silhouette');
+  rowInvert.classList.toggle('hidden', !(type === 'sketch' || type === 'silhouette'));
+  const twoTone = (type === 'sketch' || type === 'silhouette');
+  $('ctl-colors').disabled = twoTone;
+  colorsControlGroup.style.opacity = twoTone ? 0.4 : 1;
+
+  const presets = {
+    photo:      { detail: 65, noise: 2,  speckle: 4,  corner: 70, colors: 32 },
+    logo:       { detail: 55, noise: 0,  speckle: 15, corner: 20, colors: 8  },
+    sketch:     { detail: 80, noise: 1,  speckle: 5,  corner: 40, colors: 2  },
+    silhouette: { detail: 60, noise: 1,  speckle: 10, corner: 30, colors: 2  }
+  };
+  const p = presets[type];
+  $('ctl-detail').value = p.detail;
+  $('ctl-noise').value = p.noise;
+  $('ctl-speckle').value = p.speckle;
+  $('ctl-corner').value = p.corner;
+  if (!twoTone) $('ctl-colors').value = p.colors;
+  ['ctl-detail','ctl-noise','ctl-speckle','ctl-corner','ctl-colors'].forEach(id => {
+    $(id).dispatchEvent(new Event('input'));
+  });
+  setStatus('Tipo de salida: ' + ({photo:'Fotografía',logo:'Logo / clip art',sketch:'Boceto / B&N',silhouette:'Silueta'})[type]);
+}
+setupSegGroup('seg-output-type', applyOutputTypePreset);
+setupSegGroup('seg-quality', v => { state.quality = v; if (originalImageData && !isProcessing) runVectorize(true); });
+
+// ========== ZOOM / PAN ==========
+function applyZoomTransform(key) {
+  const st = zoomState[key];
+  const stage = $('stage-' + key);
+  stage.style.transform = `translate(${st.x}px, ${st.y}px) scale(${st.scale})`;
+  $('zoom-level-' + key).textContent = Math.round(st.scale * 100) + '%';
+}
+function zoomBy(key, factor) {
+  const st = zoomState[key];
+  st.scale = Math.min(8, Math.max(0.15, st.scale * factor));
+  applyZoomTransform(key);
+}
+function resetZoom(key) {
+  zoomState[key] = { scale: 1, x: 0, y: 0 };
+  applyZoomTransform(key);
+}
+
+// ---- Vector panel: zoom by resizing the SVG viewBox (always crisp, any zoom level) ----
+function applyResultView() {
+  const svg = svgOutput.querySelector('svg');
+  if (!svg || !resultBaseVB) return;
+  const w = resultBaseVB.w / resultView.scale;
+  const h = resultBaseVB.h / resultView.scale;
+  const x = resultView.cx - w / 2;
+  const y = resultView.cy - h / 2;
+  svg.setAttribute('viewBox', `${x} ${y} ${w} ${h}`);
+  $('zoom-level-result').textContent = Math.round(resultView.scale * 100) + '%';
+}
+function zoomResultBy(factor) {
+  if (!resultBaseVB) return;
+  resultView.scale = Math.min(40, Math.max(0.2, resultView.scale * factor));
+  applyResultView();
+}
+function zoomResultAt(clientX, clientY, factor) {
+  const svg = svgOutput.querySelector('svg');
+  if (!svg || !resultBaseVB) return;
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width || !rect.height) { zoomResultBy(factor); return; }
+  const px = (clientX - rect.left) / rect.width;
+  const py = (clientY - rect.top) / rect.height;
+  const curW = resultBaseVB.w / resultView.scale, curH = resultBaseVB.h / resultView.scale;
+  const curX = resultView.cx - curW / 2, curY = resultView.cy - curH / 2;
+  const userX = curX + px * curW, userY = curY + py * curH;
+  resultView.scale = Math.min(40, Math.max(0.2, resultView.scale * factor));
+  const newW = resultBaseVB.w / resultView.scale, newH = resultBaseVB.h / resultView.scale;
+  resultView.cx = (userX - px * newW) + newW / 2;
+  resultView.cy = (userY - py * newH) + newH / 2;
+  applyResultView();
+}
+function resetResultView() {
+  if (!resultBaseVB) return;
+  resultView = { scale: 1, cx: resultBaseVB.x + resultBaseVB.w / 2, cy: resultBaseVB.y + resultBaseVB.h / 2 };
+  applyResultView();
+}
+
+document.querySelectorAll('.zoom-controls').forEach(group => {
+  const key = group.dataset.panel;
+  group.querySelectorAll('.zoom-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      if (key === 'result') {
+        if (action === 'in') zoomResultBy(1.25);
+        else if (action === 'out') zoomResultBy(0.8);
+        else resetResultView();
+      } else {
+        if (action === 'in') zoomBy(key, 1.25);
+        else if (action === 'out') zoomBy(key, 0.8);
+        else resetZoom(key);
+      }
+    });
+  });
+});
+
+// ---- Reference panel: raster image, CSS-transform zoom/pan ----
+{
+  const vp = $('viewport-ref');
+  vp.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomBy('ref', e.deltaY < 0 ? 1.1 : 0.9);
+  }, { passive: false });
+  let dragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
+  vp.addEventListener('mousedown', e => {
+    dragging = true; startX = e.clientX; startY = e.clientY;
+    origX = zoomState.ref.x; origY = zoomState.ref.y;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      vp.classList.add('dragging');
+      zoomState.ref.x = origX + dx;
+      zoomState.ref.y = origY + dy;
+      applyZoomTransform('ref');
+    }
+  });
+  window.addEventListener('mouseup', () => { dragging = false; vp.classList.remove('dragging'); });
+}
+
+// ---- Result panel: vector image, native viewBox zoom/pan (no quality loss) ----
+{
+  const vp = $('viewport-result');
+  vp.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (!resultBaseVB) return;
+    zoomResultAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : 0.87);
+  }, { passive: false });
+
+  let dragging = false, startX = 0, startY = 0;
+  vp.addEventListener('mousedown', e => {
+    if (!resultBaseVB) return;
+    dragging = true; startX = e.clientX; startY = e.clientY;
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging || !resultBaseVB) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      vp.classList.add('dragging');
+      const svg = svgOutput.querySelector('svg');
+      if (svg) {
+        const rect = svg.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          const curW = resultBaseVB.w / resultView.scale, curH = resultBaseVB.h / resultView.scale;
+          resultView.cx -= dx * (curW / rect.width);
+          resultView.cy -= dy * (curH / rect.height);
+          applyResultView();
+        }
+      }
+      startX = e.clientX; startY = e.clientY;
+    }
+  });
+  window.addEventListener('mouseup', () => { dragging = false; vp.classList.remove('dragging'); });
+}
+
+// ========== LOAD IMAGE ==========
+const MAX_DIM = 1800;
+function loadImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setStatus('Archivo no válido. Usa una imagen.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      originalImage = img;
+      let w = img.width, h = img.height;
+      const downscale = $('ctl-downscale').checked;
+      if (downscale && Math.max(w, h) > MAX_DIM) {
+        const ratio = MAX_DIM / Math.max(w, h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      originalImageData = ctx.getImageData(0, 0, w, h);
+
+      stageRef.innerHTML = '';
+      const preview = document.createElement('img');
+      preview.src = canvas.toDataURL();
+      preview.alt = 'Referencia';
+      stageRef.appendChild(preview);
+      resetZoom('ref');
+
+      $('img-info').textContent = `${img.width} × ${img.height} px` + (w !== img.width ? ` (proc. ${w}×${h})` : '');
+      $('btn-vectorize').disabled = false;
+      setStatus(`Imagen cargada: ${file.name} (${img.width}×${img.height})`);
+      runVectorize(false);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+$('btn-load').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { if (e.target.files[0]) loadImageFile(e.target.files[0]); });
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+  viewportRef.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+});
+viewportRef.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+viewportRef.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+viewportRef.addEventListener('drop', e => {
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files[0]) loadImageFile(e.dataTransfer.files[0]);
+});
+
+// ========== IMAGE PREPROCESSING (output-type specific) ==========
+function toGrayscaleArray(src, w, h) {
+  const out = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    out[i] = 0.299 * src[i * 4] + 0.587 * src[i * 4 + 1] + 0.114 * src[i * 4 + 2];
+  }
+  return out;
+}
+function boxBlurGray(gray, w, h, radius) {
+  if (radius <= 0) return gray;
+  const out = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let sum = 0, count = 0;
+      for (let j = -radius; j <= radius; j++) {
+        const yy = y + j; if (yy < 0 || yy >= h) continue;
+        for (let i = -radius; i <= radius; i++) {
+          const xx = x + i; if (xx < 0 || xx >= w) continue;
+          sum += gray[yy * w + xx]; count++;
+        }
+      }
+      out[y * w + x] = sum / count;
+    }
+  }
+  return out;
+}
+function sobelMagnitude(gray, w, h) {
+  const out = new Float32Array(w * h);
+  const gx = [-1,0,1,-2,0,2,-1,0,1], gy = [-1,-2,-1,0,0,0,1,2,1];
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      let sx = 0, sy = 0, k = 0;
+      for (let j = -1; j <= 1; j++) {
+        for (let i = -1; i <= 1; i++) {
+          const v = gray[(y + j) * w + (x + i)];
+          sx += v * gx[k]; sy += v * gy[k]; k++;
+        }
+      }
+      out[y * w + x] = Math.sqrt(sx * sx + sy * sy);
+    }
+  }
+  return out;
+}
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)];
+}
+
+// Agrupa SOLO regiones contiguas de colores similares antes de ImageTracer.
+// La comparación se hace contra el color semilla de cada región para evitar que
+// dos zonas separadas del mismo tono se fusionen artificialmente.
+function mergeContiguousColors(imgData, tolerance) {
+  if (!tolerance || tolerance <= 0) return imgData;
+
+  const { width: w, height: h, data: src } = imgData;
+  const total = w * h;
+  const out = new ImageData(w, h);
+  const visited = new Uint8Array(total);
+  const queue = new Int32Array(total);
+  const tol2 = tolerance * tolerance;
+
+  const colorDistance2 = (idx, r, g, b) => {
+    const o = idx * 4;
+    const dr = src[o] - r, dg = src[o + 1] - g, db = src[o + 2] - b;
+    return dr * dr + dg * dg + db * db;
+  };
+
+  for (let start = 0; start < total; start++) {
+    if (visited[start]) continue;
+
+    const so = start * 4;
+    const sr = src[so], sg = src[so + 1], sb = src[so + 2], sa = src[so + 3];
+    let head = 0, tail = 0;
+    queue[tail++] = start;
+    visited[start] = 1;
+
+    let sumR = 0, sumG = 0, sumB = 0, count = 0;
+
+    while (head < tail) {
+      const idx = queue[head++];
+      const o = idx * 4;
+      sumR += src[o]; sumG += src[o + 1]; sumB += src[o + 2]; count++;
+
+      const x = idx % w;
+      const y = (idx / w) | 0;
+      if (x > 0) {
+        const n = idx - 1;
+        if (!visited[n] && src[n*4+3] === sa && colorDistance2(n, sr, sg, sb) <= tol2) { visited[n] = 1; queue[tail++] = n; }
+      }
+      if (x + 1 < w) {
+        const n = idx + 1;
+        if (!visited[n] && src[n*4+3] === sa && colorDistance2(n, sr, sg, sb) <= tol2) { visited[n] = 1; queue[tail++] = n; }
+      }
+      if (y > 0) {
+        const n = idx - w;
+        if (!visited[n] && src[n*4+3] === sa && colorDistance2(n, sr, sg, sb) <= tol2) { visited[n] = 1; queue[tail++] = n; }
+      }
+      if (y + 1 < h) {
+        const n = idx + w;
+        if (!visited[n] && src[n*4+3] === sa && colorDistance2(n, sr, sg, sb) <= tol2) { visited[n] = 1; queue[tail++] = n; }
+      }
+    }
+
+    const rr = Math.round(sumR / count), gg = Math.round(sumG / count), bb = Math.round(sumB / count);
+    for (let i = 0; i < tail; i++) {
+      const idx = queue[i], o = idx * 4;
+      out.data[o] = rr; out.data[o + 1] = gg; out.data[o + 2] = bb; out.data[o + 3] = src[o + 3];
+    }
+  }
+  return out;
+}
+
+function preprocessForVectorize(imgData, opts) {
+  const { width: w, height: h, data: src } = imgData;
+  const invert = opts.invert;
+
+  if (opts.type === 'sketch') {
+    let gray = toGrayscaleArray(src, w, h);
+    if (opts.noise > 0) gray = boxBlurGray(gray, w, h, Math.min(3, Math.round(opts.noise / 3)));
+    const edges = sobelMagnitude(gray, w, h);
+    const out = new ImageData(w, h);
+    for (let i = 0; i < w * h; i++) {
+      let isLine = edges[i] > opts.edgeThreshold;
+      if (invert) isLine = !isLine;
+      const v = isLine ? 0 : 255;
+      out.data[i*4] = v; out.data[i*4+1] = v; out.data[i*4+2] = v; out.data[i*4+3] = 255;
+    }
+    return out;
+  }
+
+  if (opts.type === 'silhouette') {
+    let gray = toGrayscaleArray(src, w, h);
+    if (opts.noise > 0) gray = boxBlurGray(gray, w, h, Math.min(3, Math.round(opts.noise / 3)));
+    const [r, g, b] = hexToRgb(opts.silhouetteColor);
+    const out = new ImageData(w, h);
+    for (let i = 0; i < w * h; i++) {
+      let isFg = gray[i] < opts.silhouetteThreshold;
+      if (invert) isFg = !isFg;
+      if (isFg) { out.data[i*4]=r; out.data[i*4+1]=g; out.data[i*4+2]=b; out.data[i*4+3]=255; }
+      else { out.data[i*4]=255; out.data[i*4+1]=255; out.data[i*4+2]=255; out.data[i*4+3]=0; }
+    }
+    return out;
+  }
+
+  // photo & logo: primero unimos variaciones de color CONTIGUAS dentro
+  // de la tolerancia; después ImageTracer hace su cuantización habitual.
+  if (opts.type === 'photo' || opts.type === 'logo') {
+    return mergeContiguousColors(imgData, opts.colorTolerance);
+  }
+  return imgData;
+}
+
+// ========== VECTORIZE OPTIONS ==========
+function computeTracerOptions() {
+  const detail = +$('ctl-detail').value;
+  const noise = +$('ctl-noise').value;
+  const speckle = +$('ctl-speckle').value;
+  const corner = +$('ctl-corner').value;
+  const colors = +$('ctl-colors').value;
+  const type = state.outputType;
+  const expert = $('ctl-expert').checked;
+
+  let ltres, qtres, scale, strokewidth;
+  if (expert) {
+    ltres = +$('ctl-ltres').value;
+    qtres = +$('ctl-qtres').value;
+    scale = +$('ctl-scale').value;
+    strokewidth = +$('ctl-strokewidth').value;
+  } else {
+    const t = 1 - detail / 100;
+    ltres = +(0.1 + t * 9.9).toFixed(2);
+    qtres = +(ltres * (0.4 + (corner / 100) * 1.6)).toFixed(2);
+    scale = 1;
+    strokewidth = 0;
+  }
+
+  const rightangleenhance = corner < 50;
+  const blurradius = (type === 'photo' || type === 'logo') ? Math.round(noise / 2) : 0;
+  const blurdelta = 20 + noise * 5;
+
+  const qualityMap = {
+    low:    { colorquantcycles: 1, roundcoords: 0 },
+    medium: { colorquantcycles: 3, roundcoords: 1 },
+    high:   { colorquantcycles: 6, roundcoords: 2 }
+  };
+  const q = qualityMap[state.quality];
+
+  let numberofcolors = colors;
+  let colorsampling = type === 'logo' ? 1 : 2;
+  if (type === 'sketch' || type === 'silhouette') numberofcolors = 2;
+
+  return {
+    ltres, qtres, scale, strokewidth,
+    pathomit: speckle,
+    numberofcolors,
+    colorsampling,
+    colorquantcycles: q.colorquantcycles,
+    roundcoords: q.roundcoords,
+    rightangleenhance,
+    blurradius, blurdelta,
+    mincolorratio: 0,
+    viewbox: true,
+    desc: false
+  };
+}
+
+function runVectorize(preserveZoom) {
+  if (!originalImageData || isProcessing) return;
+  isProcessing = true;
+  loading.classList.remove('hidden');
+  setStatus('Vectorizando… esto puede tardar unos segundos según el tamaño.');
+
+  setTimeout(() => {
+    try {
+      const type = state.outputType;
+      const pre = preprocessForVectorize(originalImageData, {
+        type,
+        noise: +$('ctl-noise').value,
+        colorTolerance: +$('ctl-color-tolerance').value,
+        edgeThreshold: +$('ctl-edge-threshold').value,
+        silhouetteThreshold: +$('ctl-silhouette-threshold').value,
+        silhouetteColor: $('ctl-silhouette-color').value,
+        invert: $('ctl-invert').checked
+      });
+      const options = computeTracerOptions();
+      let svgString = ImageTracer.imagedataToSVG(pre, options);
+      currentSVG = svgString;
+      renderSVG(svgString, preserveZoom);
+
+      const svg = svgOutput.querySelector('svg');
+      if (svg && type === 'silhouette') stripTransparentShapes(svg);
+
+      $('btn-export').disabled = false;
+      deletedStack = [];
+      updateDeletedList();
+      clearSelection();
+      updatePalette();
+      setStatus('Vectorización completada. Haz clic en trazados para editarlos.');
+
+      const paths = svgOutput.querySelectorAll('path, polygon, circle, rect, ellipse');
+      $('stats').innerHTML = `
+        <strong>Tipo:</strong> ${({photo:'Fotografía',logo:'Logo/clip art',sketch:'Boceto B&N',silhouette:'Silueta'})[type]}<br>
+        <strong>Calidad:</strong> ${state.quality}<br>
+        <strong>Trazados:</strong> ${paths.length}<br>
+        <strong>ltres / qtres:</strong> ${options.ltres} / ${options.qtres}<br>
+        <strong>pathomit:</strong> ${options.pathomit}<br>
+        <strong>Tolerancia de color contiguo:</strong> ${+$('ctl-color-tolerance').value}
+      `;
+      $('svg-info').textContent = `${paths.length} trazados`;
+    } catch (err) {
+      console.error(err);
+      setStatus('Error al vectorizar: ' + err.message);
+    } finally {
+      isProcessing = false;
+      loading.classList.add('hidden');
+    }
+  }, 50);
+}
+$('btn-vectorize').addEventListener('click', () => runVectorize(false));
+
+// ---- Auto-actualización al cambiar cualquier parámetro ----
+function debounce(fn, delay) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+const autoVectorize = debounce(() => { if (originalImageData && !isProcessing) runVectorize(true); }, 450);
+
+['ctl-colors','ctl-detail','ctl-noise','ctl-speckle','ctl-color-tolerance','ctl-corner','ctl-edge-threshold',
+ 'ctl-silhouette-threshold','ctl-ltres','ctl-qtres','ctl-scale','ctl-strokewidth']
+  .forEach(id => $(id).addEventListener('input', autoVectorize));
+$('ctl-silhouette-color').addEventListener('input', autoVectorize);
+$('ctl-invert').addEventListener('change', autoVectorize);
+$('ctl-expert').addEventListener('change', autoVectorize);
+
+function stripTransparentShapes(svg) {
+  svg.querySelectorAll('path, polygon, circle, rect, ellipse').forEach(el => {
+    const fill = (el.getAttribute('fill') || '').trim();
+    const opacity = el.getAttribute('fill-opacity');
+    const isTransparent = fill === 'none' || opacity === '0' || /rgba\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*0(\.0+)?\s*\)/i.test(fill);
+    if (isTransparent) el.remove();
+  });
+}
+
+// ========== RENDER & SELECT ==========
+function renderSVG(svgString, preserveZoom) {
+  svgOutput.innerHTML = svgString;
+  const svg = svgOutput.querySelector('svg');
+  if (!svg) return;
+  const shapes = svg.querySelectorAll('path, polygon, circle, rect, ellipse, g');
+  shapes.forEach(el => { el.style.cursor = 'pointer'; el.addEventListener('click', onShapeClick); });
+
+  let x = 0, y = 0, w, h;
+  const vbAttr = svg.getAttribute('viewBox');
+  if (vbAttr) {
+    const vb = vbAttr.trim().split(/\s+/).map(Number);
+    x = vb[0]; y = vb[1]; w = vb[2]; h = vb[3];
+  } else {
+    w = parseFloat(svg.getAttribute('width')) || 500;
+    h = parseFloat(svg.getAttribute('height')) || 500;
+  }
+  const sameSize = preserveZoom && resultBaseVB &&
+    Math.abs(resultBaseVB.w - w) < 0.5 && Math.abs(resultBaseVB.h - h) < 0.5;
+  resultBaseVB = { x, y, w, h };
+  if (!sameSize) resultView = { scale: 1, cx: x + w / 2, cy: y + h / 2 };
+  applyResultView();
+}
+
+function onShapeClick(e) {
+  e.stopPropagation();
+  const el = e.currentTarget;
+  if (e.ctrlKey || e.metaKey) {
+    if (selectedElements.has(el)) { selectedElements.delete(el); el.classList.remove('selected'); }
+    else { selectedElements.add(el); el.classList.add('selected'); }
+  } else {
+    clearSelection();
+    selectedElements.add(el);
+    el.classList.add('selected');
+  }
+  updateEditButtons();
+  if (selectedElements.size === 1) {
+    const s = [...selectedElements][0];
+    const fill = s.getAttribute('fill') || s.style.fill || '#5b8def';
+    const stroke = s.getAttribute('stroke') || s.style.stroke || '#000000';
+    const fillHex = anyColorToHex(fill);
+    const strokeHex = anyColorToHex(stroke);
+    if (fillHex) $('fill-color').value = fillHex;
+    if (strokeHex) $('stroke-color').value = strokeHex;
+    const sw = parseFloat(s.getAttribute('stroke-width') || s.style.strokeWidth || 1) || 1;
+    $('sel-strokewidth').value = sw;
+    $('val-sel-strokewidth').textContent = sw;
+  }
+}
+
+function clearSelection() {
+  selectedElements.forEach(el => el.classList.remove('selected'));
+  selectedElements.clear();
+  updateEditButtons();
+}
+
+function updateEditButtons() {
+  const has = selectedElements.size > 0;
+  $('btn-apply-fill').disabled = !has;
+  $('btn-apply-stroke').disabled = !has;
+  $('btn-delete').disabled = !has;
+  $('btn-group').disabled = selectedElements.size < 2;
+  $('btn-ungroup').disabled = !has;
+  $('btn-undo-delete').disabled = deletedStack.length === 0;
+}
+
+$('btn-deselect').addEventListener('click', clearSelection);
+svgOutput.addEventListener('click', e => { if (e.target === svgOutput || e.target.tagName === 'svg') clearSelection(); });
+
+// ========== COLOR PALETTE ==========
+function anyColorToHex(c) {
+  if (!c) return null;
+  c = c.trim();
+  if (c === 'none' || c === 'transparent') return null;
+  if (c[0] === '#') {
+    let hex = c.slice(1);
+    if (hex.length === 3) hex = hex.split('').map(ch => ch + ch).join('');
+    if (hex.length !== 6) return null;
+    return '#' + hex.toLowerCase();
+  }
+  const m = c.match(/rgba?\(([^)]+)\)/i);
+  if (m) {
+    const parts = m[1].split(',').map(s => parseFloat(s));
+    if (parts.length >= 3 && parts[3] === 0) return null;
+    const toHex = n => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+    return '#' + toHex(parts[0]) + toHex(parts[1]) + toHex(parts[2]);
+  }
+  return null;
+}
+
+function updatePalette() {
+  const svg = svgOutput.querySelector('svg');
+  const container = $('palette-swatches');
+  container.innerHTML = '';
+  if (!svg) { container.innerHTML = '<span class="palette-empty">Vectoriza una imagen para ver su paleta</span>'; return; }
+  const shapes = svg.querySelectorAll('path, polygon, circle, rect, ellipse');
+  const colors = new Map();
+  shapes.forEach(el => {
+    const fill = el.getAttribute('fill') || el.style.fill;
+    const hex = anyColorToHex(fill);
+    if (hex) colors.set(hex, (colors.get(hex) || 0) + 1);
+  });
+  if (colors.size === 0) { container.innerHTML = '<span class="palette-empty">Sin colores detectados</span>'; return; }
+  const sorted = [...colors.entries()].sort((a, b) => b[1] - a[1]);
+  sorted.forEach(([hex]) => {
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.className = 'swatch';
+    input.value = hex;
+    input.dataset.hex = hex;
+    input.title = hex + ' — clic para cambiar';
+    input.addEventListener('input', () => {
+      const oldHex = input.dataset.hex;
+      const newHex = input.value;
+      if (newHex === oldHex) return;
+      recolor(oldHex, newHex);
+      input.dataset.hex = newHex;
+      input.title = newHex + ' — clic para cambiar';
+    });
+    container.appendChild(input);
+  });
+}
+
+function recolor(oldHex, newHex) {
+  const svg = svgOutput.querySelector('svg');
+  if (!svg) return;
+  let count = 0;
+  svg.querySelectorAll('path, polygon, circle, rect, ellipse').forEach(el => {
+    const fill = el.getAttribute('fill') || el.style.fill;
+    if (anyColorToHex(fill) === oldHex) {
+      el.setAttribute('fill', newHex);
+      el.style.fill = newHex;
+      count++;
+    }
+  });
+  setStatus(`Color ${oldHex} → ${newHex} aplicado a ${count} trazado(s).`);
+}
+
+$('btn-regen-palette').addEventListener('click', () => { if (currentSVG) updatePalette(); });
+
+// ========== EDIT ACTIONS ==========
+$('btn-apply-fill').addEventListener('click', () => {
+  const color = $('fill-color').value;
+  selectedElements.forEach(el => { el.setAttribute('fill', color); el.style.fill = color; });
+  updatePalette();
+  setStatus(`Relleno aplicado a ${selectedElements.size} elemento(s)`);
+});
+
+$('btn-apply-stroke').addEventListener('click', () => {
+  const color = $('stroke-color').value;
+  const width = $('sel-strokewidth').value;
+  selectedElements.forEach(el => {
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-width', width);
+    el.style.stroke = color;
+    el.style.strokeWidth = width;
+  });
+  setStatus(`Trazo aplicado a ${selectedElements.size} elemento(s)`);
+});
+
+$('btn-delete').addEventListener('click', () => {
+  if (!selectedElements.size) return;
+  const toDelete = [...selectedElements];
+  toDelete.forEach(el => {
+    deletedStack.push({ element: el, parent: el.parentNode, nextSibling: el.nextSibling });
+    el.remove();
+  });
+  selectedElements.clear();
+  updateEditButtons();
+  updateDeletedList();
+  updatePalette();
+  setStatus(`Eliminados ${toDelete.length} elemento(s). Puedes restaurarlos.`);
+});
+
+$('btn-undo-delete').addEventListener('click', () => {
+  if (!deletedStack.length) return;
+  const last = deletedStack.pop();
+  if (last.nextSibling && last.nextSibling.parentNode === last.parent) {
+    last.parent.insertBefore(last.element, last.nextSibling);
+  } else {
+    last.parent.appendChild(last.element);
+  }
+  last.element.addEventListener('click', onShapeClick);
+  updateEditButtons();
+  updateDeletedList();
+  updatePalette();
+  setStatus('Elemento restaurado.');
+});
+
+function updateDeletedList() {
+  const list = $('node-list');
+  if (!deletedStack.length) { list.innerHTML = '<em style="color:var(--muted)">Ninguno aún</em>'; return; }
+  list.innerHTML = deletedStack.map((item, i) => {
+    const tag = item.element.tagName.toLowerCase();
+    const fill = item.element.getAttribute('fill') || '—';
+    return `<div data-idx="${i}">#${i + 1} &lt;${tag}&gt; fill=${fill}</div>`;
+  }).reverse().join('');
+}
+
+$('btn-group').addEventListener('click', () => {
+  if (selectedElements.size < 2) return;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.style.cursor = 'pointer';
+  g.addEventListener('click', onShapeClick);
+  const first = [...selectedElements][0];
+  const parent = first.parentNode;
+  parent.insertBefore(g, first);
+  selectedElements.forEach(el => { el.classList.remove('selected'); g.appendChild(el); });
+  selectedElements.clear();
+  selectedElements.add(g);
+  g.classList.add('selected');
+  updateEditButtons();
+  setStatus('Elementos agrupados.');
+});
+
+$('btn-ungroup').addEventListener('click', () => {
+  selectedElements.forEach(el => {
+    if (el.tagName.toLowerCase() === 'g') {
+      const parent = el.parentNode;
+      while (el.firstChild) { const child = el.firstChild; parent.insertBefore(child, el); child.addEventListener('click', onShapeClick); }
+      el.remove();
+    }
+  });
+  clearSelection();
+  setStatus('Desagrupado.');
+});
+
+// ========== EXPORT ==========
+const exportMenu = $('export-menu');
+$('btn-export').addEventListener('click', e => {
+  e.stopPropagation();
+  exportMenu.classList.toggle('hidden');
+});
+document.addEventListener('click', () => exportMenu.classList.add('hidden'));
+
+function getSerializedSVG() {
+  const svg = svgOutput.querySelector('svg');
+  if (!svg) return null;
+  const serializer = new XMLSerializer();
+  let str = serializer.serializeToString(svg);
+  if (!str.includes('xmlns=')) str = str.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  return str;
+}
+
+function downloadBlob(content, mime, filename) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+$('btn-export-svg').addEventListener('click', () => {
+  const str = getSerializedSVG();
+  if (!str) return;
+  downloadBlob(str, 'image/svg+xml;charset=utf-8', 'vectorizado.svg');
+  setStatus('SVG descargado.');
+});
+
+$('btn-export-eps').addEventListener('click', () => {
+  const svg = svgOutput.querySelector('svg');
+  if (!svg) return;
+  try {
+    const eps = svgElementToEPS(svg);
+    downloadBlob(eps, 'application/postscript', 'vectorizado.eps');
+    setStatus('EPS descargado.');
+  } catch (err) {
+    console.error(err);
+    setStatus('Error al generar EPS: ' + err.message);
+  }
+});
+
+function colorToRgb01(c) {
+  c = (c || '').trim();
+  let r, g, b;
+  if (c[0] === '#') {
+    let hex = c.slice(1);
+    if (hex.length === 3) hex = hex.split('').map(ch => ch + ch).join('');
+    if (hex.length !== 6) return null;
+    r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16);
+  } else {
+    const m = c.match(/rgba?\(([^)]+)\)/i);
+    if (!m) return null;
+    const parts = m[1].split(',').map(s => parseFloat(s));
+    if (parts.length >= 4 && parts[3] === 0) return null;
+    r = parts[0]; g = parts[1]; b = parts[2];
+  }
+  return { r: (r/255).toFixed(4), g: (g/255).toFixed(4), b: (b/255).toFixed(4) };
+}
+
+function svgPathToPS(d, H) {
+  const tokens = (d.match(/[MLQCZmlqcz]|-?\d*\.?\d+(?:[eE]-?\d+)?/g)) || [];
+  let i = 0, cmd = '', out = '', cx = 0, cy = 0;
+  function num() { return parseFloat(tokens[i++]); }
+  while (i < tokens.length) {
+    if (/^[MLQCZ]$/i.test(tokens[i])) { cmd = tokens[i].toUpperCase(); i++; }
+    if (cmd === 'M') {
+      const x = num(), y = num();
+      out += `${x} ${H - y} moveto\n`; cx = x; cy = y; cmd = 'L';
+    } else if (cmd === 'L') {
+      const x = num(), y = num();
+      out += `${x} ${H - y} lineto\n`; cx = x; cy = y;
+    } else if (cmd === 'Q') {
+      const qx = num(), qy = num(), x = num(), y = num();
+      const c1x = cx + 2/3*(qx-cx), c1y = cy + 2/3*(qy-cy);
+      const c2x = x + 2/3*(qx-x), c2y = y + 2/3*(qy-y);
+      out += `${c1x} ${H - c1y} ${c2x} ${H - c2y} ${x} ${H - y} curveto\n`;
+      cx = x; cy = y;
+    } else if (cmd === 'C') {
+      const c1x = num(), c1y = num(), c2x = num(), c2y = num(), x = num(), y = num();
+      out += `${c1x} ${H - c1y} ${c2x} ${H - c2y} ${x} ${H - y} curveto\n`;
+      cx = x; cy = y;
+    } else if (cmd === 'Z') {
+      out += 'closepath\n';
+    } else { i++; }
+  }
+  return out;
+}
+
+function svgElementToEPS(svg) {
+  const vbAttr = svg.getAttribute('viewBox');
+  let W, H;
+  if (vbAttr) {
+    const vb = vbAttr.trim().split(/\s+/).map(Number);
+    W = vb[2]; H = vb[3];
+  } else {
+    W = parseFloat(svg.getAttribute('width')) || 500;
+    H = parseFloat(svg.getAttribute('height')) || 500;
+  }
+  const shapes = svg.querySelectorAll('path, polygon, rect, circle, ellipse');
+  let body = '';
+  shapes.forEach(el => {
+    const fillRaw = el.getAttribute('fill') || el.style.fill;
+    if (!fillRaw || fillRaw === 'none') return;
+    const rgb = colorToRgb01(fillRaw);
+    if (!rgb) return;
+    const opacity = parseFloat(el.getAttribute('fill-opacity') || '1');
+    if (opacity === 0) return;
+
+    const tag = el.tagName.toLowerCase();
+    let pathOps = '';
+    if (tag === 'path') {
+      pathOps = svgPathToPS(el.getAttribute('d') || '', H);
+    } else if (tag === 'polygon') {
+      const pts = (el.getAttribute('points') || '').trim().split(/\s+/).map(p => p.split(',').map(Number)).filter(p => p.length === 2);
+      if (pts.length) {
+        pathOps += `${pts[0][0]} ${H - pts[0][1]} moveto\n`;
+        for (let i = 1; i < pts.length; i++) pathOps += `${pts[i][0]} ${H - pts[i][1]} lineto\n`;
+        pathOps += 'closepath\n';
+      }
+    } else if (tag === 'rect') {
+      const x = +el.getAttribute('x') || 0, y = +el.getAttribute('y') || 0;
+      const w = +el.getAttribute('width') || 0, h = +el.getAttribute('height') || 0;
+      pathOps = `${x} ${H-y} moveto ${x+w} ${H-y} lineto ${x+w} ${H-y-h} lineto ${x} ${H-y-h} lineto closepath\n`;
+    } else if (tag === 'circle' || tag === 'ellipse') {
+      const cx = +el.getAttribute('cx') || 0, cy = +el.getAttribute('cy') || 0;
+      const rx = tag === 'circle' ? (+el.getAttribute('r') || 0) : (+el.getAttribute('rx') || 0);
+      const ry = tag === 'circle' ? rx : (+el.getAttribute('ry') || rx);
+      const ratio = rx !== 0 ? (ry / rx) : 1;
+      pathOps = `gsave ${cx} ${H - cy} translate 1 ${ratio.toFixed(4)} scale 0 0 ${rx} 0 360 arc closepath grestore\n`;
+    }
+    if (pathOps) body += `${rgb.r} ${rgb.g} ${rgb.b} setrgbcolor\n${pathOps}fill\n`;
+  });
+  return `%!PS-Adobe-3.0 EPSF-3.0\n%%Creator: Vectorizer Editor\n%%Title: vectorizado.eps\n%%BoundingBox: 0 0 ${Math.ceil(W)} ${Math.ceil(H)}\n%%HiResBoundingBox: 0 0 ${W} ${H}\n%%LanguageLevel: 2\n%%Pages: 1\n%%EndComments\n%%Page: 1 1\ngsave\n${body}grestore\nshowpage\n%%EOF\n`;
+}
+
+// ========== KEYBOARD SHORTCUTS ==========
+document.addEventListener('keydown', e => {
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedElements.size && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      $('btn-delete').click();
+    }
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); $('btn-undo-delete').click(); }
+  if (e.key === 'Escape') clearSelection();
+});
+
+// init
+applyOutputTypePreset('photo');
+</script>
+</body>
+</html>
