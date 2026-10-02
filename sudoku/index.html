@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sudoku Responsive 2026</title>
+    <style>
+        :root {
+            --border-thick: 3px solid #2c3e50;
+            --border-thin: 1px solid #bdc3c7;
+            --bg-cell: #ffffff;
+            --bg-fixed: #f4f7f6;
+            --accent: #3498db;
+            --error: #e74c3c;
+            --success: #27ae60;
+            /* Tamaño base de celda para escritorio */
+            --cell-size: 50px;
+        }
+
+        * { box-sizing: border-box; touch-action: manipulation; }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background: #ecf0f1; 
+            margin: 0;
+            padding: 20px 10px; /* Margen de seguridad para la pantalla */
+            min-height: 100vh;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 15px; color: #2c3e50; text-align: center; }
+
+        .controls { 
+            width: 100%;
+            max-width: 460px;
+            margin-bottom: 20px; 
+            padding: 15px; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(9, var(--cell-size)); 
+            grid-template-rows: repeat(9, var(--cell-size)); 
+            border: var(--border-thick);
+            background-color: var(--border-thick);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            width: var(--cell-size); 
+            height: var(--cell-size);
+            background: var(--bg-cell);
+            border: var(--border-thin);
+            text-align: center;
+            font-size: 20px;
+            outline: none;
+            border-radius: 0;
+            -webkit-appearance: none; /* Quita estilos por defecto en iOS */
+        }
+
+        /* Rejilla 3x3 */
+        .cell:nth-child(3n) { border-right: var(--border-thick); }
+        .cell:nth-child(9n) { border-right: none; }
+        .cell:nth-child(n+19):nth-child(-n+27), 
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: var(--border-thick); }
+
+        .cell.fixed { background: var(--bg-fixed); font-weight: bold; color: #34495e; }
+        .cell.invalid { background: #ffdada !important; color: var(--error); }
+        .cell:focus { background: #e8f4fd; z-index: 2; transform: scale(1.05); box-shadow: 0 0 8px rgba(0,0,0,0.2); }
+
+        button {
+            padding: 10px 15px; cursor: pointer; border: none; border-radius: 6px;
+            background: var(--accent); color: white; font-weight: bold; font-size: 0.9rem;
+            flex-grow: 1;
+        }
+        
+        select { padding: 10px; border-radius: 6px; border: 1px solid #ccc; flex-grow: 1; }
+        
+        #message { 
+            margin-top: 20px; 
+            font-weight: bold; 
+            color: var(--success); 
+            text-align: center;
+            min-height: 1.5em;
+            padding: 0 10px;
+        }
+
+        /* AJUSTES PARA MÓVILES (Pantallas pequeñas) */
+        @media (max-width: 480px) {
+            :root {
+                /* Calcula el tamaño de celda restando los márgenes laterales */
+                --cell-size: calc((100vw - 40px) / 9);
+            }
+            .cell { font-size: 18px; }
+            h1 { font-size: 1.2rem; }
+            button { font-size: 0.8rem; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sudoku Master 2026</h1>
+
+    <div class="controls">
+        <select id="difficulty">
+            <option value="35">Modo Fácil</option>
+            <option value="48">Modo Medio</option>
+            <option value="58">Modo Difícil</option>
+        </select>
+        <button onclick="generateSudoku()" style="background: #27ae60;">Nuevo</button>
+        <button onclick="solveSudoku()">Resolver</button>
+        <button onclick="clearGrid()" style="background: #95a5a6;">Limpiar</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div id="message"></div>
+
+    <script>
+        const gridElement = document.getElementById('grid');
+        const messageElement = document.getElementById('message');
+
+        // Generar celdas
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.inputMode = 'numeric'; // Teclado numérico en móviles
+                input.maxLength = 1;
+                input.className = 'cell';
+                input.id = `cell-${r}-${c}`;
+                
+                input.oninput = function() {
+                    if (!/^[1-9]$/.test(this.value)) this.value = '';
+                    validateAll();
+                    checkWin();
+                };
+                gridElement.appendChild(input);
+            }
+        }
+
+        function validateAll() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(c => c.classList.remove('invalid'));
+            
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const el = document.getElementById(`cell-${r}-${c}`);
+                    if (el.value !== "" && !isCellValid(r, c, el.value)) {
+                        el.classList.add('invalid');
+                    }
+                }
+            }
+        }
+
+        function isCellValid(row, col, val) {
+            for (let i = 0; i < 9; i++) {
+                if (i !== col && document.getElementById(`cell-${row}-${i}`).value === val) return false;
+                if (i !== row && document.getElementById(`cell-${i}-${col}`).value === val) return false;
+            }
+            let sR = Math.floor(row / 3) * 3, sC = Math.floor(col / 3) * 3;
+            for (let r = sR; r < sR + 3; r++) {
+                for (let c = sC; c < sC + 3; c++) {
+                    if ((r !== row || c !== col) && document.getElementById(`cell-${r}-${c}`).value === val) return false;
+                }
+            }
+            return true;
+        }
+
+        function checkWin() {
+            const cells = Array.from(document.querySelectorAll('.cell'));
+            if (cells.every(c => c.value !== "") && !cells.some(c => c.classList.contains('invalid'))) {
+                messageElement.innerHTML = "¡Felicidades! Lo has resuelto correctamente. 🏆";
+            } else {
+                messageElement.innerText = "";
+            }
+        }
+
+        // Lógica Backtracking
+        function solve(board) {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (board[r][c] === 0) {
+                        for (let n = 1; n <= 9; n++) {
+                            if (isValidMove(board, r, c, n)) {
+                                board[r][c] = n;
+                                if (solve(board)) return true;
+                                board[r][c] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isValidMove(b, r, c, n) {
+            for (let i = 0; i < 9; i++) {
+                if (b[r][i] === n || b[i][c] === n || b[3*Math.floor(r/3)+Math.floor(i/3)][3*Math.floor(c/3)+i%3] === n) return false;
+            }
+            return true;
+        }
+
+        function generateSudoku() {
+            clearGrid();
+            let b = Array(9).fill().map(() => Array(9).fill(0));
+            // Semilla aleatoria diagonal
+            for (let i = 0; i < 9; i+=3) {
+                let nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random()-0.5);
+                for (let r=0; r<3; r++) for (let c=0; c<3; c++) b[i+r][i+c] = nums.pop();
+            }
+            solve(b);
+            let h = parseInt(document.getElementById('difficulty').value);
+            while(h > 0) {
+                let r = Math.floor(Math.random()*9), c = Math.floor(Math.random()*9);
+                if (b[r][c] !== 0) { b[r][c] = 0; h--; }
+            }
+            for (let r=0; r<9; r++) {
+                for (let c=0; c<9; c++) {
+                    const el = document.getElementById(`cell-${r}-${c}`);
+                    if (b[r][c] !== 0) {
+                        el.value = b[r][c]; el.classList.add('fixed'); el.readOnly = true;
+                    }
+                }
+            }
+        }
+
+        function solveSudoku() {
+            let b = Array(9).fill().map((_,r) => Array(9).fill().map((_,c) => {
+                let v = document.getElementById(`cell-${r}-${c}`).value;
+                return v === "" ? 0 : parseInt(v);
+            }));
+            if (solve(b)) {
+                for(let r=0; r<9; r++) for(let c=0; c<9; c++) document.getElementById(`cell-${r}-${c}`).value = b[r][c];
+                validateAll();
+                checkWin();
+            } else alert("Sin solución");
+        }
+
+        function clearGrid() {
+            document.querySelectorAll('.cell').forEach(c => {
+                c.value = ''; c.classList.remove('fixed', 'invalid'); c.readOnly = false;
+            });
+            messageElement.innerText = "";
+        }
+    </script>
+</body>
+</html>
