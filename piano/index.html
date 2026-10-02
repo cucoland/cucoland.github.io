@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Studio Ultra - Pro</title>
+    <style>
+        :root { --neon: #00f2ff; --pink: #ff00ff; --bg: #050505; --panel: #111; }
+        body { 
+            margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; 
+            overflow: hidden; height: 100vh; display: flex; flex-direction: column; 
+            user-select: none; -webkit-user-select: none; touch-action: none;
+        }
+
+        .master-controls { 
+            background: var(--panel); padding: 10px; display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 10px; border-bottom: 2px solid #333; z-index: 100; 
+        }
+        .group { 
+            border: 1px solid #222; padding: 6px; border-radius: 6px; 
+            display: flex; flex-direction: column; align-items: center; background: #151515; 
+        }
+
+        .label-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+
+        .group-label { font-size: 10px; color: var(--neon); text-transform: uppercase; font-weight: bold; }
+        
+        select, .btn { 
+            background: #222; color: white; border: 1px solid #444; 
+            padding: 6px; border-radius: 4px; font-size: 11px; width: 100%; cursor: pointer; transition: 0.2s;
+            text-align: center;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn.active { background: var(--neon); color: black; box-shadow: 0 0 10px var(--neon); }
+        
+        .transpose-btns { display: flex; gap: 5px; width: 100%; }
+
+        #metro-indicator {
+            width: 8px; height: 8px; border-radius: 50%; background: #333;
+            transition: 0.1s;
+        }
+        #metro-indicator.active { background: var(--pink); box-shadow: 0 0 10px var(--pink); }
+
+        .piano-container { 
+            flex: 1; display: flex; justify-content: center; align-items: flex-end; 
+            padding: 0 5px 20px 5px; background: #000; overflow: hidden;
+        }
+        .piano { display: flex; position: relative; width: 100%; height: 320px; max-width: 100%; }
+
+        .key { 
+            flex: 1; position: relative; height: 100%; background: white; 
+            border: 1px solid #999; border-radius: 0 0 5px 5px; 
+            touch-action: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px;
+        }
+        .key.black { 
+            position: absolute; height: 60%; background: #222; 
+            z-index: 2; border-radius: 0 0 3px 3px; transform: translateX(-50%); 
+        }
+        .key.pressed { background: var(--neon) !important; box-shadow: 0 0 25px var(--neon); z-index: 1; }
+        .key.black.pressed { background: var(--pink) !important; box-shadow: 0 0 25px var(--pink); z-index: 3; }
+        .key span { color: #888; font-size: 10px; pointer-events: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="master-controls">
+    <div class="group">
+        <span class="group-label">Sintetizador</span>
+        <select id="patch-select" onchange="currentPatch = this.value">
+            <option value="piano">Neon Piano</option>
+            <option value="sine">Pure Sine</option>
+            <option value="bass">Sub Bass</option>
+            <option value="saw">Hyper Saw</option>
+            <option value="lead">Power Lead</option>
+            <option value="organ">Retro Organ</option>
+            <option value="square">8-Bit Chip</option>
+            <option value="pad">Soft Pad</option>
+            <option value="pluck">Techno Pluck</option>
+            <option value="noise">Industrial</option>
+        </select>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Octavas y Tono</span>
+        <select id="octave-view" onchange="renderPiano()">
+            <option value="12">1 Octava</option>
+            <option value="24" selected>2 Octavas</option>
+            <option value="36">3 Octavas</option>
+        </select>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Altura octavas: <span id="base-oct-label" style="font-size: 10px; color: orange; ">4</span></span>
+        <div class="transpose-btns" style="margin-top: 5px;">
+            <button class="btn" onclick="transpose(-12)">-</button>
+            <button class="btn" onclick="transpose(12)">+</button>
+        </div>
+    </div>
+
+    <div class="group">
+        <div class="label-wrapper">
+            <span class="group-label">Metrónomo</span>
+            <div id="metro-indicator"></div>
+        </div>
+        <select id="bpm-select" onchange="setBPM(this.value)">
+            <option value="0">OFF</option>
+            <option value="80">80 BPM</option>
+            <option value="120">120 BPM</option>
+            <option value="140">140 BPM</option>
+        </select>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Efectos</span>
+        <button class="btn" id="btn-delay" onclick="toggleFx()">Delay: OFF</button>
+    </div>
+
+    <div class="group">
+        <span class="group-label">Visual</span>
+        <button class="btn" onclick="toggleFullscreen()">Pantalla completa</button>
+    </div>
+</div>
+
+<div class="piano-container">
+    <div id="piano" class="piano"></div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // DELAY CONFIG
+    const delayNode = audioCtx.createDelay();
+    const feedback = audioCtx.createGain();
+    const delayGain = audioCtx.createGain();
+
+    delayNode.delayTime.value = 0.3; 
+    feedback.gain.value = 0.4; 
+    delayGain.gain.value = 0; 
+
+    delayNode.connect(feedback);
+    feedback.connect(delayNode);
+    delayNode.connect(delayGain);
+    delayGain.connect(audioCtx.destination);
+
+    let currentPatch = 'piano', delayActive = false;
+    let metroInterval = null, metroBpm = 0;
+    let baseOctaveOffset = 0; 
+    let soundNodes = new Map(); 
+    let activePointers = new Map();
+
+    const noteMaster = [
+        { n: 'C', b: false }, { n: 'C#', b: true }, { n: 'D', b: false }, { n: 'D#', b: true },
+        { n: 'E', b: false }, { n: 'F', b: false }, { n: 'F#', b: true }, { n: 'G', b: false },
+        { n: 'G#', b: true }, { n: 'A', b: false }, { n: 'A#', b: true }, { n: 'B', b: false }
+    ];
+
+    function getFrequency(noteIndex) {
+        return 440 * Math.pow(2, (noteIndex - 69) / 12);
+    }
+
+    function renderPiano() {
+        const pianoEl = document.getElementById('piano');
+        const numNotes = parseInt(document.getElementById('octave-view').value);
+        pianoEl.innerHTML = '';
+
+        let startMidi = 48 + baseOctaveOffset; 
+        let currentNotes = [];
+        
+        for(let i = 0; i < numNotes; i++) {
+            let noteInfo = noteMaster[i % 12];
+            currentNotes.push({
+                name: noteInfo.n + (Math.floor((startMidi + i) / 12) - 1),
+                freq: getFrequency(startMidi + i),
+                isBlack: noteInfo.b
+            });
+        }
+
+        const totalWhite = currentNotes.filter(n => !n.isBlack).length;
+        let whiteCount = 0;
+
+        currentNotes.forEach((note) => {
+            const key = document.createElement('div');
+            key.className = `key ${note.isBlack ? 'black' : 'white'}`;
+            key.dataset.freq = note.freq;
+            key.innerHTML = `<span>${note.name}</span>`;
+
+            if (note.isBlack) {
+                key.style.left = `${(whiteCount * (100 / totalWhite))}%`;
+                key.style.width = `${(100 / totalWhite) * 0.75}%`;
+            } else {
+                whiteCount++;
+            }
+            pianoEl.appendChild(key);
+        });
+
+        document.getElementById('base-oct-label').innerText = Math.floor(startMidi/12);
+    }
+
+    function transpose(val) {
+        baseOctaveOffset += val;
+        if (baseOctaveOffset < -24) baseOctaveOffset = -24;
+        if (baseOctaveOffset > 24) baseOctaveOffset = 24;
+        renderPiano();
+    }
+
+    function startNote(freq, element, pid) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 10000;
+
+        switch(currentPatch) {
+            case 'piano': osc.type = 'triangle'; filter.frequency.value = 2000; break;
+            case 'sine': osc.type = 'sine'; break;
+            case 'bass': osc.type = 'sine'; filter.frequency.value = 400; break;
+            case 'saw': osc.type = 'sawtooth'; break;
+            case 'lead': osc.type = 'sawtooth'; filter.frequency.value = 3000; break;
+            case 'organ': osc.type = 'square'; filter.frequency.value = 1500; break;
+            case 'square': osc.type = 'square'; break;
+            case 'pad': osc.type = 'triangle'; filter.frequency.value = 800; break;
+            case 'pluck': osc.type = 'sawtooth'; filter.frequency.value = 1200; break;
+            case 'noise': osc.type = 'square'; filter.type = 'highpass'; filter.frequency.value = 2000; break;
+        }
+
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.connect(delayNode);
+
+        osc.start();
+        element.classList.add('pressed');
+        soundNodes.set(pid, { osc, gain, element });
+    }
+
+    function stopNote(pid) {
+        const node = soundNodes.get(pid);
+        if (node) {
+            const { osc, gain, element } = node;
+            const release = 0.4; 
+            gain.gain.cancelScheduledValues(audioCtx.currentTime);
+            gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + release);
+            osc.stop(audioCtx.currentTime + release);
+            element.classList.remove('pressed');
+            soundNodes.delete(pid);
+        }
+    }
+
+    function setBPM(val) {
+        metroBpm = parseInt(val);
+        clearInterval(metroInterval);
+        if (metroBpm === 0) return;
+        metroInterval = setInterval(() => {
+            const bufferSize = audioCtx.sampleRate * 0.1;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.value = 3000;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.2, audioCtx.currentTime); 
+            noiseGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            noise.start();
+            noise.stop(audioCtx.currentTime + 0.1);
+
+            const ind = document.getElementById('metro-indicator');
+            ind.classList.add('active');
+            setTimeout(() => ind.classList.remove('active'), 100);
+        }, 60000 / metroBpm);
+    }
+
+    function toggleFx() { 
+        delayActive = !delayActive; 
+        delayGain.gain.setTargetAtTime(delayActive ? 0.5 : 0, audioCtx.currentTime, 0.1);
+        document.getElementById('btn-delay').classList.toggle('active', delayActive);
+        document.getElementById('btn-delay').innerText = `Delay: ${delayActive ? 'ON' : 'OFF'}`;
+    }
+
+    function handlePointer(e) {
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        const key = target ? target.closest('.key') : null;
+        const lastKey = activePointers.get(e.pointerId);
+        if (key !== lastKey) {
+            if (lastKey) stopNote(e.pointerId);
+            if (key) {
+                startNote(parseFloat(key.dataset.freq), key, e.pointerId);
+                activePointers.set(e.pointerId, key);
+            } else { activePointers.delete(e.pointerId); }
+        }
+    }
+
+    window.addEventListener('pointerdown', (e) => { if (e.target.closest('.key')) handlePointer(e); });
+    window.addEventListener('pointermove', (e) => { if (activePointers.has(e.pointerId)) handlePointer(e); });
+    window.addEventListener('pointerup', (e) => { stopNote(e.pointerId); activePointers.delete(e.pointerId); });
+    window.addEventListener('pointercancel', (e) => { stopNote(e.pointerId); activePointers.delete(e.pointerId); });
+
+    function toggleFullscreen() { 
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen(); 
+        else document.exitFullscreen(); 
+    }
+
+    renderPiano();
+</script>
+</body>
+</html>
