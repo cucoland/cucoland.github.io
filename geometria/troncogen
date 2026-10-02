@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#2b6cb0">
+    <title>Generador Multi-Página de Troncos Piramidales (4, 8 y 16 lados)</title>
+    <style>
+        @media print {
+            html, body {
+                width: 210mm !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .main-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: none !important;
+                display: block !important;
+                overflow: visible !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                padding: 0 !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                display: block !important;
+                overflow: hidden !important;
+                position: relative !important;
+            }
+
+            * {
+                overflow: visible !important;
+                -ms-overflow-style: none !important;
+                scrollbar-width: none !important;
+            }
+            ::-webkit-scrollbar {
+                display: none !important;
+            }
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --sidebar-width: 300px;
+            --topbar-height: 52px;
+            --focus-ring: 3px solid #f6ad55;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            color: #333;
+            display: flex;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* Enlace de salto para usuarios de teclado / lectores de pantalla */
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 1000;
+            background: #1a365d;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 0 0 6px 0;
+            font-weight: 600;
+        }
+
+        .skip-link:focus {
+            left: 0;
+        }
+
+        /* Foco visible consistente para navegación por teclado */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        label:focus-within {
+            outline: var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Barra superior visible solo en móvil/tablet, con botón de menú */
+        .mobile-topbar {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            height: var(--topbar-height);
+            padding: 0 10px;
+            padding-top: env(safe-area-inset-top, 0px);
+            background-color: #1a365d;
+            color: #fff;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 500;
+        }
+
+        .mobile-topbar h1 {
+            font-size: 0.95rem;
+            margin: 0;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 1.3rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .menu-toggle:hover { background: rgba(255,255,255,0.25); }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 900;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            max-width: 100%;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            padding: 12px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .step-banner {
+            background-color: #2b6cb0;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sidebar h2 {
+            font-size: 0.8rem;
+            margin: 10px 0 4px 0;
+            color: #1a365d;
+            border-bottom: 2px solid #3182ce;
+            padding-bottom: 2px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: row;
+            gap: 2px;
+        }
+
+        .form-group label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, select, .sidebar select {
+            width: 100%;
+            padding: 2px 4px;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            font-size: small;
+            background: white;
+            height: min-content;
+        }
+
+        .form-group input:focus, .sidebar select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+        }
+
+        .dpad-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .dpad-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 24px);
+            grid-template-rows: repeat(3, 24px);
+            grid-template-areas:
+                ".    up    ."
+                "left center right"
+                ".    down  .";
+            gap: 3px;
+            flex-shrink: 0;
+        }
+
+        .dpad-grid-ext {
+            grid-template-areas:
+                "rotL   up     rotR"
+                "left   center right"
+                "scaleD down   scaleU";
+        }
+
+        .dpad-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e0;
+            background-color: #edf2f7;
+            color: #2b6cb0;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+            padding: 0;
+            transition: background-color 0.15s;
+        }
+
+        .dpad-btn:hover { background-color: #e2e8f0; }
+        .dpad-btn:active { background-color: #bee3f8; }
+
+        .dpad-up { grid-area: up; }
+        .dpad-left { grid-area: left; }
+        .dpad-right { grid-area: right; }
+        .dpad-down { grid-area: down; }
+        .dpad-rotL { grid-area: rotL; font-size: 0.9rem; color: #805ad5; }
+        .dpad-rotR { grid-area: rotR; font-size: 0.9rem; color: #805ad5; }
+        .dpad-scaleD { grid-area: scaleD; font-size: 0.9rem; color: #2f855a; font-weight: 700; }
+        .dpad-scaleU { grid-area: scaleU; font-size: 0.9rem; color: #2f855a; font-weight: 700; }
+        .dpad-center {
+            grid-area: center;
+            font-size: 0.6rem;
+            color: #a0aec0;
+            background-color: #f7fafc;
+        }
+
+        .dpad-readout {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.7rem;
+            color: #4a5568;
+        }
+
+        .dpad-readout b { color: #1a365d; }
+
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+
+        .page-nav-grid {
+            display: grid;
+            grid-template-columns: unset;
+            gap: 3px;
+		align-items: stretch;
+		grid-auto-flow: column;
+        }
+
+        .btn-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 1px 4px;
+            border: 1px solid #cbd5e0;
+            background-color: #edf2f7;
+            color: #2d3748;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .btn-page:hover {
+            background-color: #e2e8f0;
+        }
+
+        .btn-page.active {
+            background-color: #3182ce;
+            color: white;
+            border-color: #2b6cb0;
+        }
+
+        .btn-page-content {
+            display: flex;
+            flex-direction: row-reverse;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .btn-page-content svg {
+            display: block;
+            flex-shrink: 1;
+            width: 60%;
+            max-width: 26px;
+            height: auto;
+        }
+
+        .btn-page-content .btn-page-number {
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .btn-page-content .btn-page-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            line-height: 1.1;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary { background-color: #3182ce; color: white; }
+        .btn-primary:hover { background-color: #2b6cb0; }
+        .btn-secondary { background-color: #718096; color: white; }
+        .btn-secondary:hover { background-color: #4a5568; }
+
+        .image-slots-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            padding: 5px;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+
+        .image-slot {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: white;
+            padding: 4px;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .image-slot label {
+            font-size: 0.65rem;
+            width: 42px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .file-btn-wrapper {
+            position: relative;
+            display: inline-flex;
+            cursor: pointer;
+        }
+
+        .file-btn-wrapper input[type="file"] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-btn-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background 0.2s;
+            background-color: #3182ce;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .file-btn-wrapper:hover .file-btn-visual {
+            background-color: #2b6cb0;
+        }
+
+        .file-btn-block {
+            width: 100%;
+        }
+
+        .file-btn-block .file-btn-visual {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            border-radius: 5px;
+        }
+
+        .file-btn-slot {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-btn-slot .file-btn-visual {
+            padding: 3px 6px;
+            font-size: 0.6rem;
+            background-color: #edf2f7;
+            color: #2b6cb0;
+            border: 1px solid #cbd5e0;
+        }
+
+        .file-btn-slot:hover .file-btn-visual {
+            background-color: #e2e8f0;
+        }
+
+        .image-slot img {
+            width: 22px;
+            height: 22px;
+            object-fit: cover;
+            border: 1px solid #e2e8f0;
+            border-radius: 2px;
+            background: #eee;
+            flex-shrink: 0;
+        }
+
+        .face-color-picker {
+            width: 22px !important;
+            height: 22px !important;
+            padding: 0 !important;
+            border: 0px solid #cbd5e0 !important;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: transparent;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background-color: #e2e8f0;
+            scroll-behavior: smooth;
+        }
+
+        .page {
+            background: white;
+            width: 210mm;
+            height: 297mm;
+            padding: 1mm;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .page-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(43, 108, 176, 0.85);
+            color: white;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 3px;
+            z-index: 5;
+        }
+
+        svg { width: 100%; height: 100%; user-select: none; }
+
+        .cut-line {
+            stroke: var(--cut-color, #cccccc);
+            stroke-width: var(--cut-width, 0.2px);
+            stroke-dasharray: var(--cut-dash, none);
+            pointer-events: none;
+        }
+
+        .fold-line {
+            stroke: var(--fold-color, #cccccc);
+            stroke-width: var(--fold-width, 0.1px);
+            stroke-dasharray: var(--fold-dash, 1 3);
+            pointer-events: none;
+            stroke-linecap: round;
+        }
+
+        .paintable-face {
+            cursor: pointer;
+            pointer-events: all;
+            transition: fill 0.15s;
+            paint-order: stroke fill;
+        }
+
+        .paintable-face:hover {
+            opacity: 0.85;
+            stroke: #3182ce;
+            stroke-width: 0.4px;
+        }
+
+        .paintable-face.selected-face {
+            stroke: #e53e3e !important;
+            stroke-width: 0.6px !important;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #edf2f7;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+
+        #paintColor, #cutColor, #foldColor {
+            width: 18px;
+            height: 20px;
+            cursor: pointer;
+            border: 0px solid black;
+            background: transparent;
+            padding: 0;
+        }
+
+        .line-style-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .line-style-row {
+            display: grid;
+            grid-template-columns: 80px 40px minmax(0, 1fr) minmax(0, 1fr);
+            align-items: center;
+            gap: 6px;
+        }
+
+        .line-style-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .line-style-row input[type="number"],
+        .line-style-row select {
+            width: 100%;
+            min-width: 0;
+            padding: 2px 4px;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            font-size: small;
+            background: white;
+        }
+
+        /* ===== Objetivos táctiles y ajustes para pantallas pequeñas / dispositivos táctiles ===== */
+        @media (pointer: coarse) {
+            .dpad-grid {
+                grid-template-columns: repeat(3, 38px);
+                grid-template-rows: repeat(3, 38px);
+                gap: 4px;
+            }
+            .dpad-btn {
+                font-size: 1rem;
+            }
+            .btn-page {
+                min-height: 44px;
+            }
+            .btn {
+                min-height: 44px;
+                padding: 10px 12px;
+            }
+            .file-btn-block .file-btn-visual {
+                min-height: 40px;
+            }
+            .file-btn-slot .file-btn-visual {
+                min-height: 34px;
+            }
+            input[type="color"],
+            .face-color-picker {
+                width: 30px !important;
+                height: 30px !important;
+            }
+            .menu-toggle {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        /* ===== Tablet / móvil: la barra lateral se convierte en panel deslizante ===== */
+        @media (max-width: 880px) {
+            body {
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .mobile-topbar {
+                display: flex;
+            }
+
+            .sidebar-backdrop.is-visible {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                height: 100dvh;
+                width: min(88vw, 301px);
+                transform: translateX(-100%);
+                transition: transform 0.25s ease;
+                box-shadow: 4px 0 20px rgba(0,0,0,0.25);
+                padding-top: max(12px, env(safe-area-inset-top, 0px));
+                z-index: 950;
+            }
+
+            .sidebar.is-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                flex: 1;
+                width: 100%;
+                min-height: 0;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 92vw;
+            }
+
+            .form-row-3 {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .line-style-row {
+                grid-template-columns: 1fr 1fr;
+                row-gap: 4px;
+            }
+
+            .line-style-label {
+                grid-column: 1 / -1;
+            }
+
+            .dpad-row {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: 8px;
+            }
+        }
+
+        /* La página (lienzo A4) se ajusta al ancho disponible manteniendo proporción,
+           salvo en impresión, donde @media print fija el tamaño real en mm. */
+        @media screen {
+            .page {
+                width: min(210mm, 100%);
+                height: auto;
+                aspect-ratio: 210 / 297;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="#mainContent" class="skip-link">Saltar al contenido principal</a>
+
+    <div class="mobile-topbar no-print">
+        <button type="button" class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="sidebar" aria-label="Abrir panel de controles">☰</button>
+	
+
+
+
+
+<button type="button" class="menu-toggle" role="tab" aria-selected="true" onclick="switchPage(1)">
+                <span class="btn-page-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="26" height="26"
+     role="img" aria-labelledby="tt-cuadrado">
+  <title id="tt-cuadrado">Tronco de pirámide de cuatro lados (ángulo base-arista 80°, arista = lado superior)</title>
+  <g transform="translate(128 128) scale(0.7831) translate(-0.00 54.86)" stroke="#33415A" stroke-width="3.19" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="137.3,-0.0 0.0,79.27 0.0,-61.71 110.23,-125.35" fill="#7A8AA4"/>
+    <polygon points="0.0,79.27 -137.3,0.0 -110.23,-125.35 0.0,-61.71" fill="#66758F"/>
+    <polygon points="0.0,-61.71 -110.23,-125.35 -0.0,-188.99 110.23,-125.35" fill="#E8EFF9"/>
+  </g>
+</svg>
+<span class="btn-page-number">4</span>
+</span>
+</button>
+</button>
+            <button type="button" class="menu-toggle" role="tab" aria-selected="false" onclick="switchPage(2)">
+                <span class="btn-page-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="26" height="26"
+     role="img" aria-labelledby="tt-octogonal">
+  <title id="tt-octogonal">Tronco de pirámide octogonal (ángulo base-arista 80°, arista = lado superior)</title>
+
+
+
+  <g transform="translate(128 128) scale(0.8610) translate(-0.00 29.69)" stroke="#33415A" stroke-width="2.90" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="124.88,-0.0 88.3,50.98 77.94,-22.84 110.23,-67.84" fill="#94A6C1"/>
+    <polygon points="-88.3,50.98 -124.88,0.0 -110.23,-67.84 -77.94,-22.84" fill="#7A8BA5"/>
+    <polygon points="88.3,50.98 0.0,72.1 0.0,-4.2 77.94,-22.84" fill="#6A7993"/>
+    <polygon points="0.0,72.1 -88.3,50.98 -77.94,-22.84 0.0,-4.2" fill="#5F6E87"/>
+    <polygon points="77.94,-22.84 0.0,-4.2 -77.94,-22.84 -110.23,-67.84 -77.94,-112.84 -0.0,-131.48 77.94,-112.84 110.23,-67.84" fill="#E8EFF9"/>
+  </g>
+</svg>
+                    <span class="btn-page-number">8</span>
+                </span>
+            </button>
+            <button type="button" class="menu-toggle" role="tab" aria-selected="false" onclick="switchPage(3)">
+                <span class="btn-page-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="26" height="26"
+     role="img" aria-labelledby="tt-hexadecagonal">
+  <title id="tt-hexadecagonal">Tronco de pirámide hexadecagonal (ángulo base-arista 80°, arista = lado superior)</title>
+
+
+  <g transform="translate(128 128) scale(0.9135) translate(-0.00 15.13)" stroke="#33415A" stroke-width="2.74" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="117.7,-0.0 108.74,26.0 101.84,-10.23 110.23,-34.58" fill="#9FAFCA"/>
+    <polygon points="-108.74,26.0 -117.7,0.0 -110.23,-34.58 -101.84,-10.23" fill="#8697B2"/>
+    <polygon points="108.74,26.0 83.22,48.05 77.94,10.42 101.84,-10.23" fill="#8899B4"/>
+    <polygon points="-83.22,48.05 -108.74,26.0 -101.84,-10.23 -77.94,10.42" fill="#71819B"/>
+    <polygon points="83.22,48.05 45.04,62.78 42.18,24.21 77.94,10.42" fill="#73839D"/>
+    <polygon points="-45.04,62.78 -83.22,48.05 -77.94,10.42 -42.18,24.21" fill="#64738C"/>
+    <polygon points="45.04,62.78 0.0,67.95 0.0,29.06 42.18,24.21" fill="#64738C"/>
+    <polygon points="0.0,67.95 -45.04,62.78 -42.18,24.21 0.0,29.06" fill="#5F6E87"/>
+    <polygon points="77.94,10.42 42.18,24.21 0.0,29.06 -42.18,24.21 -77.94,10.42 -101.84,-10.23 -110.23,-34.58 -101.84,-58.94 -77.94,-79.58 -42.18,-93.38 -0.0,-98.22 42.18,-93.38 77.94,-79.58 101.84,-58.94 110.23,-34.58 101.84,-10.23" fill="#E8EFF9"/>
+  </g>
+</svg>
+<span class="btn-page-number">16</span>
+</span>
+</button>
+<button type="button" class="menu-toggle" role="tab" aria-selected="false" onclick="switchPage(4)">
+<span class="btn-page-content">
+<span style="font-size: 1.2rem; line-height: 1;">👁️</span>
+
+</span>
+</button>
+
+
+
+
+        
+
+<h1>Generador de Troncos Piramidales</h1>
+    </div>
+
+    <div class="sidebar-backdrop no-print" id="sidebarBackdrop"></div>
+
+    <aside class="sidebar no-print" id="sidebar" aria-label="Panel de controles del generador">
+        <div class="step-banner" id="stepTitle" role="status" aria-live="polite">Edición: Página 1</div>
+
+
+        <h2 id="navPagesHeading">Navegación de Páginas</h2>
+        <div class="page-nav-grid" role="tablist" aria-labelledby="navPagesHeading">
+            <button type="button" class="btn-page active" role="tab" aria-selected="true" onclick="switchPage(1)">
+                <span class="btn-page-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="26" height="26"
+     role="img" aria-labelledby="tt-cuadrado">
+  <title id="tt-cuadrado">Tronco de pirámide de cuatro lados (ángulo base-arista 80°, arista = lado superior)</title>
+  <g transform="translate(128 128) scale(0.7831) translate(-0.00 54.86)" stroke="#33415A" stroke-width="3.19" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="137.3,-0.0 0.0,79.27 0.0,-61.71 110.23,-125.35" fill="#7A8AA4"/>
+    <polygon points="0.0,79.27 -137.3,0.0 -110.23,-125.35 0.0,-61.71" fill="#66758F"/>
+    <polygon points="0.0,-61.71 -110.23,-125.35 -0.0,-188.99 110.23,-125.35" fill="#E8EFF9"/>
+  </g>
+</svg>
+                    <span class="btn-page-number">4</span>
+                </span>
+            </button>
+            <button type="button" class="btn-page" role="tab" aria-selected="false" onclick="switchPage(2)">
+                <span class="btn-page-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="26" height="26"
+     role="img" aria-labelledby="tt-octogonal">
+  <title id="tt-octogonal">Tronco de pirámide octogonal (ángulo base-arista 80°, arista = lado superior)</title>
+
+
+
+  <g transform="translate(128 128) scale(0.8610) translate(-0.00 29.69)" stroke="#33415A" stroke-width="2.90" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="124.88,-0.0 88.3,50.98 77.94,-22.84 110.23,-67.84" fill="#94A6C1"/>
+    <polygon points="-88.3,50.98 -124.88,0.0 -110.23,-67.84 -77.94,-22.84" fill="#7A8BA5"/>
+    <polygon points="88.3,50.98 0.0,72.1 0.0,-4.2 77.94,-22.84" fill="#6A7993"/>
+    <polygon points="0.0,72.1 -88.3,50.98 -77.94,-22.84 0.0,-4.2" fill="#5F6E87"/>
+    <polygon points="77.94,-22.84 0.0,-4.2 -77.94,-22.84 -110.23,-67.84 -77.94,-112.84 -0.0,-131.48 77.94,-112.84 110.23,-67.84" fill="#E8EFF9"/>
+  </g>
+</svg>
+                    <span class="btn-page-number">8</span>
+                </span>
+            </button>
+            <button type="button" class="btn-page" role="tab" aria-selected="false" onclick="switchPage(3)">
+                <span class="btn-page-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="26" height="26"
+     role="img" aria-labelledby="tt-hexadecagonal">
+  <title id="tt-hexadecagonal">Tronco de pirámide hexadecagonal (ángulo base-arista 80°, arista = lado superior)</title>
+
+
+  <g transform="translate(128 128) scale(0.9135) translate(-0.00 15.13)" stroke="#33415A" stroke-width="2.74" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="117.7,-0.0 108.74,26.0 101.84,-10.23 110.23,-34.58" fill="#9FAFCA"/>
+    <polygon points="-108.74,26.0 -117.7,0.0 -110.23,-34.58 -101.84,-10.23" fill="#8697B2"/>
+    <polygon points="108.74,26.0 83.22,48.05 77.94,10.42 101.84,-10.23" fill="#8899B4"/>
+    <polygon points="-83.22,48.05 -108.74,26.0 -101.84,-10.23 -77.94,10.42" fill="#71819B"/>
+    <polygon points="83.22,48.05 45.04,62.78 42.18,24.21 77.94,10.42" fill="#73839D"/>
+    <polygon points="-45.04,62.78 -83.22,48.05 -77.94,10.42 -42.18,24.21" fill="#64738C"/>
+    <polygon points="45.04,62.78 0.0,67.95 0.0,29.06 42.18,24.21" fill="#64738C"/>
+    <polygon points="0.0,67.95 -45.04,62.78 -42.18,24.21 0.0,29.06" fill="#5F6E87"/>
+    <polygon points="77.94,10.42 42.18,24.21 0.0,29.06 -42.18,24.21 -77.94,10.42 -101.84,-10.23 -110.23,-34.58 -101.84,-58.94 -77.94,-79.58 -42.18,-93.38 -0.0,-98.22 42.18,-93.38 77.94,-79.58 101.84,-58.94 110.23,-34.58 101.84,-10.23" fill="#E8EFF9"/>
+  </g>
+</svg>
+                    <span class="btn-page-number">16</span>
+                </span>
+            </button>
+            <button type="button" class="btn-page" role="tab" aria-selected="false" onclick="switchPage(4)">
+                <span class="btn-page-content">
+                    <span style="font-size: 1.2rem; line-height: 1;">👁️</span>
+                    <span class="btn-page-label">Vista Previa</span>
+                </span>
+            </button>
+        </div>
+
+        <div id="editorControls">
+            <h2>Parámetros del Tronco</h2>
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label for="numSides">Nº Lados:</label>
+                    <input type="number" id="numSides" value="4" readonly style="background-color: #edf2f7; width: 63%;">
+                </div>
+                <div class="form-group">
+                    <label for="height">Altura (mm):</label>
+                    <input type="number" id="height" value="50" min="5" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="tabWidth">Pestañas:</label>
+                    <input type="number" id="tabWidth" value="6" min="2" max="10">
+                </div>
+	    </div>	
+            <div class="form-row-2">
+                <div class="form-group">	
+                    <label for="rSmall">Radio Menor:</label>
+                    <input type="number" id="rSmall" value="30" min="5" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="sSmall">Lado Menor:</label>
+                    <input type="number" id="sSmall" value="42.43" min="1" step="0.1">
+                </div>
+                
+
+                <div class="form-group">
+                    <label for="rLarge">Radio Mayor:</label>
+                    <input type="number" id="rLarge" value="45" min="5" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="sLarge">Lado Mayor:</label>
+                    <input type="number" id="sLarge" value="63.64" min="1" step="0.1">
+                </div>
+                <div class="form-group"></div>
+            </div>
+
+           
+            <h2>Gestor de Imágenes y Color por Cara</h2>
+
+            <label class="file-btn-wrapper file-btn-block">
+                <input type="file" id="batchImgUpload" accept="image/*" multiple>
+                <span class="file-btn-visual">📂 Cargar imágenes ordenado:</span>
+            </label>
+
+            <div class="image-slots-container" id="slotsContainer"></div>
+
+            <div id="imageAdjustments" style="display: flex; flex-direction: column; gap: 4px; background: #edf2f7; padding: 6px; border-radius: 4px; margin-top: 4px;">
+                <span style="font-size: 0.65rem; font-weight: bold; color: #2b6cb0;" id="selectedFaceLabel" role="status" aria-live="polite">Ajustes cara: Selecciona una cara</span>
+                <div class="dpad-wrapper">
+                    <div class="dpad-row">
+                        <div class="dpad-grid dpad-grid-ext">
+                            <button type="button" class="dpad-btn dpad-rotL" id="dpadImgRotL" title="Rotar izquierda" aria-label="Rotar izquierda">↺</button>
+                            <button type="button" class="dpad-btn dpad-up" id="dpadImgUp" title="Subir" aria-label="Subir">▲</button>
+                            <button type="button" class="dpad-btn dpad-rotR" id="dpadImgRotR" title="Rotar derecha" aria-label="Rotar derecha">↻</button>
+
+                            <button type="button" class="dpad-btn dpad-left" id="dpadImgLeft" title="Izquierda" aria-label="Izquierda">◄</button>
+                            <button type="button" class="dpad-btn dpad-center" id="dpadImgReset" title="Restablecer imagen" aria-label="Restablecer imagen">●</button>
+                            <button type="button" class="dpad-btn dpad-right" id="dpadImgRight" title="Derecha" aria-label="Derecha">►</button>
+
+                            <button type="button" class="dpad-btn dpad-scaleD" id="dpadImgScaleDown" title="Reducir escala" aria-label="Reducir escala">－</button>
+                            <button type="button" class="dpad-btn dpad-down" id="dpadImgDown" title="Bajar" aria-label="Bajar">▼</button>
+                            <button type="button" class="dpad-btn dpad-scaleU" id="dpadImgScaleUp" title="Aumentar escala" aria-label="Aumentar escala">＋</button>
+                        </div>
+                        <div class="dpad-readout">
+                            <span>Rotación: <b id="imgRotDisplay">0</b>°</span>
+                            <span>X: <b id="imgOffXDisplay">0</b></span>
+                            <span>Y: <b id="imgOffYDisplay">0</b></span>
+                            <span>Escala: <b id="imgScaleDisplay">100</b>%</span>
+
+                        </div>
+                    </div>
+                    <input type="hidden" id="imgScale" value="100" min="10" max="500" step="5">
+                    <input type="hidden" id="imgRot" value="0" min="-360" max="360" step="5">
+                    <input type="hidden" id="imgOffX" value="0" min="-100" max="100" step="1">
+                    <input type="hidden" id="imgOffY" value="0" min="-100" max="100" step="1">
+                </div>
+            </div>
+
+            <h2>Color General / Estilo Líneas</h2>
+            <div class="color-picker-container">
+                <input type="color" id="paintColor" value="#ffffff">
+                <label for="paintColor">Color por defecto (global)</label>
+            </div>
+            
+            <div class="line-style-grid" style="margin-top: 4px;">
+                <div class="line-style-row">
+                    <label for="cutColor" class="line-style-label">Línea de Corte:</label>
+                    <input type="color" id="cutColor" value="#1a202c" title="Color de corte">
+                    <input type="number" id="cutWidth" value="0.2" min="0.01" max="2" step="0.01" title="Grosor de corte">
+                    <select id="cutDash" title="Estilo de corte">
+                        <option value="none">⎯⎯⎯⎯⎯</option>
+                        <option value="1 3">‒ ‒ ‒</option>
+                        <option value="0.5 1.5">·······</option>
+                        <option value="invisible">Invisible</option>
+                    </select>
+                </div>
+                <div class="line-style-row">
+                    <label for="foldColor" class="line-style-label">Línea de Doblez:</label>
+                    <input type="color" id="foldColor" value="#cccccc" title="Color de doblez">
+                    <input type="number" id="foldWidth" value="0.2" min="0.01" max="2" step="0.01" title="Grosor de doblez">
+                    <select id="foldDash" title="Estilo de doblez">
+                        <option value="none">⎯⎯⎯⎯⎯</option>
+                        <option value="1 3" selected>‒ ‒ ‒</option>
+                        <option value="0.5 1.5">·······</option>
+                        <option value="invisible">Invisible</option>
+                    </select>
+                </div>
+            </div>
+        
+
+ <h2>Opciones de Hoja <label style="font-size: 0.65rem; font-weight: 600; color: #4a5568;">(Posición / Escala / Rotación)</label>
+ </h2>
+            <div class="dpad-wrapper">
+                <div class="dpad-row">
+                    <div class="dpad-grid dpad-grid-ext">
+                        <button type="button" class="dpad-btn dpad-rotL" id="dpadRotL" title="Rotar izquierda" aria-label="Rotar izquierda">↺</button>
+                        <button type="button" class="dpad-btn dpad-up" id="dpadUp" title="Subir" aria-label="Subir">▲</button>
+                        <button type="button" class="dpad-btn dpad-rotR" id="dpadRotR" title="Rotar derecha" aria-label="Rotar derecha">↻</button>
+
+                        <button type="button" class="dpad-btn dpad-left" id="dpadLeft" title="Izquierda" aria-label="Izquierda">◄</button>
+                        <button type="button" class="dpad-btn dpad-center" id="dpadReset" title="Restablecer todo" aria-label="Restablecer todo">●</button>
+                        <button type="button" class="dpad-btn dpad-right" id="dpadRight" title="Derecha" aria-label="Derecha">►</button>
+
+                        <button type="button" class="dpad-btn dpad-scaleD" id="dpadScaleDown" title="Reducir escala" aria-label="Reducir escala">－</button>
+                        <button type="button" class="dpad-btn dpad-down" id="dpadDown" title="Bajar" aria-label="Bajar">▼</button>
+                        <button type="button" class="dpad-btn dpad-scaleU" id="dpadScaleUp" title="Aumentar escala" aria-label="Aumentar escala">＋</button>
+                    </div>
+                    <div class="dpad-readout">
+                        <span>Rotación: <b id="rotAngleDisplay">0</b>°</span>
+                        <span>X: <b id="offsetXDisplay">0</b> mm</span>
+                        <span>Y: <b id="offsetYDisplay">0</b> mm</span>
+                        <span>Escala: <b id="pageScaleDisplay">100</b>%</span>
+
+                    </div>
+                </div>
+                <input type="hidden" id="offsetX" value="0" min="-150" max="150" step="2">
+                <input type="hidden" id="offsetY" value="0" min="-150" max="150" step="2">
+                <input type="hidden" id="pageScale" value="100" min="20" max="200" step="5">
+                <input type="hidden" id="rotAngle" value="0" min="-180" max="180" step="2">
+            </div>
+	</div>
+
+
+        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn btn-primary" id="btnPrint" onclick="printAllPages()">
+                🖨️ Imprimir / Guardar PDF (3 Págs)
+            </button>
+            <button class="btn btn-secondary" id="btnReset" onclick="resetWizard()">
+                🔄 Reiniciar Todo
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content" id="mainContent" aria-label="Vista previa del tronco piramidal" tabindex="-1"></main>
+
+    <script>
+        let activePage = 1;
+
+        // Estado completo independiente por cada página (1, 2 y 3)
+        const pagesState = {
+            1: {
+                numSides: 4, height: 40, tabWidth: 6,
+                rSmall: 30, rLarge: 40, pageScale: 100, rotAngle: 0,
+                offsetX: 0, offsetY: 0,
+                colorMap: new Map(), imageMap: new Map()
+            },
+            2: {
+                numSides: 8, height: 30, tabWidth: 6,
+                rSmall: 40, rLarge: 50, pageScale: 100, rotAngle: 0,
+                offsetX: 0, offsetY: 0,
+                colorMap: new Map(), imageMap: new Map()
+            },
+            3: {
+                numSides: 16, height: 25, tabWidth: 6,
+                rSmall: 50, rLarge: 60, pageScale: 100, rotAngle: 0,
+                offsetX: 0, offsetY: 0,
+                colorMap: new Map(), imageMap: new Map()
+            }
+        };
+
+        let selectedFaceKey = null;
+        let isUpdatingInputs = false;
+
+        function saveCurrentState() {
+            if (activePage === 4) return;
+            const st = pagesState[activePage];
+            st.height = parseFloat(document.getElementById('height').value) || 50;
+            st.tabWidth = parseFloat(document.getElementById('tabWidth').value) || 6;
+            st.rSmall = parseFloat(document.getElementById('rSmall').value) || 30;
+            st.rLarge = parseFloat(document.getElementById('rLarge').value) || 55;
+            st.pageScale = parseFloat(document.getElementById('pageScale').value) || 100;
+            st.rotAngle = parseFloat(document.getElementById('rotAngle').value) || 0;
+            st.offsetX = parseFloat(document.getElementById('offsetX').value) || 0;
+            st.offsetY = parseFloat(document.getElementById('offsetY').value) || 0;
+        }
+
+        function loadStateToUI(pageNum) {
+            const st = pagesState[pageNum];
+            document.getElementById('numSides').value = st.numSides;
+            document.getElementById('height').value = st.height;
+            document.getElementById('tabWidth').value = st.tabWidth;
+            document.getElementById('rSmall').value = st.rSmall;
+            document.getElementById('rLarge').value = st.rLarge;
+            document.getElementById('pageScale').value = st.pageScale;
+            document.getElementById('rotAngle').value = st.rotAngle;
+            document.getElementById('offsetX').value = st.offsetX;
+            document.getElementById('offsetY').value = st.offsetY;
+            updateOffsetDisplay();
+            updateGeometryInputs('numSides');
+        }
+
+        function switchPage(pageNum) {
+            if (activePage !== 4) saveCurrentState();
+            activePage = pageNum;
+
+            // Actualizar botones activos de navegación
+            const navButtons = document.querySelectorAll('.page-nav-grid .btn-page');
+            navButtons.forEach((btn, idx) => {
+                if (idx + 1 === pageNum) {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-selected', 'true');
+                } else {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                }
+            });
+
+            closeSidebarOnMobile();
+
+            selectedFaceKey = null;
+            document.getElementById('selectedFaceLabel').innerText = "Ajustes cara: Selecciona una cara";
+
+            const mainContent = document.getElementById('mainContent');
+            mainContent.innerHTML = '';
+
+            if (pageNum === 4) {
+                document.getElementById('stepTitle').innerText = "Vista Previa Completa";
+                document.getElementById('editorControls').style.display = 'none';
+
+                [1, 2, 3].forEach(pNum => {
+                    const pageDiv = createPageContainer(`Página ${pNum} (${pagesState[pNum].numSides} Lados)`);
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('viewBox', '0 0 210 297');
+                    pageDiv.appendChild(svg);
+                    mainContent.appendChild(pageDiv);
+                    renderPageSVG(pNum, svg);
+                });
+            } else {
+                document.getElementById('stepTitle').innerText = `Edición: Página ${pageNum} (${pagesState[pageNum].numSides} Lados)`;
+                document.getElementById('editorControls').style.display = 'block';
+
+                loadStateToUI(pageNum);
+                buildImageSlots();
+
+                const pageDiv = createPageContainer(`Página ${pageNum} (${pagesState[pageNum].numSides} Lados)`, 'pageContainer');
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.id = 'svgCanvas';
+                svg.setAttribute('viewBox', '0 0 210 297');
+                pageDiv.appendChild(svg);
+                mainContent.appendChild(pageDiv);
+
+                generatePapercraft();
+            }
+        }
+
+        function getActiveFaceKeys() {
+            const N = parseInt(document.getElementById('numSides').value) || 4;
+            const keys = ['poly1', 'poly2'];
+            const n1 = Math.ceil(N / 2);
+            const n2 = N - n1;
+            for(let i=0; i<n1; i++) keys.push(`strip1_face_${i}`);
+            for(let i=0; i<n2; i++) keys.push(`strip2_face_${i}`);
+            return keys;
+        }
+
+function buildImageSlots() {
+    const container = document.getElementById('slotsContainer');
+    container.innerHTML = '';
+    const keys = getActiveFaceKeys();
+    const imgMap = pagesState[activePage].imageMap;
+    const colMap = pagesState[activePage].colorMap;
+    const defaultColor = document.getElementById('paintColor').value;
+
+    keys.forEach((key, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'image-slot';
+        
+        const label = document.createElement('label');
+        label.innerText = `Cara ${index + 1}`;
+        
+        const currentColor = colMap.get(key) || defaultColor;
+
+        // Reemplazo de <img> por un <div> para evitar el icono de error del navegador
+        const imgPreview = document.createElement('div');
+        imgPreview.id = `prev_${key}`;
+        imgPreview.style.width = '22px';
+        imgPreview.style.height = '22px';
+        imgPreview.style.border = '1px solid #e2e8f0';
+        imgPreview.style.borderRadius = '2px';
+        imgPreview.style.flexShrink = '0';
+        imgPreview.style.backgroundSize = 'cover';
+        imgPreview.style.backgroundPosition = 'center';
+        imgPreview.style.backgroundColor = currentColor;
+
+        if (imgMap.has(key)) {
+            imgPreview.style.backgroundImage = `url("${imgMap.get(key).src}")`;
+        }
+
+        const fileLabel = document.createElement('label');
+        fileLabel.className = 'file-btn-wrapper file-btn-slot';
+        fileLabel.title = "Seleccionar imagen";
+
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                loadImageFile(e.target.files[0], key);
+            }
+        });
+
+        const fileBtnText = document.createElement('span');
+        fileBtnText.className = 'file-btn-visual';
+        fileBtnText.textContent = '🖼️ Imagen';
+
+        fileLabel.appendChild(fileInput);
+        fileLabel.appendChild(fileBtnText);
+
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.className = 'face-color-picker';
+        colorInput.title = "Seleccionar color plano para esta cara";
+        colorInput.value = currentColor;
+
+        colorInput.addEventListener('input', (e) => {
+            const newColor = e.target.value;
+            colMap.set(key, newColor);
+            imgMap.delete(key);
+            
+            const prev = document.getElementById(`prev_${key}`);
+            if (prev) {
+                // Se elimina la imagen de fondo y se aplica solo el color seleccionado
+                prev.style.backgroundImage = 'none';
+                prev.style.backgroundColor = newColor; 
+            }
+            
+            fileInput.value = '';
+            generatePapercraft();
+        });
+
+        slot.appendChild(label);
+        slot.appendChild(imgPreview);
+        slot.appendChild(fileLabel);
+        slot.appendChild(colorInput);
+        container.appendChild(slot);
+    });
+}
+function loadImageFile(file, faceKey) {
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+        const imgMap = pagesState[activePage].imageMap;
+        const colMap = pagesState[activePage].colorMap;
+        
+        imgMap.set(faceKey, {
+            src: evt.target.result,
+            scale: 100,
+            rot: 0,
+            offX: 0,
+            offY: 0
+        });
+        colMap.delete(faceKey);
+        
+        const prev = document.getElementById(`prev_${faceKey}`);
+        if (prev) {
+            prev.style.backgroundImage = `url("${evt.target.result}")`;
+        }
+        generatePapercraft();
+    };
+    reader.readAsDataURL(file);
+}
+
+        document.getElementById('batchImgUpload').addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            const keys = getActiveFaceKeys();
+            files.forEach((file, idx) => {
+                if (idx < keys.length) {
+                    loadImageFile(file, keys[idx]);
+                }
+            });
+        });
+
+        function updateGeometryInputs(source) {
+            if (isUpdatingInputs) return;
+            isUpdatingInputs = true;
+
+            const N = parseInt(document.getElementById('numSides').value) || 4;
+            const sinVal = Math.sin(Math.PI / N);
+
+            let rSmall = parseFloat(document.getElementById('rSmall').value) || 40;
+            let sSmall = parseFloat(document.getElementById('sSmall').value) || 30;
+            let rLarge = parseFloat(document.getElementById('rLarge').value) || 50;
+            let sLarge = parseFloat(document.getElementById('sLarge').value) || 38;
+
+            if (source === 'numSides' || source === 'rSmall') {
+                sSmall = 2 * rSmall * sinVal;
+                document.getElementById('sSmall').value = sSmall.toFixed(2);
+            } else if (source === 'sSmall') {
+                rSmall = sSmall / (2 * sinVal);
+                document.getElementById('rSmall').value = rSmall.toFixed(2);
+            }
+            
+            if (source === 'numSides' || source === 'rLarge') {
+                sLarge = 2 * rLarge * sinVal;
+                document.getElementById('sLarge').value = sLarge.toFixed(2);
+            } else if (source === 'sLarge') {
+                rLarge = sLarge / (2 * sinVal);
+                document.getElementById('rLarge').value = rLarge.toFixed(2);
+            }
+
+            isUpdatingInputs = false;
+        }
+
+        ['rSmall', 'sSmall', 'rLarge', 'sLarge'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                updateGeometryInputs(e.target.id);
+                generatePapercraft();
+            });
+        });
+
+        ['imgScale', 'imgRot', 'imgOffX', 'imgOffY'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                const imgMap = pagesState[activePage].imageMap;
+                if (selectedFaceKey && imgMap.has(selectedFaceKey)) {
+                    const imgData = imgMap.get(selectedFaceKey);
+                    imgData.scale = parseFloat(document.getElementById('imgScale').value) || 100;
+                    imgData.rot = parseFloat(document.getElementById('imgRot').value) || 0;
+                    imgData.offX = parseFloat(document.getElementById('imgOffX').value) || 0;
+                    imgData.offY = parseFloat(document.getElementById('imgOffY').value) || 0;
+                    generatePapercraft();
+                }
+            });
+        });
+
+        const IMG_OFFSET_STEP = 2;
+        const IMG_OFFSET_MIN = -100;
+        const IMG_OFFSET_MAX = 100;
+        const IMG_SCALE_STEP = 5;
+        const IMG_SCALE_MIN = 10;
+        const IMG_SCALE_MAX = 500;
+        const IMG_ROT_STEP = 5;
+        const IMG_ROT_MIN = -360;
+        const IMG_ROT_MAX = 360;
+
+        function updateImgAdjustDisplay() {
+            document.getElementById('imgOffXDisplay').textContent = document.getElementById('imgOffX').value;
+            document.getElementById('imgOffYDisplay').textContent = document.getElementById('imgOffY').value;
+            document.getElementById('imgScaleDisplay').textContent = document.getElementById('imgScale').value;
+            document.getElementById('imgRotDisplay').textContent = document.getElementById('imgRot').value;
+        }
+
+        function nudgeImgOffset(dx, dy) {
+            const xInput = document.getElementById('imgOffX');
+            const yInput = document.getElementById('imgOffY');
+            let x = parseFloat(xInput.value) || 0;
+            let y = parseFloat(yInput.value) || 0;
+            x = Math.min(IMG_OFFSET_MAX, Math.max(IMG_OFFSET_MIN, x + dx));
+            y = Math.min(IMG_OFFSET_MAX, Math.max(IMG_OFFSET_MIN, y + dy));
+            xInput.value = x;
+            yInput.value = y;
+            xInput.dispatchEvent(new Event('input', { bubbles: true }));
+            yInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateImgAdjustDisplay();
+        }
+
+        function nudgeImgScale(delta) {
+            const scaleInput = document.getElementById('imgScale');
+            let s = parseFloat(scaleInput.value) || 100;
+            s = Math.min(IMG_SCALE_MAX, Math.max(IMG_SCALE_MIN, s + delta));
+            scaleInput.value = s;
+            scaleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateImgAdjustDisplay();
+        }
+
+        function nudgeImgRotation(delta) {
+            const rotInput = document.getElementById('imgRot');
+            let r = parseFloat(rotInput.value) || 0;
+            r = Math.min(IMG_ROT_MAX, Math.max(IMG_ROT_MIN, r + delta));
+            rotInput.value = r;
+            rotInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateImgAdjustDisplay();
+        }
+
+        function resetImgAdjust() {
+            const xInput = document.getElementById('imgOffX');
+            const yInput = document.getElementById('imgOffY');
+            const scaleInput = document.getElementById('imgScale');
+            const rotInput = document.getElementById('imgRot');
+            xInput.value = 0;
+            yInput.value = 0;
+            scaleInput.value = 100;
+            rotInput.value = 0;
+            xInput.dispatchEvent(new Event('input', { bubbles: true }));
+            yInput.dispatchEvent(new Event('input', { bubbles: true }));
+            scaleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            rotInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateImgAdjustDisplay();
+        }
+
+        const DPAD_STEP = 2;
+        const DPAD_MIN = -150;
+        const DPAD_MAX = 150;
+        const SCALE_STEP = 5;
+        const SCALE_MIN = 20;
+        const SCALE_MAX = 200;
+        const ROT_STEP = 2;
+        const ROT_MIN = -180;
+        const ROT_MAX = 180;
+
+        function updateOffsetDisplay() {
+            document.getElementById('offsetXDisplay').textContent = document.getElementById('offsetX').value;
+            document.getElementById('offsetYDisplay').textContent = document.getElementById('offsetY').value;
+            document.getElementById('pageScaleDisplay').textContent = document.getElementById('pageScale').value;
+            document.getElementById('rotAngleDisplay').textContent = document.getElementById('rotAngle').value;
+        }
+
+        function nudgeOffset(dx, dy) {
+            const xInput = document.getElementById('offsetX');
+            const yInput = document.getElementById('offsetY');
+            let x = parseFloat(xInput.value) || 0;
+            let y = parseFloat(yInput.value) || 0;
+            x = Math.min(DPAD_MAX, Math.max(DPAD_MIN, x + dx));
+            y = Math.min(DPAD_MAX, Math.max(DPAD_MIN, y + dy));
+            xInput.value = x;
+            yInput.value = y;
+            xInput.dispatchEvent(new Event('input', { bubbles: true }));
+            yInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateOffsetDisplay();
+        }
+
+        function nudgeScale(delta) {
+            const scaleInput = document.getElementById('pageScale');
+            let s = parseFloat(scaleInput.value) || 100;
+            s = Math.min(SCALE_MAX, Math.max(SCALE_MIN, s + delta));
+            scaleInput.value = s;
+            scaleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateOffsetDisplay();
+        }
+
+        function nudgeRotation(delta) {
+            const rotInput = document.getElementById('rotAngle');
+            let r = parseFloat(rotInput.value) || 0;
+            r = Math.min(ROT_MAX, Math.max(ROT_MIN, r + delta));
+            rotInput.value = r;
+            rotInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateOffsetDisplay();
+        }
+
+        function resetOffset() {
+            const xInput = document.getElementById('offsetX');
+            const yInput = document.getElementById('offsetY');
+            const scaleInput = document.getElementById('pageScale');
+            const rotInput = document.getElementById('rotAngle');
+            xInput.value = 0;
+            yInput.value = 0;
+            scaleInput.value = 100;
+            rotInput.value = 0;
+            xInput.dispatchEvent(new Event('input', { bubbles: true }));
+            yInput.dispatchEvent(new Event('input', { bubbles: true }));
+            scaleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            rotInput.dispatchEvent(new Event('input', { bubbles: true }));
+            updateOffsetDisplay();
+        }
+
+        function setupDpadButton(id, action) {
+            const btn = document.getElementById(id);
+            let holdTimeout = null;
+            let holdInterval = null;
+
+            const stop = () => {
+                clearTimeout(holdTimeout);
+                clearInterval(holdInterval);
+                holdTimeout = null;
+                holdInterval = null;
+            };
+
+            const start = (e) => {
+                e.preventDefault();
+                action();
+                holdTimeout = setTimeout(() => {
+                    holdInterval = setInterval(action, 80);
+                }, 400);
+            };
+
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('touchstart', start, { passive: false });
+            ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => {
+                btn.addEventListener(evt, stop);
+            });
+        }
+
+        setupDpadButton('dpadUp', () => nudgeOffset(0, -DPAD_STEP));
+        setupDpadButton('dpadDown', () => nudgeOffset(0, DPAD_STEP));
+        setupDpadButton('dpadLeft', () => nudgeOffset(-DPAD_STEP, 0));
+        setupDpadButton('dpadRight', () => nudgeOffset(DPAD_STEP, 0));
+        setupDpadButton('dpadRotL', () => nudgeRotation(-ROT_STEP));
+        setupDpadButton('dpadRotR', () => nudgeRotation(ROT_STEP));
+        setupDpadButton('dpadScaleDown', () => nudgeScale(-SCALE_STEP));
+        setupDpadButton('dpadScaleUp', () => nudgeScale(SCALE_STEP));
+        document.getElementById('dpadReset').addEventListener('click', resetOffset);
+
+        setupDpadButton('dpadImgUp', () => nudgeImgOffset(0, -IMG_OFFSET_STEP));
+        setupDpadButton('dpadImgDown', () => nudgeImgOffset(0, IMG_OFFSET_STEP));
+        setupDpadButton('dpadImgLeft', () => nudgeImgOffset(-IMG_OFFSET_STEP, 0));
+        setupDpadButton('dpadImgRight', () => nudgeImgOffset(IMG_OFFSET_STEP, 0));
+        setupDpadButton('dpadImgRotL', () => nudgeImgRotation(-IMG_ROT_STEP));
+        setupDpadButton('dpadImgRotR', () => nudgeImgRotation(IMG_ROT_STEP));
+        setupDpadButton('dpadImgScaleDown', () => nudgeImgScale(-IMG_SCALE_STEP));
+        setupDpadButton('dpadImgScaleUp', () => nudgeImgScale(IMG_SCALE_STEP));
+        document.getElementById('dpadImgReset').addEventListener('click', resetImgAdjust);
+
+        function updateLineStyles() {
+            const cutColor = document.getElementById('cutColor').value;
+            const foldColor = document.getElementById('foldColor').value;
+            const cutWidth = document.getElementById('cutWidth').value;
+            const foldWidth = document.getElementById('foldWidth').value;
+            const cutDash = document.getElementById('cutDash').value;
+            const foldDash = document.getElementById('foldDash').value;
+
+            document.documentElement.style.setProperty('--cut-color', cutDash === 'invisible' ? 'transparent' : cutColor);
+            document.documentElement.style.setProperty('--fold-color', foldDash === 'invisible' ? 'transparent' : foldColor);
+            document.documentElement.style.setProperty('--cut-width', cutWidth + 'px');
+            document.documentElement.style.setProperty('--fold-width', foldWidth + 'px');
+            document.documentElement.style.setProperty('--cut-dash', (cutDash === 'none' || cutDash === 'invisible') ? 'none' : cutDash);
+            document.documentElement.style.setProperty('--fold-dash', (foldDash === 'none' || foldDash === 'invisible') ? 'none' : foldDash);
+        }
+
+        ['cutColor', 'foldColor', 'cutWidth', 'foldWidth', 'cutDash', 'foldDash'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) {
+                elem.addEventListener('input', updateLineStyles);
+                elem.addEventListener('change', updateLineStyles);
+            }
+        });
+        updateLineStyles();
+
+        function selectFace(key) {
+            selectedFaceKey = key;
+            const keys = getActiveFaceKeys();
+            const index = keys.indexOf(key);
+            document.getElementById('selectedFaceLabel').innerText = `Ajustes cara: ${index >= 0 ? index + 1 : key}`;
+            
+            const imgMap = pagesState[activePage].imageMap;
+            if (imgMap.has(key)) {
+                const imgData = imgMap.get(key);
+                document.getElementById('imgScale').value = imgData.scale;
+                document.getElementById('imgRot').value = imgData.rot;
+                document.getElementById('imgOffX').value = imgData.offX;
+                document.getElementById('imgOffY').value = imgData.offY;
+            } else {
+                document.getElementById('imgScale').value = 100;
+                document.getElementById('imgRot').value = 0;
+                document.getElementById('imgOffX').value = 0;
+                document.getElementById('imgOffY').value = 0;
+            }
+            updateImgAdjustDisplay();
+            generatePapercraft();
+        }
+
+        function applyPaint(element, key) {
+            element.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectFace(key);
+            });
+        }
+
+        function renderPolygonFace(container, points, faceKey, defs, pageNum) {
+            const st = pagesState[pageNum];
+            let ptsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+
+            if (st.imageMap.has(faceKey)) {
+                let imgData = st.imageMap.get(faceKey);
+                let clipId = `clip_${faceKey}_p${pageNum}`;
+
+                let clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clipPath.setAttribute('id', clipId);
+
+                let clipPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                clipPoly.setAttribute('points', ptsStr);
+                clipPath.appendChild(clipPoly);
+                defs.appendChild(clipPath);
+
+                let cx = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+                let cy = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+
+                let xs = points.map(p => p.x);
+                let ys = points.map(p => p.y);
+                let w = Math.max(...xs) - Math.min(...xs);
+                let h = Math.max(...ys) - Math.min(...ys);
+                let baseSize = Math.max(w, h) * 1.5;
+                let size = baseSize * (imgData.scale / 100);
+
+                let gImgGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                gImgGroup.setAttribute('clip-path', `url(#${clipId})`);
+
+                let img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', imgData.src);
+                img.setAttribute('x', cx - size / 2);
+                img.setAttribute('y', cy - size / 2);
+                img.setAttribute('width', size);
+                img.setAttribute('height', size);
+                img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+
+                let baseRot = 180;
+                let finalRot = baseRot + imgData.rot;
+
+                let transformStr = `translate(${imgData.offX}, ${imgData.offY}) rotate(${finalRot}, ${cx}, ${cy})`;
+                img.setAttribute('transform', transformStr);
+
+                gImgGroup.appendChild(img);
+                container.appendChild(gImgGroup);
+            }
+
+            let polyElement = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polyElement.setAttribute('points', ptsStr);
+            polyElement.setAttribute('class', 'paintable-face fold-line' + (selectedFaceKey === faceKey && activePage === pageNum ? ' selected-face' : ''));
+
+            if (st.imageMap.has(faceKey)) {
+                polyElement.setAttribute('fill', 'transparent');
+            } else {
+                polyElement.setAttribute('fill', st.colorMap.get(faceKey) || document.getElementById('paintColor').value);
+            }
+
+            if (activePage === pageNum) applyPaint(polyElement, faceKey);
+            container.appendChild(polyElement);
+        }
+
+        function generatePapercraft() {
+            if (activePage === 4) return;
+            saveCurrentState();
+            const svg = document.getElementById('svgCanvas');
+            if(!svg) return;
+            renderPageSVG(activePage, svg);
+        }
+
+        function renderPageSVG(pageNum, svg) {
+            svg.innerHTML = '';
+            const st = pagesState[pageNum];
+
+            const N = st.numSides;
+            const r1 = st.rSmall;
+            const r2 = st.rLarge;
+            const H = st.height;
+            const tabW = st.tabWidth;
+            const scale = st.pageScale / 100;
+            const rotDeg = st.rotAngle;
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            svg.appendChild(defs);
+
+            const alpha = (2 * Math.PI) / N;
+            const s1 = 2 * r1 * Math.sin(Math.PI / N);
+            const s2 = 2 * r2 * Math.sin(Math.PI / N);
+
+            const ap1 = r1 * Math.cos(Math.PI / N);
+            const ap2 = r2 * Math.cos(Math.PI / N);
+            const L = Math.sqrt(Math.pow(ap2 - ap1, 2) + Math.pow(H, 2));
+
+            let dTheta = (s2 - s1) / L;
+            let R1, R2;
+
+            const isPrism = Math.abs(s2 - s1) < 0.001;
+            if (!isPrism) {
+                R1 = s1 / dTheta;
+                R2 = s2 / dTheta;
+            }
+
+            const n1 = Math.ceil(N / 2);
+            const n2 = N - n1;
+
+            const midIdx1 = Math.floor((n1 - 1) / 2);
+            const midIdx2 = Math.floor(n2 / 2);
+
+            function getStripVertices(nFaces, isInverted = false) {
+                let innerPts = [];
+                let outerPts = [];
+
+                if (!isPrism) {
+                    const startAngle = - (nFaces * dTheta) / 2;
+                    for (let i = 0; i <= nFaces; i++) {
+                        let ang = startAngle + i * dTheta - Math.PI / 2;
+                        if (!isInverted) {
+                            innerPts.push({ x: (R1 * Math.cos(ang)), y: (R1 * Math.sin(ang)) + R1 });
+                            outerPts.push({ x: (R2 * Math.cos(ang)), y: (R2 * Math.sin(ang)) + R1 });
+                        } else {
+                            innerPts.push({ x: (R1 * Math.cos(ang)), y: -(R1 * Math.sin(ang)) - R1 });
+                            outerPts.push({ x: (R2 * Math.cos(ang)), y: -(R2 * Math.sin(ang)) - R1 });
+                        }
+                    }
+                } else {
+                    const totalW = nFaces * s1;
+                    const startX = -totalW / 2;
+                    for (let i = 0; i <= nFaces; i++) {
+                        if (!isInverted) {
+                            innerPts.push({ x: startX + i * s1, y: 0 });
+                            outerPts.push({ x: startX + i * s1, y: L });
+                        } else {
+                            innerPts.push({ x: startX + i * s1, y: 0 });
+                            outerPts.push({ x: startX + i * s1, y: -L });
+                        }
+                    }
+                }
+                return { innerPts, outerPts };
+            }
+
+            function getPolygonPoints(r) {
+                let pts = [];
+                for (let i = 0; i < N; i++) {
+                    let ang = i * alpha - Math.PI / 2 + Math.PI / N;
+                    pts.push({ x: r * Math.cos(ang), y: r * Math.sin(ang) });
+                }
+                return pts;
+            }
+
+            const poly1Pts = getPolygonPoints(r1);
+            const poly2Pts = getPolygonPoints(r2);
+            const strip1Data = getStripVertices(n1, isPrism);
+
+            let minY1 = Infinity;
+            strip1Data.innerPts.forEach(p => { if (p.y < minY1) minY1 = p.y; });
+            strip1Data.outerPts.forEach(p => { if (p.y < minY1) minY1 = p.y; });
+
+            const yStrip1 = -minY1 + 15;
+            const gMain = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gMain.setAttribute('transform', `translate(${105 + st.offsetX}, ${st.offsetY}) scale(${scale}) rotate(${rotDeg})`);
+            svg.appendChild(gMain);
+
+            const pCenterA1 = strip1Data.innerPts[midIdx1];
+            const pCenterB1 = strip1Data.innerPts[midIdx1 + 1];
+            const midX1 = (pCenterA1.x + pCenterB1.x) / 2;
+            const midY1 = (pCenterA1.y + pCenterB1.y) / 2 + yStrip1;
+            const stripEdgeAngle1 = Math.atan2(pCenterB1.y - pCenterA1.y, pCenterB1.x - pCenterA1.x);
+
+            const polyEdgeTopIdx = Math.floor((N - 1) / 2);
+            const pPolyTopA = poly1Pts[polyEdgeTopIdx];
+            const pPolyTopB = poly1Pts[(polyEdgeTopIdx + 1) % N];
+
+            const polyMidTopX = (pPolyTopA.x + pPolyTopB.x) / 2;
+            const polyMidTopY = (pPolyTopA.y + pPolyTopB.y) / 2;
+            const polyEdgeTopAngle = Math.atan2(pPolyTopB.y - pPolyTopA.y, pPolyTopB.x - pPolyTopA.x);
+
+            const rotNeeded1 = (stripEdgeAngle1 - polyEdgeTopAngle) * (180 / Math.PI);
+            
+            let polyEdgeBotIdx = (polyEdgeTopIdx + Math.floor(N / 2)) % N;
+            if (N % 4 === 3) polyEdgeBotIdx = (polyEdgeBotIdx + 1) % N;
+
+            const strip2Data = getStripVertices(n2, !isPrism);
+            const pCenterA2 = strip2Data.innerPts[midIdx2];
+            const pCenterB2 = strip2Data.innerPts[midIdx2 + 1];
+            const midStrip2X = (pCenterA2.x + pCenterB2.x) / 2;
+            const midStrip2Y = (pCenterA2.y + pCenterB2.y) / 2;
+            const stripEdgeAngle2 = Math.atan2(pCenterB2.y - pCenterA2.y, pCenterB2.x - pCenterA2.x);
+
+            const rad = rotNeeded1 * (Math.PI / 180);
+            const cosR = Math.cos(rad);
+            const sinR = Math.sin(rad);
+
+            function transformPoint(pt) {
+                let dx = pt.x - polyMidTopX;
+                let dy = pt.y - polyMidTopY;
+                let rx = dx * cosR - dy * sinR;
+                let ry = dx * sinR + dy * cosR;
+                return { x: midX1 + rx, y: midY1 + ry };
+            }
+
+            const pBotA = transformPoint(poly1Pts[polyEdgeBotIdx]);
+            const pBotB = transformPoint(poly1Pts[(polyEdgeBotIdx + 1) % N]);
+            const midPolyBotX = (pBotA.x + pBotB.x) / 2;
+            const midPolyBotY = (pBotA.y + pBotB.y) / 2;
+            const polyEdgeBotAngle = Math.atan2(pBotA.y - pBotB.y, pBotA.x - pBotB.x);
+            const rotNeeded2 = (polyEdgeBotAngle - stripEdgeAngle2) * (180 / Math.PI);
+
+            const pStrip2ExtA = strip2Data.outerPts[midIdx2];
+            const pStrip2ExtB = strip2Data.outerPts[midIdx2 + 1];
+
+            const rad2 = rotNeeded2 * (Math.PI / 180);
+            const cosR2 = Math.cos(rad2);
+            const sinR2 = Math.sin(rad2);
+
+            function transformPointStrip2(pt) {
+                let dx = pt.x - midStrip2X;
+                let dy = pt.y - midStrip2Y;
+                let rx = dx * cosR2 - dy * sinR2;
+                let ry = dx * sinR2 + dy * cosR2;
+                return { x: midPolyBotX + rx, y: midPolyBotY + ry };
+            }
+
+            const globalS2ExtA = transformPointStrip2(pStrip2ExtA);
+            const globalS2ExtB = transformPointStrip2(pStrip2ExtB);
+            const globalS2ExtMidX = (globalS2ExtA.x + globalS2ExtB.x) / 2;
+            const globalS2ExtMidY = (globalS2ExtA.y + globalS2ExtB.y) / 2;
+            const globalS2ExtAngle = Math.atan2(globalS2ExtB.y - globalS2ExtA.y, globalS2ExtB.x - globalS2ExtA.x);
+
+            const poly2AttachIdx = Math.floor((N - 1) / 2);
+            const pPoly2A = poly2Pts[poly2AttachIdx];
+            const pPoly2B = poly2Pts[(poly2AttachIdx + 1) % N];
+            const poly2MidX = (pPoly2A.x + pPoly2B.x) / 2;
+            const poly2MidY = (pPoly2A.y + pPoly2B.y) / 2;
+            const poly2EdgeAngle = Math.atan2(pPoly2B.y - pPoly2A.y, pPoly2B.x - pPoly2A.x);
+
+            const rotNeededPoly2 = (globalS2ExtAngle - poly2EdgeAngle) * (180 / Math.PI);
+
+            const gPoly1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gPoly1.setAttribute('transform', `translate(${midX1}, ${midY1}) rotate(${rotNeeded1}) translate(${-polyMidTopX}, ${-polyMidTopY})`);
+
+            const gStrip1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gStrip1.setAttribute('transform', `translate(0, ${yStrip1})`);
+
+            const gStrip2 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gStrip2.setAttribute('transform', `translate(${midPolyBotX}, ${midPolyBotY}) rotate(${rotNeeded2}) translate(${-midStrip2X}, ${-midStrip2Y})`);
+
+            const gPoly2 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            gPoly2.setAttribute('transform', `translate(${globalS2ExtMidX}, ${globalS2ExtMidY}) rotate(${rotNeededPoly2}) translate(${-poly2MidX}, ${-poly2MidY})`);
+
+            gMain.appendChild(gPoly1);
+            gMain.appendChild(gPoly2);
+            gMain.appendChild(gStrip1);
+            gMain.appendChild(gStrip2);
+
+            for (let i = 0; i < N; i++) {
+                if (i !== polyEdgeTopIdx && i !== polyEdgeBotIdx) {
+                    let pA = poly1Pts[i];
+                    let pB = poly1Pts[(i + 1) % N];
+                    let dx = pB.x - pA.x;
+                    let dy = pB.y - pA.y;
+                    let len = Math.hypot(dx, dy);
+                    let nx = dy / len;
+                    let ny = -dx / len;
+
+                    let tA = { x: pA.x + nx * tabW + (dx / len) * (tabW * 0.6), y: pA.y + ny * tabW + (dy / len) * (tabW * 0.6) };
+                    let tB = { x: pB.x + nx * tabW - (dx / len) * (tabW * 0.6), y: pB.y + ny * tabW - (dy / len) * (tabW * 0.6) };
+
+                    let tabPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                    tabPoly.setAttribute('points', `${pA.x},${pA.y} ${tA.x},${tA.y} ${tB.x},${tB.y} ${pB.x},${pB.y}`);
+                    tabPoly.setAttribute('class', 'cut-line');
+                    tabPoly.setAttribute('fill', 'none');
+                    gPoly1.appendChild(tabPoly);
+
+                    let tabFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    tabFold.setAttribute('x1', pA.x); tabFold.setAttribute('y1', pA.y);
+                    tabFold.setAttribute('x2', pB.x); tabFold.setAttribute('y2', pB.y);
+                    tabFold.setAttribute('class', 'fold-line');
+                    gPoly1.appendChild(tabFold);
+                }
+            }
+
+            renderPolygonFace(gPoly1, poly1Pts, 'poly1', defs, pageNum);
+            drawStrip(gStrip1, strip1Data.innerPts, strip1Data.outerPts, n1, 'strip1', tabW, midIdx1, defs, pageNum);
+            drawStrip(gStrip2, strip2Data.innerPts, strip2Data.outerPts, n2, 'strip2', tabW, midIdx2, defs, pageNum);
+
+            for (let i = 0; i < N; i++) {
+                if (i !== poly2AttachIdx) {
+                    let pA = poly2Pts[i];
+                    let pB = poly2Pts[(i + 1) % N];
+                    let dx = pB.x - pA.x;
+                    let dy = pB.y - pA.y;
+                    let len = Math.hypot(dx, dy);
+                    let nx = dy / len;
+                    let ny = -dx / len;
+
+                    let tA = { x: pA.x + nx * tabW + (dx / len) * (tabW * 0.6), y: pA.y + ny * tabW + (dy / len) * (tabW * 0.6) };
+                    let tB = { x: pB.x + nx * tabW - (dx / len) * (tabW * 0.6), y: pB.y + ny * tabW - (dy / len) * (tabW * 0.6) };
+
+                    let tabPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                    tabPoly.setAttribute('points', `${pA.x},${pA.y} ${tA.x},${tA.y} ${tB.x},${tB.y} ${pB.x},${pB.y}`);
+                    tabPoly.setAttribute('class', 'cut-line');
+                    tabPoly.setAttribute('fill', 'none');
+                    gPoly2.appendChild(tabPoly);
+
+                    let tabFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    tabFold.setAttribute('x1', pA.x); tabFold.setAttribute('y1', pA.y);
+                    tabFold.setAttribute('x2', pB.x); tabFold.setAttribute('y2', pB.y);
+                    tabFold.setAttribute('class', 'fold-line');
+                    gPoly2.appendChild(tabFold);
+                }
+            }
+
+            renderPolygonFace(gPoly2, poly2Pts, 'poly2', defs, pageNum);
+        }
+
+        function drawStrip(container, innerPts, outerPts, nFaces, stripKey, tabW, attachIdx, defs, pageNum) {
+            const st = pagesState[pageNum];
+
+            for (let i = 0; i < nFaces; i++) {
+                let p1 = innerPts[i];
+                let p2 = innerPts[i + 1];
+                let p3 = outerPts[i + 1];
+                let p4 = outerPts[i];
+
+                let faceKey = `${stripKey}_face_${i}`;
+                let clipId = `clip_${faceKey}_p${pageNum}`;
+
+                let clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clipPath.setAttribute('id', clipId);
+
+                let clipPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                clipPolygon.setAttribute('points', `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+                clipPath.appendChild(clipPolygon);
+                defs.appendChild(clipPath);
+
+                let cx = (p1.x + p2.x + p3.x + p4.x) / 4;
+                let cy = (p1.y + p2.y + p3.y + p4.y) / 4;
+
+                if (st.imageMap.has(faceKey)) {
+                    let imgData = st.imageMap.get(faceKey);
+                    
+                    let gImgGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    gImgGroup.setAttribute('clip-path', `url(#${clipId})`);
+
+                    let img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', imgData.src);
+
+                    let baseSize = Math.max(Math.hypot(p2.x - p1.x, p2.y - p1.y), Math.hypot(p4.x - p1.x, p4.y - p1.y)) * 2;
+                    let size = baseSize * (imgData.scale / 100);
+
+                    img.setAttribute('x', cx - size / 2);
+                    img.setAttribute('y', cy - size / 2);
+                    img.setAttribute('width', size);
+                    img.setAttribute('height', size);
+                    img.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+
+                    let lenInner = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                    let lenOuter = Math.hypot(p3.x - p4.x, p3.y - p4.y);
+
+                    let baseAngle;
+                    if (lenOuter >= lenInner) {
+                        baseAngle = Math.atan2(p3.y - p4.y, p3.x - p4.x) * (180 / Math.PI);
+                        if (stripKey === 'strip1') baseAngle += 180;
+                    } else {
+                        baseAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+                        if (stripKey === 'strip2') baseAngle += 180;
+                    }
+
+                    let finalRot = baseAngle + imgData.rot;
+                    let transformStr = `translate(${imgData.offX}, ${imgData.offY}) rotate(${finalRot}, ${cx}, ${cy})`;
+                    img.setAttribute('transform', transformStr);
+
+                    gImgGroup.appendChild(img);
+                    container.appendChild(gImgGroup);
+                }
+
+                let face = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                face.setAttribute('points', `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+                face.setAttribute('class', 'paintable-face fold-line' + (selectedFaceKey === faceKey && activePage === pageNum ? ' selected-face' : ''));
+
+                if (st.imageMap.has(faceKey)) {
+                    face.setAttribute('fill', 'transparent');
+                } else {
+                    face.setAttribute('fill', st.colorMap.get(faceKey) || document.getElementById('paintColor').value);
+                }
+
+                if (activePage === pageNum) applyPaint(face, faceKey);
+                container.appendChild(face);
+
+                if (i > 0) {
+                    let divLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    divLine.setAttribute('x1', p1.x); divLine.setAttribute('y1', p1.y);
+                    divLine.setAttribute('x2', p4.x); divLine.setAttribute('y2', p4.y);
+                    divLine.setAttribute('class', 'fold-line');
+                    container.appendChild(divLine);
+                }
+            }
+
+            for (let i = 0; i < nFaces; i++) {
+                let topClass = ((stripKey === 'strip1' || stripKey === 'strip2') && i === attachIdx) ? 'fold-line' : 'cut-line';
+                let botClass = (stripKey === 'strip2' && i === attachIdx) ? 'fold-line' : 'cut-line';
+
+                let lTop = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lTop.setAttribute('x1', innerPts[i].x); lTop.setAttribute('y1', innerPts[i].y);
+                lTop.setAttribute('x2', innerPts[i+1].x); lTop.setAttribute('y2', innerPts[i+1].y);
+                lTop.setAttribute('class', topClass);
+                container.appendChild(lTop);
+
+                let lBot = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lBot.setAttribute('x1', outerPts[i].x); lBot.setAttribute('y1', outerPts[i].y);
+                lBot.setAttribute('x2', outerPts[i+1].x); lBot.setAttribute('y2', outerPts[i+1].y);
+                lBot.setAttribute('class', botClass);
+                container.appendChild(lBot);
+            }
+
+            if (stripKey === 'strip1') {
+                let pInLeft = innerPts[0];
+                let pOutLeft = outerPts[0];
+                let dxL = pOutLeft.x - pInLeft.x;
+                let dyL = pOutLeft.y - pInLeft.y;
+                let lenL = Math.hypot(dxL, dyL);
+                
+                let nxL = dyL / lenL;
+                let nyL = -dxL / lenL;
+                let uxL = dxL / lenL;
+                let uyL = dyL / lenL;
+
+                let tAL = { x: pInLeft.x + nxL * tabW + uxL * (tabW * 0.6), y: pInLeft.y + nyL * tabW + uyL * (tabW * 0.6) };
+                let tBL = { x: pOutLeft.x + nxL * tabW - uxL * (tabW * 0.6), y: pOutLeft.y + nyL * tabW - uyL * (tabW * 0.6) };
+
+                let tabLeft = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                tabLeft.setAttribute('points', `${pInLeft.x},${pInLeft.y} ${tAL.x},${tAL.y} ${tBL.x},${tBL.y} ${pOutLeft.x},${pOutLeft.y}`);
+                tabLeft.setAttribute('class', 'cut-line');
+                tabLeft.setAttribute('fill', 'none');
+                container.appendChild(tabLeft);
+
+                let lLeftFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lLeftFold.setAttribute('x1', pInLeft.x); lLeftFold.setAttribute('y1', pInLeft.y);
+                lLeftFold.setAttribute('x2', pOutLeft.x); lLeftFold.setAttribute('y2', pOutLeft.y);
+                lLeftFold.setAttribute('class', 'fold-line');
+                container.appendChild(lLeftFold);
+            } else {
+                let lLeft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lLeft.setAttribute('x1', innerPts[0].x); lLeft.setAttribute('y1', innerPts[0].y);
+                lLeft.setAttribute('x2', outerPts[0].x); lLeft.setAttribute('y2', outerPts[0].y);
+                lLeft.setAttribute('class', 'cut-line');
+                container.appendChild(lLeft);
+            }
+
+            if (stripKey === 'strip2') {
+                let pInRight = innerPts[nFaces];
+                let pOutRight = outerPts[nFaces];
+                let dxR = pOutRight.x - pInRight.x;
+                let dyR = pOutRight.y - pInRight.y;
+                let lenR = Math.hypot(dxR, dyR);
+                
+                let nxR = dyR / lenR;
+                let nyR = -dxR / lenR;
+                let uxR = dxR / lenR;
+                let uyR = dyR / lenR;
+
+                let tAR = { x: pInRight.x + nxR * tabW + uxR * (tabW * 0.6), y: pInRight.y + nyR * tabW + uxR * (tabW * 0.6) };
+                let tBR = { x: pOutRight.x + nxR * tabW - uxR * (tabW * 0.6), y: pOutRight.y + nyR * tabW - uxR * (tabW * 0.6) };
+
+                let tabRight = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                tabRight.setAttribute('points', `${pInRight.x},${pInRight.y} ${tAR.x},${tAR.y} ${tBR.x},${tBR.y} ${pOutRight.x},${pOutRight.y}`);
+                tabRight.setAttribute('class', 'cut-line');
+                tabRight.setAttribute('fill', 'none');
+                container.appendChild(tabRight);
+
+                let lRightFold = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lRightFold.setAttribute('x1', pInRight.x); lRightFold.setAttribute('y1', pInRight.y);
+                lRightFold.setAttribute('x2', pOutRight.x); lRightFold.setAttribute('y2', pOutRight.y);
+                lRightFold.setAttribute('class', 'fold-line');
+                container.appendChild(lRightFold);
+            } else {
+                let lRight = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lRight.setAttribute('x1', innerPts[nFaces].x); lRight.setAttribute('y1', innerPts[nFaces].y);
+                lRight.setAttribute('x2', outerPts[nFaces].x); lRight.setAttribute('y2', outerPts[nFaces].y);
+                lRight.setAttribute('class', 'cut-line');
+                container.appendChild(lRight);
+            }
+        }
+
+        function createPageContainer(badgeText, idAttr = null) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page';
+            if (idAttr) pageDiv.id = idAttr;
+
+            const badge = document.createElement('div');
+            badge.className = 'page-badge no-print';
+            badge.innerText = badgeText;
+            pageDiv.appendChild(badge);
+
+            return pageDiv;
+        }
+
+        function printAllPages() {
+            switchPage(4);
+            setTimeout(() => {
+                window.print();
+            }, 150);
+        }
+
+        function resetWizard() {
+            pagesState[1].imageMap.clear(); pagesState[1].colorMap.clear();
+            pagesState[2].imageMap.clear(); pagesState[2].colorMap.clear();
+            pagesState[3].imageMap.clear(); pagesState[3].colorMap.clear();
+            switchPage(1);
+        }
+
+        const inputs = document.querySelectorAll('.sidebar input');
+        inputs.forEach(input => {
+            if (!['imgScale', 'imgRot', 'imgOffX', 'imgOffY', 'numSides', 'rSmall', 'sSmall', 'rLarge', 'sLarge', 'batchImgUpload'].includes(input.id)) {
+                input.addEventListener('input', generatePapercraft);
+            }
+        });
+
+        // ===== Panel lateral deslizante para móvil/tablet =====
+        const sidebarEl = document.getElementById('sidebar');
+        const menuToggleBtn = document.getElementById('menuToggle');
+        const sidebarBackdropEl = document.getElementById('sidebarBackdrop');
+        const mobileBreakpoint = window.matchMedia('(max-width: 880px)');
+
+        function isMobileLayout() {
+            return mobileBreakpoint.matches;
+        }
+
+        function openSidebar() {
+            sidebarEl.classList.add('is-open');
+            sidebarBackdropEl.classList.add('is-visible');
+            menuToggleBtn.setAttribute('aria-expanded', 'true');
+            menuToggleBtn.setAttribute('aria-label', 'Cerrar panel de controles');
+        }
+
+        function closeSidebar() {
+            sidebarEl.classList.remove('is-open');
+            sidebarBackdropEl.classList.remove('is-visible');
+            menuToggleBtn.setAttribute('aria-expanded', 'false');
+            menuToggleBtn.setAttribute('aria-label', 'Abrir panel de controles');
+        }
+
+        function toggleSidebar() {
+            if (sidebarEl.classList.contains('is-open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+
+        function closeSidebarOnMobile() {
+            if (isMobileLayout()) closeSidebar();
+        }
+
+        menuToggleBtn.addEventListener('click', toggleSidebar);
+        sidebarBackdropEl.addEventListener('click', closeSidebar);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebarEl.classList.contains('is-open')) {
+                closeSidebar();
+                menuToggleBtn.focus();
+            }
+        });
+
+        switchPage(1);
+    </script>
+</body>
+</html>
