@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Neon Grid Survivor - Touch Edition</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            color: #00f2ff;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            touch-action: none;
+        }
+        #ui {
+            width: 100vw;
+            max-width: 600px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-shadow: 0 0 5px #00f2ff;
+        }
+        canvas {
+            border: 2px solid #00f2ff;
+            box-shadow: 0 0 20px #00f2ff55;
+            background-color: #000;
+            max-width: 95vw;
+            max-height: 50vh; /* Ajustado para dejar espacio al touchpad */
+            cursor: crosshair;
+        }
+        #health-bar-bg {
+            width: 150px;
+            height: 12px;
+            background: #222;
+            border: 1px solid #ff0055;
+            margin-top: 5px;
+        }
+        #health-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: #ff0055;
+            box-shadow: 0 0 10px #ff0055;
+            transition: width 0.3s;
+        }
+        #game-over-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff0055;
+            padding: 30px;
+            text-align: center;
+            display: none;
+            z-index: 20;
+            box-shadow: 0 0 30px #ff0055;
+        }
+        button {
+            background: transparent;
+            color: #00f2ff;
+            border: 1px solid #00f2ff;
+            padding: 10px 20px;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #00f2ff;
+            color: #000;
+            box-shadow: 0 0 15px #00f2ff;
+        }
+
+        /* ESTILOS DEL TOUCHPAD */
+        #touch-container {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-top: 10px;
+        }
+        #joystick-base {
+            width: 250px;
+            height: 250px;
+            background: rgba(0, 242, 255, 0.1);
+            border: 2px solid #00f2ff55;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #joystick-knob {
+            width: 100px;
+            height: 100px;
+            background: #00f2ff;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 15px #00f2ff;
+        }
+        .controls-hint {
+            font-size: 0.7em;
+            margin-top: 5px;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div>
+        TIME: <span id="current-time">00:00</span><br>
+        BEST: <span id="best-time">00:00</span>
+    </div>
+    <div style="text-align: right;">
+        LIVES (SHIELD)
+        <div id="health-bar-bg"><div id="health-bar-fill"></div></div>
+    </div>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="touch-container">
+    <div id="joystick-base">
+        <div id="joystick-knob"></div>
+    </div>
+</div>
+
+<div class="controls-hint">USA LAS FLECHAS O EL JOYSTICK INFERIOR</div>
+
+<div id="game-over-screen">
+    <h1 style="color: #ff0055;">FIN DE JUEGO</h1>
+    <p>JUGADOR ELIMINADO</p>
+    <p>TIEMPO SOBREVIVIDO: <span id="final-time">00:00</span></p>
+    <button onclick="resetGame()">REINTENTAR</button>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const currentTimeElem = document.getElementById('current-time');
+const bestTimeElem = document.getElementById('best-time');
+const finalTimeElem = document.getElementById('final-time');
+const healthBar = document.getElementById('health-bar-fill');
+const gameOverScreen = document.getElementById('game-over-screen');
+const joystickKnob = document.getElementById('joystick-knob');
+const joystickBase = document.getElementById('joystick-base');
+
+const GRID_SIZE = 40;
+const CELL_SIZE = 15;
+canvas.width = GRID_SIZE * CELL_SIZE;
+canvas.height = GRID_SIZE * CELL_SIZE;
+
+let gameActive = true;
+let startTime, lastEnemySpawn, lastPlayerShot, enemySpawnCount, lastDifficultyUpdate, scoreTime;
+let bestTime = localStorage.getItem('neonBestTime') || 0;
+
+let player, playerBullets, enemies, enemyBullets;
+const keys = {};
+
+// Lógica de Joystick
+let touchX = 0, touchY = 0;
+let isTouching = false;
+
+function initVariables() {
+    startTime = Date.now();
+    lastEnemySpawn = 0;
+    lastPlayerShot = 0;
+    enemySpawnCount = 1;
+    lastDifficultyUpdate = 0;
+    scoreTime = 0;
+    gameActive = true;
+    
+    player = { x: 20, y: 20, dirX: 0, dirY: -1, hits: 0, maxHits: 5 };
+    playerBullets = [];
+    enemies = [];
+    enemyBullets = [];
+    
+    healthBar.style.width = '100%';
+    gameOverScreen.style.display = 'none';
+    bestTimeElem.innerText = formatTime(bestTime);
+    resetJoystickUI();
+}
+
+// Audio
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type, duration, vol = 0.1) {
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+}
+
+// Controles Teclado
+window.addEventListener('keydown', e => { if(e.code.includes('Arrow')) keys[e.code] = true; });
+window.addEventListener('keyup', e => { if(e.code.includes('Arrow')) keys[e.code] = false; });
+
+// Controles Joystick (Touch)
+joystickBase.addEventListener('touchstart', handleTouchStart, {passive: false});
+window.addEventListener('touchmove', handleTouchMove, {passive: false});
+window.addEventListener('touchend', handleTouchEnd);
+
+function handleTouchStart(e) {
+    isTouching = true;
+    handleTouchMove(e);
+}
+
+function handleTouchMove(e) {
+    if (!isTouching) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = joystickBase.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    let dx = touch.clientX - centerX;
+    let dy = touch.clientY - centerY;
+    const distance = Math.min(Math.sqrt(dx*dx + dy*dy), 40);
+    const angle = Math.atan2(dy, dx);
+
+    touchX = (Math.cos(angle) * distance) / 40;
+    touchY = (Math.sin(angle) * distance) / 40;
+
+    joystickKnob.style.transform = `translate(${touchX * 40}px, ${touchY * 40}px)`;
+}
+
+function handleTouchEnd() {
+    isTouching = false;
+    touchX = 0;
+    touchY = 0;
+    resetJoystickUI();
+}
+
+function resetJoystickUI() {
+    joystickKnob.style.transform = `translate(0px, 0px)`;
+}
+
+function formatTime(ms) {
+    let totalSec = Math.floor(ms / 1000);
+    return `${Math.floor(totalSec / 60).toString().padStart(2, '0')}:${(totalSec % 60).toString().padStart(2, '0')}`;
+}
+
+function spawnEnemy() {
+    for(let i = 0; i < enemySpawnCount; i++) {
+        let side = Math.floor(Math.random() * 4);
+        let ex, ey;
+        if(side === 0) { ex = Math.random() * GRID_SIZE; ey = 0; }
+        else if(side === 1) { ex = GRID_SIZE; ey = Math.random() * GRID_SIZE; }
+        else if(side === 2) { ex = Math.random() * GRID_SIZE; ey = GRID_SIZE; }
+        else { ex = 0; ey = Math.random() * GRID_SIZE; }
+        enemies.push({ x: ex, y: ey, health: 2, lastMove: Date.now() });
+    }
+}
+
+function update() {
+    if (!gameActive) return;
+    let now = Date.now();
+    scoreTime = now - startTime;
+    currentTimeElem.innerText = formatTime(scoreTime);
+
+    if (now - lastDifficultyUpdate > 80000) { enemySpawnCount++; lastDifficultyUpdate = now; }
+    if (now - lastEnemySpawn > 3000) { spawnEnemy(); lastEnemySpawn = now; }
+
+    // Movimiento combinado (Teclado + Joystick)
+    let mx = touchX * 0.2, my = touchY * 0.2;
+    if (keys['ArrowUp']) my -= 0.2;
+    if (keys['ArrowDown']) my += 0.2;
+    if (keys['ArrowLeft']) mx -= 0.2;
+    if (keys['ArrowRight']) mx += 0.2;
+
+    if (mx !== 0 || my !== 0) {
+        player.x = Math.max(0, Math.min(GRID_SIZE, player.x + mx));
+        player.y = Math.max(0, Math.min(GRID_SIZE, player.y + my));
+        player.dirX = mx; player.dirY = my;
+    }
+
+    // Disparo automático
+    if (now - lastPlayerShot > 100) {
+        playerBullets.push({ x: player.x, y: player.y, vx: player.dirX, vy: player.dirY });
+        playSound(600, 'triangle', 0.01, 0.01);
+        lastPlayerShot = now;
+    }
+
+    playerBullets.forEach((b, i) => {
+        b.x += b.vx * 2; b.y += b.vy * 2;
+        if(b.x < 0 || b.x > GRID_SIZE || b.y < 0 || b.y > GRID_SIZE) playerBullets.splice(i, 1);
+    });
+
+    enemies.forEach((en, i) => {
+        if (now - en.lastMove > 1500) {
+            let dx = player.x - en.x, dy = player.y - en.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            let vx = dx / dist, vy = dy / dist;
+            en.x += vx; en.y += vy;
+            enemyBullets.push({ x: en.x, y: en.y, vx: vx * 0.07, vy: vy * 0.07 });
+            en.lastMove = now;
+        }
+        playerBullets.forEach((b, bi) => {
+            if (Math.hypot(en.x - b.x, en.y - b.y) < 1.2) {
+                en.health--; playerBullets.splice(bi, 1);
+                playSound(200, 'square', 0.1);
+                if (en.health <= 0) enemies.splice(i, 1);
+            }
+        });
+    });
+
+    enemyBullets.forEach((eb, i) => {
+        eb.x += eb.vx * 1.3; eb.y += eb.vy * 1.3;
+        if (Math.hypot(eb.x - player.x, eb.y - player.y) < 0.8) {
+            player.hits++; enemyBullets.splice(i, 1);
+            playSound(100, 'sawtooth', 0.2);
+            healthBar.style.width = `${((player.maxHits - player.hits) / player.maxHits) * 100}%`;
+            if (player.hits >= player.maxHits) endGame();
+        }
+        if(eb.x < 0 || eb.x > GRID_SIZE || eb.y < 0 || eb.y > GRID_SIZE) enemyBullets.splice(i, 1);
+    });
+}
+
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.strokeStyle = '#00f2ff11';
+    ctx.beginPath();
+    for(let i=0; i<=GRID_SIZE; i++) {
+        ctx.moveTo(i * CELL_SIZE, 0); ctx.lineTo(i * CELL_SIZE, canvas.height);
+        ctx.moveTo(0, i * CELL_SIZE); ctx.lineTo(canvas.width, i * CELL_SIZE);
+    }
+    ctx.stroke();
+
+    // Player
+    ctx.save();
+    ctx.translate(player.x * CELL_SIZE, player.y * CELL_SIZE);
+    ctx.rotate(Math.atan2(player.dirY, player.dirX) + Math.PI/2);
+    ctx.strokeStyle = '#00f2ff'; ctx.shadowBlur = 10; ctx.shadowColor = '#00f2ff';
+    ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(7, 10); ctx.lineTo(-7, 10); ctx.closePath(); ctx.stroke();
+    ctx.restore();
+
+    // Enemies
+    enemies.forEach(en => {
+        ctx.strokeStyle = '#ff0055'; ctx.shadowBlur = 10; ctx.shadowColor = '#ff0055';
+        ctx.beginPath(); 
+        ctx.strokeRect(en.x * CELL_SIZE - 8, en.y * CELL_SIZE - 8, 16, 16);
+        ctx.stroke();
+    });
+
+    // Bullets
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    playerBullets.forEach(b => ctx.fillRect(b.x * CELL_SIZE - 2, b.y * CELL_SIZE - 2, 4, 4));
+    ctx.fillStyle = '#ff0';
+    enemyBullets.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(b.x * CELL_SIZE, b.y * CELL_SIZE, 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function endGame() {
+    gameActive = false;
+    if (scoreTime > bestTime) {
+        bestTime = scoreTime;
+        localStorage.setItem('neonBestTime', bestTime);
+    }
+    finalTimeElem.innerText = formatTime(scoreTime);
+    gameOverScreen.style.display = 'block';
+}
+
+function resetGame() {
+    initVariables();
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+initVariables();
+loop();
+</script>
+</body>
+</html>
