@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Launchpad Ultimate - Fixed</title>
+    <style>
+        :root {
+            --bg-color: #0d0d12;
+            --panel-color: #16161d;
+            --neon-pink: #ff00ff;
+            --neon-blue: #00f2ff;
+            --neon-green: #39ff14;
+            --neon-yellow: #fffb00;
+            --scroll-width: 40px; /* Medio centímetro real para agarre táctil */
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; height: -webkit-fill-available; 
+            overflow: hidden; touch-action: none;
+        }
+
+        .container {
+            display: flex;
+            width: 95vw; max-width: 1100px; height: 90vh;
+            background: var(--panel-color);
+            padding: 20px; border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            border: 1px solid #2a2a35;
+            gap: 20px;
+            position: relative;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 15px; left: 15px;
+            background: #222; border: 1px solid #444;
+            color: var(--neon-blue);
+            padding: 8px; border-radius: 8px;
+            cursor: pointer; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- MEJORA: BARRA DE SCROLL VISIBLE Y ANCHA --- */
+        .left-panel {
+            flex: 1;
+            display: flex; flex-direction: column;
+            gap: 15px; padding-right: 15px;
+            border-right: 1px solid #2a2a35;
+            padding-top: 45px;
+            overflow-y: scroll !important; /* Forzado permanente */
+            scrollbar-width: thick;
+            scrollbar-color: var(--neon-blue) #1a1a24;
+        }
+
+        .left-panel::-webkit-scrollbar {
+            width: var(--scroll-width) !important;
+            display: block !important;
+        }
+
+        .left-panel::-webkit-scrollbar-track {
+            background: #1a1a24;
+            border-radius: 10px;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb {
+            background: var(--neon-blue);
+            border-radius: 10px;
+            border: 5px solid #1a1a24; /* Aumenta el área de colisión táctil */
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .left-panel::-webkit-scrollbar-thumb:active {
+            background: var(--neon-green);
+        }
+
+        h2 { margin: 0; font-size: 1rem; letter-spacing: 2px; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+
+        .control-group { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+        label { font-size: 0.65rem; text-transform: uppercase; color: #777; font-weight: bold; }
+
+        select, button {
+            padding: 10px; background: #222; border: 1px solid #333;
+            color: white; border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+        }
+
+        .active-btn { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+
+        input[type=range] { width: 100%; accent-color: var(--neon-blue); cursor: pointer; height: 30px; }
+
+        .right-panel {
+            flex: 2.5; display: flex; flex-direction: column; gap: 10px;
+            height: 100%;
+        }
+
+        .sequencer-bar { background: #000; padding: 10px; border-radius: 12px; }
+        .step-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+        .step { height: 8px; background: #222; border-radius: 2px; }
+        .step.playing { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+
+        .grid-container {
+            flex: 1; display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .pad {
+            background: #23232b; border-radius: 10px; border: none;
+            cursor: pointer; transition: all 0.05s;
+            box-shadow: 0 3px 0 #111;
+        }
+
+        .pad.row-0 { border: 1px solid var(--neon-pink); }
+        .pad.row-1 { border: 1px solid var(--neon-blue); }
+        .pad.row-2 { border: 1px solid var(--neon-green); }
+        .pad.row-3 { border: 1px solid var(--neon-yellow); }
+
+        .pad.active {
+            transform: translateY(2px);
+            background: #fff !important;
+            box-shadow: 0 0 20px white;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; height: 95vh; width: 98vw; padding: 10px; gap: 10px; }
+            .left-panel { flex: 0 0 35%; border-right: none; border-bottom: 1px solid #2a2a35; padding: 40px 5px 10px 5px; width: 100%; }
+            .right-panel { flex: 1; overflow: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button class="fullscreen-btn" id="fs-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+    </button>
+
+    <div class="left-panel">
+        <h2>NEON CORE</h2>
+        <div class="control-group">
+            <label>Master Beat</label>
+            <select id="beat-selector">
+                <option value="none">Sin Base</option>
+                <option value="techno">Techno Pulse</option>
+                <option value="trap">Urban Trap</option>
+                <option value="house">Deep House</option>
+            </select>
+            <button id="play-beat-btn">PLAY/STOP</button>
+        </div>
+        <div class="control-group">
+            <label>Tempo: <span id="bpm-display">120</span> BPM</label>
+            <input type="range" id="bpm-slider" min="60" max="180" value="120">
+        </div>
+        <div class="control-group">
+            <label>Waveform</label>
+            <div style="display: flex; gap: 5px;">
+                <button id="btn-saw" class="active-btn" style="flex:1">SAW</button>
+                <button id="btn-sqr" style="flex:1">SQR</button>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Filter</label>
+            <input type="range" id="filter-slider" min="100" max="10000" value="5000">
+        </div>
+        <div class="control-group">
+            <label>Volume</label>
+            <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.6">
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="sequencer-bar">
+            <div class="step-grid" id="step-visualizer">
+                <div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div>
+                <div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div>
+            </div>
+        </div>
+        <div class="grid-container" id="pad-grid"></div>
+    </div>
+</div>
+
+<script>
+    // MEJORA: LatencyHint para respuesta inmediata
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext({ latencyHint: 'interactive' });
+    
+    let currentOscType = 'sawtooth';
+    let isSequencerRunning = false;
+    let currentStep = 0;
+    let nextStepTime = 0;
+    let timerID;
+    const activeVoices = new Map();
+
+    const frequencies = [
+        130.81, 155.56, 174.61, 185.00,
+        261.63, 311.13, 349.23, 369.99,
+        523.25, 622.25, 698.46, 739.99,
+        1046.50, 1244.51, 1396.91, 1479.98
+    ];
+
+    const grid = document.getElementById('pad-grid');
+    for (let i = 0; i < 16; i++) {
+        const pad = document.createElement('div');
+        pad.className = `pad row-${Math.floor(i / 4)}`;
+        pad.dataset.index = i;
+        grid.appendChild(pad);
+    }
+
+    document.getElementById('fs-btn').onclick = () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    };
+
+    // MEJORA: Ataque instantáneo para eliminar desfase
+    function startVoice(index) {
+        if (activeVoices.has(index)) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc.type = currentOscType;
+        osc.frequency.setValueAtTime(frequencies[index], ctx.currentTime);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(document.getElementById('filter-slider').value, ctx.currentTime);
+
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        // Rampas de 0.005s son inaudibles pero eliminan la latencia percibida
+        gain.gain.linearRampToValueAtTime(document.getElementById('vol-slider').value * 0.4, ctx.currentTime + 0.005);
+
+        osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        activeVoices.set(index, { osc, gain });
+        document.querySelectorAll('.pad')[index].classList.add('active');
+    }
+
+    function stopVoice(index) {
+        const voice = activeVoices.get(index);
+        if (voice) {
+            const now = ctx.currentTime;
+            voice.gain.gain.cancelScheduledValues(now);
+            voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+            voice.gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            const oscToStop = voice.osc;
+            setTimeout(() => { try { oscToStop.stop(); oscToStop.disconnect(); } catch(e){} }, 100);
+            activeVoices.delete(index);
+            document.querySelectorAll('.pad')[index].classList.remove('active');
+        }
+    }
+
+    function playKick(time) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.frequency.setValueAtTime(150, time);
+        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.4);
+        g.gain.setValueAtTime(1, time);
+        g.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(time); osc.stop(time + 0.4);
+    }
+
+    function playHat(time) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(8000, time);
+        g.gain.setValueAtTime(0.05, time);
+        g.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+        osc.connect(g); g.connect(ctx.destination);
+        osc.start(time); osc.stop(time + 0.05);
+    }
+
+    function runScheduler() {
+        while (nextStepTime < ctx.currentTime + 0.1) {
+            const mode = document.getElementById('beat-selector').value;
+            if (mode !== 'none') {
+                if (currentStep % 4 === 0) playKick(nextStepTime);
+                if (mode === 'techno' && currentStep % 2 === 0) playHat(nextStepTime);
+                if (mode === 'trap') playHat(nextStepTime);
+                if (mode === 'house' && currentStep % 4 === 2) playHat(nextStepTime);
+            }
+            updateVisualizer(currentStep);
+            nextStepTime += (60.0 / document.getElementById('bpm-slider').value / 2);
+            currentStep = (currentStep + 1) % 8;
+        }
+        timerID = setTimeout(runScheduler, 25);
+    }
+
+    function updateVisualizer(step) {
+        document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('playing', i === step));
+    }
+
+    let isTouching = false;
+    let lastActiveIndex = null;
+
+    function handleInteraction(e) {
+        e.preventDefault();
+        if (ctx.state === 'suspended') ctx.resume();
+        const pointer = e.touches ? e.touches[0] : e;
+        const target = document.elementFromPoint(pointer.clientX, pointer.clientY);
+        if (target && target.classList.contains('pad')) {
+            const index = parseInt(target.dataset.index);
+            if (lastActiveIndex !== index) {
+                if (lastActiveIndex !== null) stopVoice(lastActiveIndex);
+                startVoice(index);
+                lastActiveIndex = index;
+            }
+        } else if (lastActiveIndex !== null) {
+            stopVoice(lastActiveIndex);
+            lastActiveIndex = null;
+        }
+    }
+
+    grid.addEventListener('mousedown', (e) => { isTouching = true; handleInteraction(e); });
+    window.addEventListener('mousemove', (e) => { if(isTouching) handleInteraction(e); });
+    window.addEventListener('mouseup', () => { isTouching = false; if(lastActiveIndex !== null) stopVoice(lastActiveIndex); lastActiveIndex = null; });
+
+    grid.addEventListener('touchstart', (e) => { handleInteraction(e); }, {passive: false});
+    grid.addEventListener('touchmove', handleInteraction, {passive: false});
+    grid.addEventListener('touchend', (e) => { e.preventDefault(); if(lastActiveIndex !== null) stopVoice(lastActiveIndex); lastActiveIndex = null; }, {passive: false});
+
+    document.getElementById('play-beat-btn').onclick = function() {
+        if (!isSequencerRunning) {
+            ctx.resume();
+            nextStepTime = ctx.currentTime;
+            runScheduler();
+            this.classList.add('active-btn');
+        } else {
+            clearTimeout(timerID);
+            this.classList.remove('active-btn');
+            updateVisualizer(-1);
+        }
+        isSequencerRunning = !isSequencerRunning;
+    };
+
+    document.getElementById('bpm-slider').oninput = function() { document.getElementById('bpm-display').textContent = this.value; };
+    document.getElementById('btn-saw').onclick = function() { currentOscType = 'sawtooth'; this.classList.add('active-btn'); document.getElementById('btn-sqr').classList.remove('active-btn'); };
+    document.getElementById('btn-sqr').onclick = function() { currentOscType = 'square'; this.classList.add('active-btn'); document.getElementById('btn-saw').classList.remove('active-btn'); };
+</script>
+</body>
+</html>
