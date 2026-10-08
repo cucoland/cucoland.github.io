@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Juego de Memoria</title>
+    <style>
+        :root {
+            --red: #FF4238;
+            --yellow: #FFEE3F;
+            --green: #11D66D;
+            --purple: #7859E6;
+            --bg-dark: #506972;
+            --panel-bg: #F0F0F1;
+            /* Diseño smooth 3D con bordes suaves */
+            --shadow-3d: inset -4px -4px 8px rgba(0,0,0,0.3), 
+                         inset 4px 4px 8px rgba(255,255,255,0.4),
+                         0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Espacio visual: 99% alto, ancho 60% del alto */
+        #game-container {
+
+background: #C6FFDD;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to bottom, #f7797d, #FBD786, #C6FFDD);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to bottom, #f7797d, #FBD786, #C6FFDD); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+
+            //background-color: var(--panel-bg);
+            height: 99vh;
+            width: calc(99vh * 0.6);
+            max-width: 100vw;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 2vh;
+            border-radius: 2vh;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Contador de mejor marca (superior derecha) */
+        #high-score {
+            position: absolute;
+            top: 1.5vh;
+            right: 1.5vh;
+            font-size: 1.8vh;
+            font-weight: bold;
+            color: #333;
+            z-index: 20;
+        }
+
+        /* Título Fijo */
+        #game-title {
+            height: 4vh;
+            display: flex;
+            align-items: left;
+            justify-content: left;
+            font-size: 3.5vh;
+            color: #2c3e50;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        
+        #info-zone {
+            min-height: 39vh; 
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            align-items: center;
+            text-align: center;
+            gap: 1.5vh;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .text-adaptive { font-size: 2.2vh; line-height: 1.3; color: #444; }
+        .level-text { font-size: 2.8vh; font-weight: bold; color: var(--purple); }
+
+        /* Botones de acción */
+        .btn-action {
+            width: 30vh;
+            //height: 15vh; /* Botón cuadrado */
+            border: none;
+            border-radius: 2vh;
+            font-weight: bold;
+            font-size: 2vh;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: var(--shadow-3d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1vh;
+        }
+        #btn-start { background-color: var(--green); color: white; }
+        #btn-continue { background-color: var(--purple); color: white; display: none; }
+        .btn-action:active { transform: scale(0.95); }
+
+        /* Zona de Juego (Torre y Grid) */
+        #play-area {
+            flex-grow: 1;
+            position: relative;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+#play-area.active {
+    display: flex;
+}
+
+        /* Torre de piezas 3D */
+        #tower-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            justify-content: center;
+        }
+
+#tower-container.hidden {
+    display: none !important;
+}
+
+        .piece-3d {
+            width: 20vh;
+            height: 10vh;
+            border-radius: 1vh;
+            position: absolute;
+            box-shadow: var(--shadow-3d);
+            transition: all 0.5s ease;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* Efecto explosión */
+        .explode {
+            transform: scale(2) rotate(180deg);
+            opacity: 0 !important;
+        }
+
+        /* Grid de selección 2x2 */
+        #color-grid {
+            display: none; /* Solo se ve cuando se requiere interacción */
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2vh;
+            width: 90%;
+            aspect-ratio: 1 / 1; /* Cuadrado proporcional */
+        }
+
+        /* Ajuste de ancho del grid si la pantalla es más ancha que alta */
+        @media (orientation: landscape) {
+            #color-grid { max-width: ; }
+        }
+
+        .grid-btn {
+            border: none;
+            border-radius: 2vh;
+            cursor: pointer;
+            box-shadow: var(--shadow-3d);
+            transition: transform 0.1s;
+        }
+        .grid-btn:active { transform: scale(0.92); }
+
+        /* Replicación de colores (fila superior) */
+        #sequence-tracker {
+            display: flex;
+            justify-content: center;
+            gap: 1vh;
+            height: 4vh;
+            margin-bottom: 1vh;
+            width: 100%;
+        }
+
+#solution-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Por si la secuencia es muy larga */
+    gap: 0.8vh;
+    width: 100%;
+    margin-top: 1.5vh;
+    padding: 1vh 0;
+}
+
+        .mini-piece {
+            width: 4vh;
+            height: 4vh;
+            border-radius: 0.5vh;
+            box-shadow: var(--shadow-3d);
+	    flex-shrink: 0;
+        }
+
+        /* Colores */
+        .bg-red { background-color: var(--red); }
+        .bg-yellow { background-color: var(--yellow); }
+        .bg-green { background-color: var(--green); }
+        .bg-purple { background-color: var(--purple); }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="high-score">Record Personal: <span id="score-val">0</span></div>
+    
+    <div id="info-zone">
+<h1 id="game-title">JUEGO DE MEMORIA</h1>
+
+        <div id="result-screen" class="hidden">
+            <p id="final-message" class="text-adaptive"></p>
+            <div id="solution-row" class="sequence-tracker" style="display:flex; justify-content:center; flex-wrap: wrap; gap:0.5vh; margin-top:1vh; padding: 1vh 0;"></div>
+            <div style="display:flex; justify-content:center; margin-top:2vh;">
+                <button id="btn-continue" class="btn-action">CONTINUAR</button>
+            </div>
+        </div>
+
+
+        <div id="start-screen">
+            <p class="text-adaptive"><br><br>Memoriza la torre de colores que aparecerá.<br>¡Cada nivel es un nuevo desafío!</p>
+            <div style="display:flex; justify-content:center; margin-top:2vh;">
+                <button id="btn-start" class="btn-action">COMENZAR<br>JUEGO</button>
+            </div>
+        </div>
+
+        <div id="game-status" class="hidden">
+            <div id="level-display" class="level-text">Nivel 1</div>
+            <p id="instruction-msg" class="text-adaptive"></p>
+            <div id="sequence-tracker"></div>
+        </div>
+
+
+    </div>
+
+    <div id="play-area">
+        <div id="tower-container"></div>
+        <div id="color-grid">
+            <button class="grid-btn bg-red" onclick="handleInput('bg-red')"></button>
+            <button class="grid-btn bg-yellow" onclick="handleInput('bg-yellow')"></button>
+            <button class="grid-btn bg-green" onclick="handleInput('bg-green')"></button>
+            <button class="grid-btn bg-purple" onclick="handleInput('bg-purple')"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configuración del Estado
+    let level = 1;
+    let sequence = [];
+    let userIndex = 0;
+    let highScore = localStorage.getItem('maxLevelMemory') || 0;
+    const colorOptions = ['bg-red', 'bg-yellow', 'bg-green', 'bg-purple'];
+
+    // Elementos DOM
+    const ui = {
+        score: document.getElementById('score-val'),
+        startScreen: document.getElementById('start-screen'),
+        gameStatus: document.getElementById('game-status'),
+        resultScreen: document.getElementById('result-screen'),
+        levelTxt: document.getElementById('level-display'),
+        instrMsg: document.getElementById('instruction-msg'),
+        tracker: document.getElementById('sequence-tracker'),
+        solutionRow: document.getElementById('solution-row'),
+        tower: document.getElementById('tower-container'),
+        grid: document.getElementById('color-grid'),
+        btnStart: document.getElementById('btn-start'),
+        btnContinue: document.getElementById('btn-continue'),
+        finalMsg: document.getElementById('final-message')
+    };
+
+    ui.score.innerText = highScore;
+
+    // Eventos
+    ui.btnStart.addEventListener('click', () => startLevel(true));
+    ui.btnContinue.addEventListener('click', () => startLevel(false));
+
+    function startLevel(isNewGame) {
+        if (isNewGame) level = 1;
+
+
+	// Mostrar Play Area
+    document.getElementById('play-area').classList.add('active');
+    
+    // Mostrar Torre y Ocultar Grid
+    ui.tower.classList.remove('hidden');
+    ui.grid.style.display = 'none';
+
+        
+        // Limpieza de interfaz
+        ui.startScreen.classList.add('hidden');
+        ui.resultScreen.classList.add('hidden');
+        ui.gameStatus.classList.remove('hidden');
+        ui.grid.style.display = 'none';
+        ui.tower.innerHTML = '';
+        ui.tracker.innerHTML = '';
+        ui.btnContinue.style.display = 'none';
+        
+        ui.levelTxt.innerText = `Nivel ${level}`;
+        ui.instrMsg.innerText = "Memoriza la secuencia...";
+        
+        generateLevelSequence();
+        animateTower();
+    }
+
+    function generateLevelSequence() {
+        sequence = [];
+        // Cada nivel genera una secuencia nueva (longitud: nivel + 3)
+        const length = level + 3;
+        for(let i = 0; i < length; i++) {
+            sequence.push(colorOptions[Math.floor(Math.random() * 4)]);
+        }
+    }
+
+    async function animateTower() {
+        for(let i = 0; i < sequence.length; i++) {
+            await sleep(1000);
+            const piece = document.createElement('div');
+            piece.className = `piece-3d ${sequence[i]}`;
+            // Amontonado con 10px de diferencia (usamos vh para adaptabilidad)
+            piece.style.bottom = `calc(50% - 15vh + ${i * 1.2}vh)`; 
+            piece.style.zIndex = i;
+            ui.tower.appendChild(piece);
+        }
+
+        // 2 segundos extra para memorizar
+        await sleep(2000);
+
+        // Efecto explosión
+        const pieces = document.querySelectorAll('.piece-3d');
+        pieces.forEach(p => p.classList.add('explode'));
+        
+        await sleep(500);
+        ui.tower.innerHTML = '';
+	ui.tower.classList.add('hidden'); // <-- Esto libera el espacio de la torre
+        showInputGrid();
+    }
+
+    function showInputGrid() {
+        userIndex = 0;
+        ui.grid.style.display = 'grid';
+        ui.instrMsg.innerText = "Pulsa los colores en el mismo orden que han aparecido";
+        updateProgressText();
+    }
+
+    function updateProgressText() {
+        ui.instrMsg.innerHTML = `Pulsa en los colores en el mismo orden que han aparecido<br>
+                                 </br><b>Correctos: ${userIndex} / ${sequence.length}</b>`;
+    }
+
+    function handleInput(color) {
+        if (color === sequence[userIndex]) {
+            // Replicar color en la parte superior
+            const dot = document.createElement('div');
+            dot.className = `mini-piece ${color}`;
+            ui.tracker.appendChild(dot);
+            
+            userIndex++;
+            updateProgressText();
+
+            if (userIndex === sequence.length) {
+                levelSuccess();
+            }
+        } else {
+            gameOver();
+        }
+    }
+
+    function levelSuccess() {
+        ui.grid.style.display = 'none';
+	ui.tower.classList.add('hidden');
+        ui.gameStatus.classList.add('hidden');
+        ui.resultScreen.classList.remove('hidden');
+        ui.btnContinue.style.display = 'flex';
+	// Ocultar el play-area por completo
+    	document.getElementById('play-area').classList.remove('active');
+        
+        ui.finalMsg.innerHTML = `<span style="color:var(--green)">¡Nivel Completado!</span><br>Nivel superado: ${level}`;
+        
+        // Mostrar secuencia acertada
+        ui.solutionRow.innerHTML = '';
+        sequence.forEach(c => {
+            const d = document.createElement('div');
+            d.className = `mini-piece ${c}`;
+            ui.solutionRow.appendChild(d);
+        });
+
+        if (level > highScore) {
+            highScore = level;
+            localStorage.setItem('maxLevelMemory', highScore);
+            ui.score.innerText = highScore;
+        }
+        level++;
+    }
+
+    function gameOver() {
+        ui.grid.style.display = 'none';
+	ui.tower.classList.add('hidden');
+        ui.gameStatus.classList.add('hidden');
+        ui.resultScreen.classList.remove('hidden');
+        ui.startScreen.classList.remove('hidden');
+
+	// 4. Ocultar el play-area por completo
+    	document.getElementById('play-area').classList.remove('active');
+        
+        ui.finalMsg.innerHTML = `<span style="color:var(--red)"><h1>¡Final de partida!</h1></span><br>
+                                 Aciertos: ${userIndex} de ${sequence.length}<br>
+                                 Pulsa "Comenzar Juego" para jugar otra vez.<br>
+                                 La solución era:`;
+        
+        ui.solutionRow.innerHTML = '';
+
+	// Generar la fila de la solución
+	    sequence.forEach(colorClass => {
+	        const piece = document.createElement('div');
+	        // Usamos mini-piece para que herede el diseño 3D
+	        piece.className = `mini-piece ${colorClass}`;
+	        ui.solutionRow.appendChild(piece);
+	    });
+    }
+
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+</script>
+
+</body>
+</html>
