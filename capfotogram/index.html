@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extractor de Fotogramas 2026</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .video-preview {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+            margin-bottom: 20px;
+            max-height: 400px;
+        }
+
+        /* Estilo del Scroll Horizontal de Fotogramas */
+        .controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #334155;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .time-display {
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-select { background: #334155; color: white; }
+        .btn-download { background: var(--primary); color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:disabled { background: #475569; cursor: not-allowed; }
+
+        input[type="file"] { display: none; }
+
+        #canvas-buffer { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Capturador de Fotogramas</h2>
+        <p>Selecciona un video y desliza para elegir el momento perfecto.</p>
+
+        <video id="main-video" class="video-preview"></video>
+        
+        <div class="controls">
+            <div class="time-display" id="time-val">00:00:00</div>
+            <input type="range" id="video-slider" min="0" value="0" step="0.01" disabled>
+            <p style="font-size: 0.8rem; color: #94a3b8;">Usa el deslizador para buscar el fotograma</p>
+        </div>
+
+        <div class="btn-group">
+            <label class="btn btn-select">
+                Cargar Video
+                <input type="file" id="file-input" accept="video/*">
+            </label>
+            <button class="btn btn-download" id="download-btn" disabled>Guardar Fotograma (.JPG)</button>
+        </div>
+    </div>
+
+    <!-- Buffer invisible para procesar la imagen -->
+    <canvas id="canvas-buffer"></canvas>
+
+    <script>
+        const video = document.getElementById('main-video');
+        const fileInput = document.getElementById('file-input');
+        const slider = document.getElementById('video-slider');
+        const timeVal = document.getElementById('time-val');
+        const downloadBtn = document.getElementById('download-btn');
+        const canvas = document.getElementById('canvas-buffer');
+        const ctx = canvas.getContext('2d');
+
+        // 1. Cargar Video
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            video.src = url;
+            
+            video.onloadedmetadata = () => {
+                slider.disabled = false;
+                downloadBtn.disabled = false;
+                slider.max = video.duration;
+                formatTime(0);
+            };
+        });
+
+        // 2. Sincronizar Slider con Video
+        slider.addEventListener('input', function() {
+            video.currentTime = this.value;
+            formatTime(this.value);
+        });
+
+        // Formatear tiempo HH:MM:SS
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 100);
+            timeVal.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms}`;
+        }
+
+        // 3. Capturar y Descargar
+        downloadBtn.addEventListener('click', () => {
+            // Ajustar canvas al tamaño real del video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Dibujar el fotograma actual en el canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convertir a imagen y descargar
+            const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = `fotograma_2026_${Math.floor(video.currentTime)}s.jpg`;
+            link.click();
+        });
+
+        // Permitir que el slider se mueva si el usuario da play al video
+        video.addEventListener('timeupdate', () => {
+            if (!slider.matches(':active')) { // Solo si el usuario no está arrastrando el slider
+                slider.value = video.currentTime;
+                formatTime(video.currentTime);
+            }
+        });
+    </script>
+</body>
+</html>
