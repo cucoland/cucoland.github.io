@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Limpiador Móvil 2026</title>
+    <style>
+        :root { --primary: #007AFF; --bg: #f2f2f7; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding: 20px; box-sizing: border-box; }
+        h1 { font-size: 1.5rem; text-align: center; color: #1c1c1e; margin-bottom: 5px; }
+        p { text-align: center; color: #8e8e93; font-size: 0.9rem; margin-bottom: 25px; }
+        
+        .upload-area { border: 2px dashed #c7c7cc; border-radius: 15px; padding: 40px 20px; text-align: center; position: relative; transition: all 0.3s; }
+        .upload-area:active { background: #f2f2f7; transform: scale(0.98); }
+        .btn-main { background: var(--primary); color: white; padding: 16px 30px; border-radius: 12px; font-weight: 600; text-decoration: none; display: inline-block; margin-top: 10px; border: none; font-size: 1rem; cursor: pointer; }
+        
+        #status-list { margin-top: 25px; }
+        .status-item { background: #f9f9f9; border-radius: 10px; padding: 10px; margin-bottom: 8px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .status-ok { color: #34c759; font-weight: bold; }
+        
+        .limit-info { margin-top: 30px; background: #fff9e6; border-radius: 10px; padding: 15px; font-size: 0.8rem; line-height: 1.4; color: #6d4c41; }
+        input[type="file"] { position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1>Limpiador Pro 2026</h1>
+    <p>Las fotos se procesan en tu móvil. <br>Sin subir datos a internet.</p>
+
+    <div class="upload-area">
+        <div id="icon">📸</div>
+        <button class="btn-main">SELECCIONAR FOTOS</button>
+        <input type="file" id="picker" accept="image/*" multiple>
+    </div>
+
+    <div id="status-list"></div>
+
+    <div class="limit-info">
+        <strong>Privacidad Total (2026):</strong><br>
+        • Elimina GPS, fecha y datos del dispositivo.<br>
+        • Las fotos se guardarán en tu carpeta de Descargas.<br>
+        • Procesamiento local mediante GPU móvil.
+    </div>
+</div>
+
+<canvas id="engine" style="display:none;"></canvas>
+
+<script>
+    const picker = document.getElementById('picker');
+    const list = document.getElementById('status-list');
+    const canvas = document.getElementById('engine');
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    picker.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        list.innerHTML = "<strong>Procesando...</strong><br>";
+
+        for (let file of files) {
+            const item = document.createElement('div');
+            item.className = 'status-item';
+            item.innerHTML = `<span>${file.name.substring(0,20)}...</span> <span>⌛</span>`;
+            list.appendChild(item);
+
+            try {
+                const cleanBlob = await cleanImage(file);
+                download(cleanBlob, file.name);
+                item.innerHTML = `<span>${file.name.substring(0,20)}...</span> <span class="status-ok">Limpia ✓</span>`;
+            } catch (err) {
+                item.innerHTML = `<span>${file.name}</span> <span style="color:red">Error</span>`;
+            }
+        }
+    });
+
+    function cleanImage(file) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            img.onload = () => {
+                // Redimensionar si es extremadamente grande para ahorrar RAM en móvil
+                let w = img.width;
+                let h = img.height;
+                const max = 4096; 
+                if (w > max || h > max) {
+                    if (w > h) { h = (max/w)*h; w = max; }
+                    else { w = (max/h)*w; h = max; }
+                }
+
+                canvas.width = w;
+                canvas.height = h;
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(img.src);
+                    resolve(blob);
+                }, 'image/jpeg', 0.90);
+            };
+        });
+    }
+
+    function download(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const baseName = name.split('.').slice(0, -1).join('.');
+        a.download = `limpia_${baseName}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+</script>
+
+</body>
+</html>
