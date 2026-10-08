@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Puzzle Deslizante Personalizado</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f0f0; }
+        #controls { margin: 20px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #puzzle-board { 
+            display: grid; 
+            gap: 2px; 
+            border: 5px solid #333; 
+            background: #333;
+            width: 600px; height: 600px;
+            display: none;
+        }
+        .tile { 
+            cursor: pointer; 
+            background-repeat: no-repeat;
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.5); font-weight: bold;
+        }
+        .empty { background: #555 !important; cursor: default; }
+        #message { margin-top: 20px; font-size: 1.5em; color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <input type="file" id="imageInput" accept="image/*">
+        <label>Tamaño (N):</label>
+        <input type="number" id="gridSize" value="3" min="2" max="10" style="width: 50px;">
+        <button onclick="startGame()">Iniciar Juego</button>
+    </div>
+
+    <div id="puzzle-board"></div>
+    <div id="message"></div>
+
+    <script>
+        let size, tiles = [], emptyIdx, imgUrl;
+
+        function startGame() {
+            const input = document.getElementById('imageInput');
+            size = parseInt(document.getElementById('gridSize').value);
+            if (!input.files[0]) return alert("Selecciona una imagen");
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imgUrl = e.target.result;
+                setupBoard();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function setupBoard() {
+            const board = document.getElementById('puzzle-board');
+            const message = document.getElementById('message');
+            board.innerHTML = '';
+            message.innerText = '';
+            board.style.display = 'grid';
+            board.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            
+            tiles = Array.from({length: size * size}, (_, i) => i);
+            emptyIdx = size * size - 1;
+            
+            // Mezclar (simulando movimientos válidos para garantizar resolubilidad)
+            shuffleTiles();
+            renderBoard();
+        }
+
+        function shuffleTiles() {
+            for (let i = 0; i < 500; i++) {
+                const neighbors = getNeighbors(emptyIdx);
+                const randomNeighbor = neighbors[Math.floor(Math.random() * neighbors.length)];
+                [tiles[emptyIdx], tiles[randomNeighbor]] = [tiles[randomNeighbor], tiles[emptyIdx]];
+                emptyIdx = randomNeighbor;
+            }
+        }
+
+        function getNeighbors(idx) {
+            const res = [], r = Math.floor(idx / size), c = idx % size;
+            if (r > 0) res.push(idx - size);
+            if (r < size - 1) res.push(idx + size);
+            if (c > 0) res.push(idx - 1);
+            if (c < size - 1) res.push(idx + 1);
+            return res;
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('puzzle-board');
+            board.innerHTML = '';
+            tiles.forEach((tileVal, currentIdx) => {
+                const div = document.createElement('div');
+                div.className = 'tile' + (tileVal === size * size - 1 ? ' empty' : '');
+                if (tileVal !== size * size - 1) {
+                    const r = Math.floor(tileVal / size);
+                    const c = tileVal % size;
+                    div.style.backgroundImage = `url(${imgUrl})`;
+                    div.style.backgroundSize = `${600}px ${600}px`;
+                    div.style.backgroundPosition = `-${c * (600/size)}px -${r * (600/size)}px`;
+                }
+                div.onclick = () => moveTile(currentIdx);
+                board.appendChild(div);
+            });
+        }
+
+        function moveTile(idx) {
+            if (getNeighbors(idx).includes(emptyIdx)) {
+                [tiles[idx], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[idx]];
+                emptyIdx = idx;
+                renderBoard();
+                checkWin();
+            }
+        }
+
+        function checkWin() {
+            if (tiles.every((v, i) => v === i)) {
+                document.getElementById('message').innerText = "¡Felicidades! Imagen montada correctamente.";
+            }
+        }
+    </script>
+</body>
+</html>
