@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Imagen Pro</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --panel-color: #2d2d2d;
+            --accent-color: #007bff;
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Área de Visualización (Superior) */
+        #viewport {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 4px;
+        }
+
+        /* Menú de Controles (Inferior) */
+        #controls-panel {
+            background-color: var(--panel-color);
+            padding: 15px;
+            border-top: 1px solid #444;
+        }
+
+        .menu-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover { background: #555; }
+        button.active { background: var(--accent-color); }
+
+        .slider-container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+
+        .slider-container.visible { display: flex; }
+
+        input[type="range"] { width: 250px; }
+
+        .action-buttons {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        #download-btn { background-color: #28a745; }
+    </style>
+</head>
+<body>
+
+    <div id="viewport">
+        <canvas id="canvas"></canvas>
+        <p id="placeholder">Carga una imagen para comenzar</p>
+    </div>
+
+    <div id="controls-panel">
+        <div class="menu-buttons">
+            <button onclick="showSlider('exposure')">Exposición</button>
+            <button onclick="showSlider('brightness')">Brillo</button>
+            <button onclick="showSlider('contrast')">Contraste</button>
+            <button onclick="showSlider('highlights')">Rango Claro</button>
+            <button onclick="showSlider('shadows')">Rango Oscuro</button>
+            <button onclick="showSlider('saturation')">Saturación</button>
+        </div>
+
+        <div id="slider-group">
+            <div class="slider-container" id="ctrl-exposure">
+                <label>Exposición</label>
+                <input type="range" id="exposure" min="-100" max="100" value="0">
+            </div>
+            <div class="slider-container" id="ctrl-brightness">
+                <label>Brillo</label>
+                <input type="range" id="brightness" min="-100" max="100" value="0">
+            </div>
+            <div class="slider-container" id="ctrl-contrast">
+                <label>Contraste</label>
+                <input type="range" id="contrast" min="-100" max="100" value="0">
+            </div>
+            <div class="slider-container" id="ctrl-highlights">
+                <label>Rango Claro</label>
+                <input type="range" id="highlights" min="-100" max="100" value="0">
+            </div>
+            <div class="slider-container" id="ctrl-shadows">
+                <label>Rango Oscuro</label>
+                <input type="range" id="shadows" min="-100" max="100" value="0">
+            </div>
+            <div class="slider-container" id="ctrl-saturation">
+                <label>Saturación</label>
+                <input type="range" id="saturation" min="-100" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <input type="file" id="upload" accept="image/*" style="display:none">
+            <button onclick="document.getElementById('upload').click()">Cargar Imagen</button>
+            <button id="download-btn" onclick="downloadImage()">Guardar Imagen</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const upload = document.getElementById('upload');
+        let originalImage = null;
+
+        // Configuración de filtros iniciales
+        const filters = {
+            exposure: 0, brightness: 0, contrast: 0,
+            highlights: 0, shadows: 0, saturation: 0
+        };
+
+        // Cargar Imagen
+        upload.addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    document.getElementById('placeholder').style.display = 'none';
+                    applyFilters();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        // Mostrar el slider correspondiente
+        function showSlider(id) {
+            document.querySelectorAll('.slider-container').forEach(c => c.classList.remove('visible'));
+            document.getElementById('ctrl-' + id).classList.add('visible');
+        }
+
+        // Escuchar cambios en sliders
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                filters[e.target.id] = parseInt(e.target.value);
+                applyFilters();
+            });
+        });
+
+        function applyFilters() {
+            if (!originalImage) return;
+
+            // Dibujar imagen original
+            ctx.drawImage(originalImage, 0, 0);
+
+            // Obtener datos de píxeles
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Valores de ajuste
+            const exp = (filters.exposure + 100) / 100;
+            const bright = filters.brightness * 2.55;
+            const cont = (filters.contrast + 100) / 100;
+            const sat = (filters.saturation + 100) / 100;
+            const high = filters.highlights; 
+            const shd = filters.shadows;
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+
+                // 1. Exposición y Brillo
+                r = (r * exp) + bright;
+                g = (g * exp) + bright;
+                b = (b * exp) + bright;
+
+                // 2. Contraste
+                r = ((r / 255 - 0.5) * cont + 0.5) * 255;
+                g = ((g / 255 - 0.5) * cont + 0.5) * 255;
+                b = ((b / 255 - 0.5) * cont + 0.5) * 255;
+
+                // 3. Rango Claro (Highlights) / Oscuro (Shadows) simple
+                let avg = (r + g + b) / 3;
+                if (avg > 128) { // Highlights
+                    r += high * (avg / 255);
+                    g += high * (avg / 255);
+                    b += high * (avg / 255);
+                } else { // Shadows
+                    r += shd * (1 - avg / 255);
+                    g += shd * (1 - avg / 255);
+                    b += shd * (1 - avg / 255);
+                }
+
+                // 4. Saturación (Fórmula de luminancia)
+                const gray = 0.2989 * r + 0.5870 * g + 0.1140 * b;
+                r = gray + sat * (r - gray);
+                g = gray + sat * (g - gray);
+                b = gray + sat * (b - gray);
+
+                // Aplicar valores finales
+                data[i] = Math.min(255, Math.max(0, r));
+                data[i + 1] = Math.min(255, Math.max(0, g));
+                data[i + 2] = Math.min(255, Math.max(0, b));
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'imagen-retocada.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
