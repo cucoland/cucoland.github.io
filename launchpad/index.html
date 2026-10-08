@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Launchpad Pro</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --panel-color: #1a1a20;
+            --neon-pink: #ff00ff;
+            --neon-blue: #00f2ff;
+            --neon-green: #39ff14;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            display: flex;
+            width: 95vw;
+            max-width: 900px;
+            height: 80vh;
+            background: var(--panel-color);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.05);
+            border: 1px solid #333;
+        }
+
+        /* Controles Izquierda */
+        .controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding-right: 20px;
+            border-right: 2px solid #2a2a35;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        label { font-size: 0.8rem; text-transform: uppercase; color: #888; }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--neon-blue);
+        }
+
+        .mode-btn {
+            padding: 15px;
+            background: #222;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .mode-btn.active {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        /* Rejilla Derecha */
+        .grid-container {
+            flex: 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 15px;
+            padding-left: 20px;
+        }
+
+        .pad {
+            background: #2a2a35;
+            border-radius: 10px;
+            border: none;
+            position: relative;
+            transition: transform 0.1s, box-shadow 0.1s;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Colores de los Pads */
+        .pad[data-note="C"] { border-bottom: 4px solid var(--neon-pink); }
+        .pad[data-note="D"] { border-bottom: 4px solid var(--neon-blue); }
+        .pad[data-note="E"] { border-bottom: 4px solid var(--neon-green); }
+        .pad[data-note="G"] { border-bottom: 4px solid #fffb00; }
+
+        .pad.active {
+            transform: scale(0.95);
+            background: white !important;
+            box-shadow: 0 0 30px white;
+        }
+
+        .status-light {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+        }
+
+        @media (max-width: 600px) {
+            .container { flex-direction: column; height: 95vh; }
+            .controls { border-right: none; border-bottom: 2px solid #2a2a35; padding: 10px 0; }
+            .grid-container { padding: 15px 0 0 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <div class="control-group">
+            <label>Master Volume</label>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+        </div>
+        <div class="control-group">
+            <label>Sintetizador</label>
+            <button class="mode-btn active" id="osc-saw">Sawtooth</button>
+            <button class="mode-btn" id="osc-square">Square</button>
+        </div>
+        <div class="control-group">
+            <label>Filtro (Cutoff)</label>
+            <input type="range" id="filter" min="100" max="5000" value="2000">
+        </div>
+        <p style="font-size: 10px; color: #555;">Toca o desliza sobre los pads</p>
+    </div>
+
+    <div class="grid-container" id="grid">
+        </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentOscillator = 'sawtooth';
+    const activeNodes = new Map();
+
+    // Notas de la escala pentatónica para que siempre suene bien
+    const notes = [
+        261.63, 293.66, 329.63, 392.00, // C4, D4, E4, G4
+        440.00, 523.25, 587.33, 659.25, // A4, C5, D5, E5
+        783.99, 880.00, 1046.50, 1174.66, // G5, A5, C6, D6
+        1318.51, 1567.98, 1760.00, 2093.00 // E6, G6, A6, C7
+    ];
+
+    const grid = document.getElementById('grid');
+    
+    // Crear la rejilla 4x4
+    for (let i = 0; i < 16; i++) {
+        const pad = document.createElement('div');
+        pad.classList.add('pad');
+        pad.dataset.index = i;
+        pad.dataset.freq = notes[i];
+        // Asignar color visual según fila
+        const noteNames = ["C", "D", "E", "G"];
+        pad.dataset.note = noteNames[Math.floor(i/4)];
+        
+        pad.innerHTML = `<div class="status-light"></div>`;
+        grid.appendChild(pad);
+    }
+
+    // Lógica de sonido
+    function playNote(index) {
+        if (activeNodes.has(index)) return;
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        osc.type = currentOscillator;
+        osc.frequency.setValueAtTime(notes[index], audioCtx.currentTime);
+
+        filter.type = "lowpass";
+        filter.frequency.value = document.getElementById('filter').value;
+
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(document.getElementById('volume').value, audioCtx.currentTime + 0.05);
+
+        osc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.start();
+        activeNodes.set(index, { osc, gainNode });
+        
+        document.querySelectorAll('.pad')[index].classList.add('active');
+    }
+
+    function stopNote(index) {
+        if (activeNodes.has(index)) {
+            const { osc, gainNode } = activeNodes.get(index);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            setTimeout(() => {
+                osc.stop();
+                osc.disconnect();
+            }, 100);
+            activeNodes.delete(index);
+            document.querySelectorAll('.pad')[index].classList.remove('active');
+        }
+    }
+
+    // Manejo de entrada Táctil y Ratón (Glissando)
+    let isDrawing = false;
+    let lastPad = null;
+
+    function handleInput(e) {
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const element = document.elementFromPoint(clientX, clientY);
+
+        if (element && element.classList.contains('pad')) {
+            const index = parseInt(element.dataset.index);
+            if (lastPad !== index) {
+                if (lastPad !== null) stopNote(lastPad);
+                playNote(index);
+                lastPad = index;
+            }
+        } else {
+            if (lastPad !== null) {
+                stopNote(lastPad);
+                lastPad = null;
+            }
+        }
+    }
+
+    // Eventos de ratón
+    grid.addEventListener('mousedown', (e) => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        isDrawing = true;
+        handleInput(e);
+    });
+    window.addEventListener('mousemove', (e) => { if (isDrawing) handleInput(e); });
+    window.addEventListener('mouseup', () => { 
+        isDrawing = false; 
+        if (lastPad !== null) stopNote(lastPad);
+        lastPad = null;
+    });
+
+    // Eventos táctiles
+    grid.addEventListener('touchstart', (e) => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        handleInput(e);
+    }, { passive: false });
+    grid.addEventListener('touchmove', handleInput, { passive: false });
+    grid.addEventListener('touchend', () => {
+        if (lastPad !== null) stopNote(lastPad);
+        lastPad = null;
+    }, { passive: false });
+
+    // Cambio de tipo de oscilador
+    document.getElementById('osc-saw').onclick = function() {
+        currentOscillator = 'sawtooth';
+        this.classList.add('active');
+        document.getElementById('osc-square').classList.remove('active');
+    };
+    document.getElementById('osc-square').onclick = function() {
+        currentOscillator = 'square';
+        this.classList.add('active');
+        document.getElementById('osc-saw').classList.remove('active');
+    };
+
+</script>
+</body>
+</html>
