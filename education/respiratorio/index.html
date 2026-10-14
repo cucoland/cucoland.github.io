@@ -1,156 +1,159 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Memoria: Aparato Respiratorio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #27ae60;
-            --bg-card: #34495e;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: var(--primary);
-        }
-
-        /* Grid adaptable: mínimo 3 y máximo 6 cartas por fila, separación de 5px */
-        #game-grid {
-            --gap: 5px;
-            display: grid;
-            gap: var(--gap);
-            width: 100%;
-            /* Ancho mínimo de carta:
-               - nunca menor que 1/6 del ancho (máx. 6 por fila) ni que 100px,
-               - nunca mayor que 1/3 del ancho (mín. 3 por fila). */
-            --card-min: min(
-                max(100px, calc((100% - 5 * var(--gap)) / 6)),
-                calc((100% - 2 * var(--gap) - 1px) / 3)
-            );
-            grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
-        }
-
-        .card {
-            width: 100%;
-            aspect-ratio: 110 / 150;
-            perspective: 1000px;
-            cursor: pointer;
-        }
-
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .card-front {
-            background-color: var(--bg-card);
-            color: white;
-            font-size: 2.2rem;
-            font-weight: bold;
-            border: 2px solid #2c3e50;
-        }
-
-        .card-back {
-            background-color: white;
-            transform: rotateY(180deg);
-            border: 3px solid #bdc3c7;
-        }
-
-        .card-back.type-image {
-            border-color: #e67e22;
-            background-color: #fffaf5;
-            padding: 4px;
-        }
-
-        .card-back.type-text {
-            border-color: #9b59b6;
-            background-color: #faf5ff;
-        }
-
-        .card-back svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        .card-back span {
-            font-size: .85rem;
-            font-weight: bold;
-            text-align: center;
-            color: #2c3e50;
-        }
-    </style>
-</head>
-<body class="min-h-screen py-5 px-3 flex flex-col items-center">
-
-    <header class="text-center mb-6 max-w-2xl">
-        <h1 class="text-2xl font-extrabold text-slate-600 mb-2">Juego de Memoria: Aparato Respiratorio</h1>
-        <p class="text-gray-500 text-sm md:text-base">
-           Empareja la imagen del órgano con su nombre lo más rápido posible. ¡Tiempo!
-        </p>
-    </header>
-
-    <main class="w-full max-w-5xl flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center">
-        
-        <!-- Game Section -->
-        <div class="flex flex-col items-center flex-1">
-            <div class="flex items-center justify-between w-full mb-4 bg-white px-3 py-1 rounded-xl shadow-sm border border-slate-200">
-                <span class="text-l font-bold text-slate-700">⏱️ Tiempo:</span>
-                <span id="timer" class="text-l font-mono font-bold text-emerald-600">00.00s</span>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>
+            Juego de Memoria: Aparato Respiratorio
+        </title>
+        <script src="https://cdn.tailwindcss.com">
+        </script>
+        <style>
+            :root {
+                --primary: #2c3e50;
+                --accent: #27ae60;
+                --bg-card: #34495e;
+            }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f5f7fa;
+                color: var(--primary);
+            }
+            /* Grid adaptable: mínimo 3 y máximo 6 cartas por fila, separación de 5px */
+                    #game-grid {
+                --gap: 5px;
+                display: grid;
+                gap: var(--gap);
+                width: 100%;
+                /* Ancho mínimo de carta:
+                           - nunca menor que 1/6 del ancho (máx. 6 por fila) ni que 100px,
+                           - nunca mayor que 1/3 del ancho (mín. 3 por fila). */
+                        --card-min: min(
+                            max(100px, calc((100% - 5 * var(--gap)) / 6)),
+                            calc((100% - 2 * var(--gap) - 1px) / 3)
+                        );
+                grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+            }
+            .card {
+                width: 100%;
+                aspect-ratio: 110 / 150;
+                perspective: 1000px;
+                cursor: pointer;
+            }
+            .card-inner {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                text-align: center;
+                transition: transform 0.6s;
+                transform-style: preserve-3d;
+            }
+            .card.flipped .card-inner {
+                transform: rotateY(180deg);
+            }
+            .card-front, .card-back {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+                border-radius: 12px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 10px;
+                box-sizing: border-box;
+            }
+            .card-front {
+                background-color: var(--bg-card);
+                color: white;
+                font-size: 2.2rem;
+                font-weight: bold;
+                border: 2px solid #2c3e50;
+            }
+            .card-back {
+                background-color: white;
+                transform: rotateY(180deg);
+                border: 3px solid #bdc3c7;
+            }
+            .card-back.type-image {
+                border-color: #e67e22;
+                background-color: #fffaf5;
+                padding: 4px;
+            }
+            .card-back.type-text {
+                border-color: #9b59b6;
+                background-color: #faf5ff;
+            }
+            .card-back svg {
+                width: 100%;
+                height: 100%;
+            }
+            .card-back span {
+                font-size: .85rem;
+                font-weight: bold;
+                text-align: center;
+                color: #2c3e50;
+            }
+            #reset {
+                background-color: #e8e8e8;
+                padding-left:10px;
+                padding-right:10px;
+                margin-left: 10px;
+                border: 1px solid #cfcfcf;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                border-radius: 9px;
+            }
+        </style>
+    </head>
+    <body class="min-h-screen py-5 px-3 flex flex-col items-center">
+        <header class="text-center mb-6 max-w-2xl">
+            <h1 class="text-2xl font-extrabold text-slate-600 mb-2">
+                Juego de Memoria: Aparato Respiratorio
+            </h1>
+            <p class="text-gray-500 text-sm md:text-base">
+                Empareja la imagen del órgano con su nombre lo más rápido posible. ¡Tiempo!
+            </p>
+        </header>
+        <main class="w-full max-w-5xl flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center">
+            <!-- Game Section -->
+            <div class="flex flex-col items-center flex-1">
+                <div class="flex items-center justify-between w-full mb-4 bg-white px-3 py-1 rounded-xl shadow-sm border border-slate-200">
+                    <span class="text-l font-bold text-slate-700 pr-10">
+                        ⏱️ Tiempo:
+                    </span>
+                    <span id="timer" class="text-l font-mono font-bold text-emerald-600 pr-10 pl-10">
+                        00.00s
+                    </span>
+                    <!-- Botón de reinicio -->
+                    <button id="reset" onclick="initGame()" >
+                        Reiniciar Partida
+                    </button>
+                </div>
+                <div class="winner-msg text-center font-bold text-lg text-emerald-600 min-h-[30px] mb-3" id="winner-text">
+                </div>
+                <div id="game-grid">
+                </div>
             </div>
-
-            <div class="winner-msg text-center font-bold text-lg text-emerald-600 min-h-[30px] mb-3" id="winner-text"></div>
-
-            <div id="game-grid"></div>
-
-            <button id="btn-reset" onclick="initGame()" class="mt-6 px-6 py-3 text-white bg-slate-800 font-bold rounded-full shadow-md hover:bg-slate-700 transition cursor-pointer">
-                Reiniciar Partida
-            </button>
-        </div>
-
-        <!-- High Scores Panel -->
-        <aside class="w-full lg:w-80 bg-white rounded-2xl shadow-md border border-slate-200 p-6 flex flex-col">
-            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                🏆 Top 10 Mejores Tiempos
-            </h2>
-            <div id="scores-container" class="flex-1 overflow-y-auto max-h-[350px]">
-                <p class="text-gray-400 text-sm italic text-center py-4">No hay registros todavía.</p>
-            </div>
-            <button onclick="clearScores()" class="mt-4 text-xs text-red-500 hover:underline text-center cursor-pointer">
-                Borrar récords
-            </button>
-        </aside>
-    </main>
-
-    <script>
-        // ---------- Vista de pulmón: bronquios (contexto), bronquiolos y alvéolos ----------
+            <!-- High Scores Panel -->
+            <aside class="w-full lg:w-80 bg-white rounded-2xl shadow-md border border-slate-200 p-6 flex flex-col">
+                <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    🏆 Top 10 Mejores Tiempos
+                </h2>
+                <div id="scores-container" class="flex-1 overflow-y-auto max-h-[350px]">
+                    <p class="text-gray-400 text-sm italic text-center py-4">
+                        No hay registros todavía.
+                    </p>
+                </div>
+                <button onclick="clearScores()" class="mt-4 text-xs text-red-500 hover:underline text-center cursor-pointer">
+                    Borrar récords
+                </button>
+            </aside>
+        </main>
+        <script>
+            // ---------- Vista de pulmón: bronquios (contexto), bronquiolos y alvéolos ----------
         const LUNG_PATH = 'M60 12 C42 6 22 14 14 34 C6 58 6 90 12 108 C18 124 44 130 62 128 C82 126 96 118 98 100 C100 76 96 46 86 28 C80 18 70 13 60 12 Z';
         // [x1, y1, x2, y2, grosor]
         const LUNG_BRONCHI = [
@@ -171,62 +174,99 @@
                     const a = ang + s * (depth === 0 ? 24 : 18);
                     const x2 = x + len * Math.cos(rad(a));
                     const y2 = y + len * Math.sin(rad(a));
-                    lines.push(`<line x1="${f(x)}" y1="${f(y)}" x2="${f(x2)}" y2="${f(y2)}" stroke="#1f9bd1" stroke-width="${depth === 0 ? 1.9 : 1.3}" stroke-linecap="round"/>`);
-                    if (depth < 1) {
+                    lines.push(`
+            <line x1="${f(x)}" y1="${f(y)}" x2="${f(x2)}" y2="${f(y2)}" stroke="#1f9bd1" stroke-width="${depth === 0 ? 1.9 : 1.3}" stroke-linecap="round"/>
+            `);
+                    if (depth
+            < 1) {
                         branch(x2, y2, a, len * 0.8, depth + 1);
                     } else {
                         clusters.push({ x: x2 + 3 * Math.cos(rad(a)), y: y2 + 3 * Math.sin(rad(a)), rot: a });
                     }
                 });
             }
-            LUNG_LEAVES.forEach(([x, y, a]) => branch(x, y, a, 23, 0));
+            LUNG_LEAVES.forEach(([x, y, a]) =>
+                branch(x, y, a, 23, 0));
 
             const alveoli = clusters.map(c => {
                 let s = '';
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i
+                < 5; i++) {
                     const t = rad(c.rot + i * 72);
-                    s += `<circle cx="${f(c.x + 3 * Math.cos(t))}" cy="${f(c.y + 3 * Math.sin(t))}" r="2.3" fill="#f08aa0" stroke="#c2185b" stroke-width=".7"/>`;
+                    s += `<circle cx="${f(c.x + 3 * Math.cos(t))}" cy="${f(c.y + 3 * Math.sin(t))}" r="2.3" fill="#f08aa0" stroke="#c2185b" stroke-width=".7"/>
+                `;
                 }
-                return s + `<circle cx="${f(c.x)}" cy="${f(c.y)}" r="2.2" fill="#f5b5c3" stroke="#c2185b" stroke-width=".7"/>`;
+                return s + `
+                <circle cx="${f(c.x)}" cy="${f(c.y)}" r="2.2" fill="#f5b5c3" stroke="#c2185b" stroke-width=".7"/>
+                `;
             }).join('');
 
             return { bronchioles: lines.join(''), alveoli };
         })();
 
         const LUNG_BRONCHI_SVG = LUNG_BRONCHI
-            .map(([x1, y1, x2, y2, w]) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2e86c1" stroke-width="${w}" stroke-linecap="round"/>`)
+            .map(([x1, y1, x2, y2, w]) => `
+                <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2e86c1" stroke-width="${w}" stroke-linecap="round"/>
+                `)
             .join('');
 
         const organsData = [
             {
                 id: 'nariz',
                 name: 'Fosas nasales',
-                draw: `<path d="M60 9 C57 14 54 20 51.5 25 C54 28.5 57 28 60 27 C63 28 66 28.5 68.5 25 C66 20 63 14 60 9 Z" fill="#e8a87c" stroke="#b9703f" stroke-width="1.2" stroke-linejoin="round"/><path d="M60 15 V25" stroke="#b9703f" stroke-width="1" opacity=".7"/><ellipse cx="56" cy="25.3" rx="2.4" ry="1.5" fill="#6b3a1e"/><ellipse cx="64" cy="25.3" rx="2.4" ry="1.5" fill="#6b3a1e"/>`
+                draw: `
+                <path d="M60 9 C57 14 54 20 51.5 25 C54 28.5 57 28 60 27 C63 28 66 28.5 68.5 25 C66 20 63 14 60 9 Z" fill="#e8a87c" stroke="#b9703f" stroke-width="1.2" stroke-linejoin="round"/>
+                <path d="M60 15 V25" stroke="#b9703f" stroke-width="1" opacity=".7"/>
+                <ellipse cx="56" cy="25.3" rx="2.4" ry="1.5" fill="#6b3a1e"/>
+                <ellipse cx="64" cy="25.3" rx="2.4" ry="1.5" fill="#6b3a1e"/>
+                `
             },
             {
                 id: 'faringe',
                 name: 'Faringe',
-                draw: `<path d="M52 31 H68 C68 37 65.5 40 64.5 43 V46 H55.5 V43 C54.5 40 52 37 52 31 Z" fill="#d6608a" stroke="#9c3560" stroke-width="1.2" stroke-linejoin="round"/><path d="M56 36 V45 M64 36 V45" stroke="#f5b7cd" stroke-width="1" opacity=".8"/>`
+                draw: `
+                <path d="M52 31 H68 C68 37 65.5 40 64.5 43 V46 H55.5 V43 C54.5 40 52 37 52 31 Z" fill="#d6608a" stroke="#9c3560" stroke-width="1.2" stroke-linejoin="round"/>
+                <path d="M56 36 V45 M64 36 V45" stroke="#f5b7cd" stroke-width="1" opacity=".8"/>
+                `
             },
             {
                 id: 'laringe',
                 name: 'Laringe',
-                draw: `<path d="M54 46 H66 L65.5 57 C62.5 59.5 57.5 59.5 54.5 57 Z" fill="#8e6bbf" stroke="#5b3f8c" stroke-width="1.2" stroke-linejoin="round"/><path d="M60 47 V58 M56.5 52 H63.5" stroke="#d2c3ea" stroke-width="1" opacity=".9"/>`
+                draw: `
+                <path d="M54 46 H66 L65.5 57 C62.5 59.5 57.5 59.5 54.5 57 Z" fill="#8e6bbf" stroke="#5b3f8c" stroke-width="1.2" stroke-linejoin="round"/>
+                <path d="M60 47 V58 M56.5 52 H63.5" stroke="#d2c3ea" stroke-width="1" opacity=".9"/>
+                `
             },
             {
                 id: 'traquea',
                 name: 'Tráquea',
-                draw: `<path d="M60 58 V81" fill="none" stroke="#2874a6" stroke-width="7" stroke-linecap="round"/><path d="M60 58 V81" fill="none" stroke="#5dade2" stroke-width="5" stroke-linecap="round"/><path d="M60 58 V81" fill="none" stroke="#2874a6" stroke-width="5" stroke-dasharray=".9 2.3" opacity=".7"/>`
+                draw: `
+                <path d="M60 58 V81" fill="none" stroke="#2874a6" stroke-width="7" stroke-linecap="round"/>
+                <path d="M60 58 V81" fill="none" stroke="#5dade2" stroke-width="5" stroke-linecap="round"/>
+                <path d="M60 58 V81" fill="none" stroke="#2874a6" stroke-width="5" stroke-dasharray=".9 2.3" opacity=".7"/>
+                `
             },
             {
                 id: 'bronquios',
                 name: 'Bronquios',
-                draw: `<path d="M60 80 L49 91 M60 80 L71 91" fill="none" stroke="#1b4f72" stroke-width="6.5" stroke-linecap="round"/><path d="M60 80 L49 91 M60 80 L71 91" fill="none" stroke="#2e86c1" stroke-width="4.5" stroke-linecap="round"/><path d="M49 91 L40 99 M49 91 L50 103 M49 91 L41 86 M71 91 L80 99 M71 91 L70 103 M71 91 L79 86" fill="none" stroke="#2e86c1" stroke-width="3" stroke-linecap="round"/><path d="M40 99 L34 104 M40 99 L38 105 M50 103 L47 107 M50 103 L53 107 M41 86 L35 84 M41 86 L36 90 M80 99 L86 104 M80 99 L82 105 M70 103 L73 107 M70 103 L67 106 M79 86 L85 84 M79 86 L84 90" fill="none" stroke="#2e86c1" stroke-width="1.8" stroke-linecap="round"/>`
+                draw: `
+                <path d="M60 80 L49 91 M60 80 L71 91" fill="none" stroke="#1b4f72" stroke-width="6.5" stroke-linecap="round"/>
+                <path d="M60 80 L49 91 M60 80 L71 91" fill="none" stroke="#2e86c1" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M49 91 L40 99 M49 91 L50 103 M49 91 L41 86 M71 91 L80 99 M71 91 L70 103 M71 91 L79 86" fill="none" stroke="#2e86c1" stroke-width="3" stroke-linecap="round"/>
+                <path d="M40 99 L34 104 M40 99 L38 105 M50 103 L47 107 M50 103 L53 107 M41 86 L35 84 M41 86 L36 90 M80 99 L86 104 M80 99 L82 105 M70 103 L73 107 M70 103 L67 106 M79 86 L85 84 M79 86 L84 90" fill="none" stroke="#2e86c1" stroke-width="1.8" stroke-linecap="round"/>
+                `
             },
                         {
                 id: 'pulmones',
                 name: 'Pulmones',
-                draw: `<path d="M57 66 C55 62 48 60 42 63 C34 67 30 78 29 90 C28 100 31 106 38 108 C46 110 54 108 57 104 C58 94 58 78 57 66 Z" fill="#f1948a" stroke="#c0392b" stroke-width="1.4" stroke-linejoin="round"/><path d="M29 82 C38 86 48 84 57 77 M31 98 C42 96 50 98 57 94" fill="none" stroke="#c0392b" stroke-width="1.2" stroke-linecap="round" opacity=".7"/><path d="M36 70 C33 76 32 84 32 90" fill="none" stroke="#fadbd8" stroke-width="2" stroke-linecap="round" opacity=".8"/><path d="M63 66 C65 62 72 60 78 63 C86 67 90 78 91 90 C92 100 89 106 82 108 C74 110 67 108 63 104 C66 100 69 96 67 90 C65 84 63 76 63 66 Z" fill="#f1948a" stroke="#c0392b" stroke-width="1.4" stroke-linejoin="round"/><path d="M91 86 C82 88 73 86 66 80" fill="none" stroke="#c0392b" stroke-width="1.2" stroke-linecap="round" opacity=".7"/><path d="M84 70 C87 76 88 84 88 90" fill="none" stroke="#fadbd8" stroke-width="2" stroke-linecap="round" opacity=".8"/>`
+                draw: `
+                <path d="M57 66 C55 62 48 60 42 63 C34 67 30 78 29 90 C28 100 31 106 38 108 C46 110 54 108 57 104 C58 94 58 78 57 66 Z" fill="#f1948a" stroke="#c0392b" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M29 82 C38 86 48 84 57 77 M31 98 C42 96 50 98 57 94" fill="none" stroke="#c0392b" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>
+                <path d="M36 70 C33 76 32 84 32 90" fill="none" stroke="#fadbd8" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+                <path d="M63 66 C65 62 72 60 78 63 C86 67 90 78 91 90 C92 100 89 106 82 108 C74 110 67 108 63 104 C66 100 69 96 67 90 C65 84 63 76 63 66 Z" fill="#f1948a" stroke="#c0392b" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M91 86 C82 88 73 86 66 80" fill="none" stroke="#c0392b" stroke-width="1.2" stroke-linecap="round" opacity=".7"/>
+                <path d="M84 70 C87 76 88 84 88 90" fill="none" stroke="#fadbd8" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+                `
             },
             {
                 id: 'bronquiolos',
@@ -243,7 +283,10 @@
             {
                 id: 'diafragma',
                 name: 'Diafragma',
-                draw: `<path d="M31 117 C33 106 46 102 58 108 C60 109 60 109 62 108 C74 102 87 106 89 117 C82 122 72 123 60 123 C48 123 38 122 31 117 Z" fill="#b5483a" stroke="#7b241c" stroke-width="1.4" stroke-linejoin="round"/><path d="M60 109 V122 M48 107 L45 121 M72 107 L75 121 M38 111 L38 120 M82 111 L82 120" stroke="#e6a79d" stroke-width="1" opacity=".7"/>`
+                draw: `
+                <path d="M31 117 C33 106 46 102 58 108 C60 109 60 109 62 108 C74 102 87 106 89 117 C82 122 72 123 60 123 C48 123 38 122 31 117 Z" fill="#b5483a" stroke="#7b241c" stroke-width="1.4" stroke-linejoin="round"/>
+                <path d="M60 109 V122 M48 107 L45 121 M72 107 L75 121 M38 111 L38 120 M82 111 L82 120" stroke="#e6a79d" stroke-width="1" opacity=".7"/>
+                `
             }
         ];
 
@@ -259,9 +302,18 @@
                 target
             ];
             const organs = ordered
-                .map(o => `<g opacity="${o.id === highlightId ? 1 : 0.2}">${o.draw}</g>`)
+                .map(o => `
+                <g opacity="${o.id === highlightId ? 1 : 0.2}">
+                    ${o.draw}
+                </g>
+                `)
                 .join('');
-            return `<svg viewBox="0 0 120 138" role="img" aria-label="Torso humano con ${target.name} destacado"><path d="${TORSO_PATH}" fill="#e9eef2" stroke="#9aa7b0" stroke-width="1.5" stroke-linejoin="round"/>${organs}</svg>`;
+            return `
+                <svg viewBox="0 0 120 138" role="img" aria-label="Torso humano con ${target.name} destacado">
+                    <path d="${TORSO_PATH}" fill="#e9eef2" stroke="#9aa7b0" stroke-width="1.5" stroke-linejoin="round"/>
+                    ${organs}
+                </svg>
+                `;
         }
 
         // Pulmón con el árbol bronquial: solo la estructura indicada va en color pleno
@@ -273,9 +325,22 @@
                 target
             ];
             const structures = ordered
-                .map(o => `<g opacity="${o.id === highlightId ? 1 : 0.2}">${o.draw}</g>`)
+                .map(o => `
+                <g opacity="${o.id === highlightId ? 1 : 0.2}">
+                    ${o.draw}
+                </g>
+                `)
                 .join('');
-            return `<svg viewBox="0 0 120 138" role="img" aria-label="Pulmón con ${target.name} destacado"><path d="${LUNG_PATH}" fill="#fdecea" stroke="#c0392b" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 76 C40 86 72 82 98 60" fill="none" stroke="#c0392b" stroke-width="1.2" opacity=".35" stroke-linecap="round"/><g opacity=".2">${LUNG_BRONCHI_SVG}</g>${structures}</svg>`;
+            return `
+                <svg viewBox="0 0 120 138" role="img" aria-label="Pulmón con ${target.name} destacado">
+                    <path d="${LUNG_PATH}" fill="#fdecea" stroke="#c0392b" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M12 76 C40 86 72 82 98 60" fill="none" stroke="#c0392b" stroke-width="1.2" opacity=".35" stroke-linecap="round"/>
+                    <g opacity=".2">
+                        ${LUNG_BRONCHI_SVG}
+                    </g>
+                    ${structures}
+                </svg>
+                `;
         }
 
         function buildImage(id) {
@@ -327,15 +392,21 @@
 
                 const cardBackContent = organ.type === 'image' 
                     ? buildImage(organ.id) 
-                    : `<span>${organ.name}</span>`;
+                    : `
+                <span>
+                    ${organ.name}
+                </span>
+                `;
 
                 card.innerHTML = `
-                    <div class="card-inner">
-                        <div class="card-front">🫁</div>
-                        <div class="card-back type-${organ.type}">
-                            ${cardBackContent}
-                        </div>
+                <div class="card-inner">
+                    <div class="card-front">
+                        🫁
                     </div>
+                    <div class="card-back type-${organ.type}">
+                        ${cardBackContent}
+                    </div>
+                </div>
                 `;
                 
                 card.addEventListener('click', flipCard);
@@ -426,11 +497,17 @@
             const scores = JSON.parse(localStorage.getItem('respiratory_high_scores') || '[]');
             
             if (scores.length === 0) {
-                scoresContainer.innerHTML = `<p class="text-gray-400 text-sm italic text-center py-4">No hay récords todavía.</p>`;
+                scoresContainer.innerHTML = `
+                <p class="text-gray-400 text-sm italic text-center py-4">
+                    No hay récords todavía.
+                </p>
+                `;
                 return;
             }
 
-            let html = `<ul class="divide-y divide-slate-100">`;
+            let html = `
+                <ul class="divide-y divide-slate-100">
+                    `;
             scores.forEach((entry, idx) => {
                 const isLastPlayed = entry.timestamp === lastPlayedTimestamp;
                 const rowClass = isLastPlayed 
@@ -440,14 +517,22 @@
                 html += `
                     <li class="py-2.5 flex justify-between items-center text-sm ${rowClass}">
                         <span class="flex items-center gap-2">
-                            <span class="w-6 text-gray-400 font-semibold">#${idx + 1}</span>
-                            <span>${entry.time.toFixed(2)}s</span>
+                            <span class="w-6 text-gray-400 font-semibold">
+                                #${idx + 1}
+                            </span>
+                            <span>
+                                ${entry.time.toFixed(2)}s
+                            </span>
                         </span>
-                        <span class="text-xs text-gray-400">${entry.date || ''}</span>
+                        <span class="text-xs text-gray-400">
+                            ${entry.date || ''}
+                        </span>
                     </li>
-                `;
+                    `;
             });
-            html += `</ul>`;
+            html += `
+                </ul>
+                `;
             scoresContainer.innerHTML = html;
         }
 
@@ -459,6 +544,6 @@
 
         // Inicializar el juego al cargar la página
         initGame();
-    </script>
-</body>
-</html>
+            </script>
+        </body>
+    </html>
