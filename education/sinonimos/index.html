@@ -107,7 +107,7 @@
 
         .card {
             width: 100%;
-            aspect-ratio: 110 / 150;
+            aspect-ratio: 110 / 75;
             perspective: 1000px;
             cursor: pointer;
         }
@@ -186,10 +186,10 @@
 <body class="pt-3 sm:pt-5 flex flex-col items-center">
 
     <header class="text-center mb-4 sm:mb-6 max-w-2xl w-full">
-        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-600 mb-2 break-words">Juego de Memoria: Sinónimos y Antónimos</h1>
+        <h1 class="text-xl sm:text-2xl font-extrabold text-slate-600 mb-2 break-words">Sinónimos y Antónimos</h1>
         <p class="text-gray-600 text-sm md:text-base">
-            Encuentra las parejas de palabras. <strong>Sinónimos</strong>: significado igual o muy parecido.
-            <strong>Antónimos</strong>: significados opuestos.
+            Encuentra las parejas de palabras <strong>Sinónimos</strong>o 
+            <strong>Antónimos</strong>
         </p>
     </header>
 
@@ -251,7 +251,7 @@
             ['alegría', 'tristeza'], ['silencio', 'ruido'], ['paz', 'guerra'], ['victoria', 'derrota']
         ];
 
-        const PAIRS_PER_GAME = 8;
+        const PAIRS_PER_GAME = 12;
 
         const MODES = {
             sin: { name: 'Sinónimos', pool: () => SINONIMOS.map(p => ({ p, rel: 'sinónimos' })) },
