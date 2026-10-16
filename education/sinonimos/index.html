@@ -3,184 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Juego de Memoria: Sinónimos y Antónimos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sinónimos y Antónimos: Encuentra las parejas</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <style>
-        :root {
-            --primary: #2c3e50;
-            --accent: #27ae60;
-            --bg-card: #34495e;
-        }
-
-        html {
-            -webkit-text-size-adjust: 100%;
-            text-size-adjust: 100%;
-        }
-
+        :root { --primary: #2c3e50; --accent: #27ae60; color-scheme: light; }
+        html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: var(--primary);
-            min-height: 100vh;
-            min-height: 100dvh;
-            overflow-x: hidden;
+            background-color: #f5f7fa; color: var(--primary);
+            min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+            padding-top: env(safe-area-inset-top, 0px);
             padding-left: max(.75rem, env(safe-area-inset-left));
             padding-right: max(.75rem, env(safe-area-inset-right));
             padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
         }
-
-        /* Barra de tiempo / reinicio / progreso */
         .status-bar {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 4px 12px;
-            width: 100%;
-            margin-bottom: 1rem;
-            padding: 6px 12px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,.08);
-            font-size: clamp(.85rem, 3.6vw, 1.1rem);
+            position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+            gap: 4px 12px; width: 100%; margin-bottom: 1rem; padding: 6px 12px;
+            background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08); font-size: clamp(.85rem, 3.6vw, 1.1rem);
         }
-
-        .status-bar .group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-        }
-
+        .status-bar .group { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
         #reset {
-            background-color: #e8e8e8;
-            padding: 4px 10px;
-            min-height: 36px;
-            font-size: inherit;
-            font-weight: 600;
-            white-space: nowrap;
-            border: 1px solid #cfcfcf;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 9px;
-            cursor: pointer;
+            background-color: #e8e8e8; padding: 4px 10px; min-height: 36px; font-size: inherit;
+            font-weight: 600; white-space: nowrap; border: 1px solid #cfcfcf;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 9px; cursor: pointer;
         }
-
-        /* Selector de modo */
         .mode-btn {
-            padding: 8px 16px;
-            min-height: 40px;
-            font-weight: 700;
-            font-size: .95rem;
-            color: var(--primary);
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 999px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            cursor: pointer;
+            padding: 8px 16px; min-height: 40px; font-weight: 700; font-size: .95rem;
+            color: var(--primary); background: white; border: 2px solid #e2e8f0; border-radius: 999px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer;
             transition: background-color .2s, color .2s, border-color .2s;
         }
-
         .mode-btn:hover { border-color: var(--accent); }
+        .mode-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
 
-        .mode-btn.active {
-            background: #1e293b;
-            color: white;
-            border-color: #1e293b;
-        }
-
-        /* Grid adaptable: mínimo 3 y máximo 6 cartas por fila, separación de 5px */
         #game-grid {
-            --gap: 5px;
-            display: grid;
-            gap: var(--gap);
-            width: 100%;
+            --gap: 5px; display: grid; gap: var(--gap); width: 100%;
             --card-min: min(
                 max(100px, calc((100% - 5 * var(--gap)) / 6)),
                 calc((100% - 2 * var(--gap) - 1px) / 3)
             );
             grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
         }
-
         .card {
-            width: 100%;
-            aspect-ratio: 110 / 75;
-            perspective: 1000px;
-            cursor: pointer;
-        }
-
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 12px;
+            width: 100%; aspect-ratio: 110 / 75; display: flex; align-items: center; justify-content: center;
+            padding: 6px; box-sizing: border-box; cursor: pointer; user-select: none; -webkit-user-select: none;
+            background-color: #faf5ff; border: 3px solid #9b59b6; border-radius: 12px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 6px;
-            box-sizing: border-box;
+            font-size: clamp(.9rem, 3.6vw, 1.15rem); font-weight: bold; color: #2c3e50;
+            text-transform: capitalize; overflow-wrap: anywhere; text-align: center;
+            transition: transform .15s, background-color .2s, border-color .2s, box-shadow .2s;
         }
-
-        .card-front {
-            background-color: var(--bg-card);
-            color: white;
-            font-size: clamp(1.6rem, 6vw, 2.2rem);
-            font-weight: bold;
-            border: 2px solid #2c3e50;
-        }
-
-        .card-back {
-            transform: rotateY(180deg);
-            background-color: #faf5ff;
-            border: 3px solid #9b59b6;
-        }
-
-        .card-back span {
-            font-size: clamp(.85rem, 3.4vw, 1.1rem);
-            font-weight: bold;
-            text-align: center;
-            color: #2c3e50;
-            text-transform: capitalize;
-            overflow-wrap: anywhere;
-        }
-
-        /* Pareja encontrada */
-        .card.matched .card-back {
-            background-color: #eafaf1;
-            border-color: var(--accent);
+        .card:hover:not(.matched) { transform: translateY(-2px); }
+        .card.selected { background-color: #fef9e7; border-color: #f39c12; transform: scale(1.04); box-shadow: 0 0 0 3px rgba(243,156,18,.3), 0 6px 14px rgba(243,156,18,.35); }
+        .card.shake { background-color: #fdedec; border-color: #e74c3c; animation: shake .4s; }
+        .card.matched {
+            background-color: #eafaf1; border-color: var(--accent); cursor: default; opacity: .75;
             box-shadow: 0 0 0 3px rgba(39,174,96,.25), 0 6px 16px rgba(39,174,96,.45);
         }
-
-        .card.matched { cursor: default; }
-
-        .card.shake .card-back {
-            border-color: #e74c3c;
-            background-color: #fdedec;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .card-inner { transition: none; }
-        }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @media (prefers-reduced-motion: reduce) { .card { transition: none; animation: none !important; } }
     </style>
 </head>
 <body class="pt-3 sm:pt-5 flex flex-col items-center">
@@ -188,12 +72,10 @@
     <header class="text-center mb-4 sm:mb-6 max-w-2xl w-full">
         <h1 class="text-xl sm:text-2xl font-extrabold text-slate-600 mb-2 break-words">Sinónimos y Antónimos</h1>
         <p class="text-gray-600 text-sm md:text-base">
-            Encuentra las parejas de palabras <strong>Sinónimos</strong>o 
-            <strong>Antónimos</strong>
+            Toca dos palabras para unir las parejas de <strong>Sinónimos</strong> o <strong>Antónimos</strong>
         </p>
     </header>
 
-    <!-- Selector de modo -->
     <div class="flex flex-wrap justify-center gap-2 mb-4" role="group" aria-label="Modo de juego">
         <button class="mode-btn" data-mode="sin" onclick="setMode('sin')">🟰 Sinónimos</button>
         <button class="mode-btn" data-mode="ant" onclick="setMode('ant')">↔️ Antónimos</button>
@@ -201,8 +83,6 @@
     </div>
 
     <main class="w-full max-w-5xl min-w-0 flex flex-col lg:flex-row gap-6 items-center lg:items-start justify-center">
-
-        <!-- Juego -->
         <div class="flex flex-col items-center flex-1 min-w-0 w-full">
             <div class="status-bar">
                 <div class="group">
@@ -214,6 +94,10 @@
                     <span class="font-bold text-slate-700">✅ Parejas:</span>
                     <span id="progress" class="font-mono font-bold text-slate-600">0/0</span>
                 </div>
+                <div class="group">
+                    <span class="font-bold text-slate-700">❌ Errores:</span>
+                    <span id="errors" class="font-mono font-bold text-emerald-600">0</span>
+                </div>
             </div>
 
             <div class="text-center font-bold text-emerald-600 min-h-[28px] mb-1" id="winner-text"></div>
@@ -222,7 +106,6 @@
             <div id="game-grid"></div>
         </div>
 
-        <!-- Récords -->
         <aside class="w-full lg:w-72 bg-white rounded-2xl shadow-md border border-slate-200 p-5 flex flex-col">
             <h2 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">🏆 Top 10 mejores tiempos</h2>
             <p id="scores-mode" class="text-xs text-slate-400 mb-3"></p>
@@ -234,14 +117,12 @@
     </main>
 
     <script>
-        // ---- Vocabulario de la ficha: [palabra, pareja] ----
         const SINONIMOS = [
             ['feliz', 'contento'], ['bonito', 'hermoso'], ['comenzar', 'iniciar'], ['rápido', 'veloz'],
             ['ayudar', 'colaborar'], ['enfado', 'ira'], ['grande', 'enorme'], ['pequeño', 'diminuto'],
             ['hablar', 'conversar'], ['subir', 'ascender'], ['empezar', 'iniciar'], ['alto', 'elevado'],
             ['gigante', 'enorme'], ['pequeño', 'reducido'], ['bonito', 'precioso'], ['hablar', 'dialogar']
         ];
-
         const ANTONIMOS = [
             ['alto', 'bajo'], ['grande', 'pequeño'], ['entrar', 'salir'], ['frío', 'caliente'],
             ['abrir', 'cerrar'], ['cerca', 'lejos'], ['ganar', 'perder'], ['subir', 'bajar'],
@@ -250,9 +131,7 @@
             ['blanco', 'negro'], ['día', 'noche'], ['rico', 'pobre'], ['inicio', 'final'],
             ['alegría', 'tristeza'], ['silencio', 'ruido'], ['paz', 'guerra'], ['victoria', 'derrota']
         ];
-
         const PAIRS_PER_GAME = 12;
-
         const MODES = {
             sin: { name: 'Sinónimos', pool: () => SINONIMOS.map(p => ({ p, rel: 'sinónimos' })) },
             ant: { name: 'Antónimos', pool: () => ANTONIMOS.map(p => ({ p, rel: 'antónimos' })) },
@@ -264,19 +143,21 @@
 
         let mode = 'sin';
         let cards = [];
-        let flippedCards = [];
+        let selected = [];
         let lockBoard = false;
         let hasStarted = false;
         let startTime = null;
         let timerInterval = null;
         let elapsedTime = 0;
         let matchedPairs = 0;
+        let errors = 0;
         let totalPairs = 0;
         let lastPlayedTimestamp = null;
 
         const grid = document.getElementById('game-grid');
         const timerElement = document.getElementById('timer');
         const progressElement = document.getElementById('progress');
+        const errorsElement = document.getElementById('errors');
         const winnerText = document.getElementById('winner-text');
         const lastMatch = document.getElementById('last-match');
         const scoresContainer = document.getElementById('scores-container');
@@ -291,7 +172,7 @@
             return a;
         }
 
-        // Elige parejas sin repetir ninguna palabra (evita ambigüedades)
+        // Parejas sin palabras repetidas (evita ambigüedades)
         function pickPairs(modeKey) {
             const used = new Set();
             const chosen = [];
@@ -313,13 +194,14 @@
 
         function initGame() {
             if (timerInterval) clearInterval(timerInterval);
-
             grid.innerHTML = '';
-            flippedCards = [];
+            selected = [];
             lockBoard = false;
             hasStarted = false;
             elapsedTime = 0;
             matchedPairs = 0;
+            errors = 0;
+            updateErrors();
             timerElement.textContent = '00.00s';
             winnerText.textContent = '';
             lastMatch.textContent = '';
@@ -341,17 +223,24 @@
                 card.className = 'card';
                 card.dataset.pair = c.pairId;
                 card.dataset.index = index;
-                card.innerHTML = `
-                    <div class="card-inner">
-                        <div class="card-front">📚</div>
-                        <div class="card-back"><span>${c.word}</span></div>
-                    </div>
-                `;
-                card.addEventListener('click', flipCard);
+                card.setAttribute('role', 'button');
+                card.tabIndex = 0;
+                card.textContent = c.word;
+                card.addEventListener('click', selectCard);
+                card.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+                });
                 grid.appendChild(card);
             });
 
             renderHighScores();
+        }
+
+        // Rojo si hay errores, verde si no se ha cometido ninguno
+        function updateErrors() {
+            errorsElement.textContent = errors;
+            errorsElement.classList.toggle('text-red-600', errors > 0);
+            errorsElement.classList.toggle('text-emerald-600', errors === 0);
         }
 
         function startTimer() {
@@ -364,24 +253,31 @@
             }, 50);
         }
 
-        function flipCard() {
+        function selectCard() {
             if (lockBoard) return;
-            if (this.classList.contains('flipped')) return;
+            if (this.classList.contains('matched')) return;
 
             startTimer();
 
-            this.classList.add('flipped');
-            flippedCards.push(this);
+            // Tocar de nuevo la carta seleccionada la deselecciona
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                selected = [];
+                return;
+            }
 
-            if (flippedCards.length === 2) checkMatch();
+            this.classList.add('selected');
+            selected.push(this);
+            if (selected.length === 2) checkMatch();
         }
 
         function checkMatch() {
             lockBoard = true;
-            const [c1, c2] = flippedCards;
+            const [c1, c2] = selected;
             const isMatch = c1.dataset.pair === c2.dataset.pair;
 
             if (isMatch) {
+                [c1, c2].forEach(c => c.classList.remove('selected'));
                 c1.classList.add('matched');
                 c2.classList.add('matched');
                 matchedPairs++;
@@ -391,18 +287,19 @@
                 const sep = data.rel === 'sinónimos' ? '=' : '↔';
                 lastMatch.innerHTML = `✅ <strong>${data.word}</strong> ${sep} <strong>${data.partner}</strong> son ${data.rel}`;
 
-                flippedCards = [];
+                selected = [];
                 lockBoard = false;
                 if (matchedPairs === totalPairs) endGame();
             } else {
-                c1.classList.add('shake');
-                c2.classList.add('shake');
+                errors++;
+                updateErrors();
+                [c1, c2].forEach(c => { c.classList.remove('selected'); c.classList.add('shake'); });
                 setTimeout(() => {
-                    c1.classList.remove('flipped', 'shake');
-                    c2.classList.remove('flipped', 'shake');
-                    flippedCards = [];
+                    c1.classList.remove('shake');
+                    c2.classList.remove('shake');
+                    selected = [];
                     lockBoard = false;
-                }, 1000);
+                }, 700);
             }
         }
 
@@ -412,21 +309,21 @@
             timerElement.textContent = finalTime.toFixed(2) + 's';
             lastPlayedTimestamp = Date.now();
             winnerText.textContent = `🎉 ¡Completado en ${finalTime}s!`;
-            saveScore(finalTime, lastPlayedTimestamp);
+            saveScore(finalTime, lastPlayedTimestamp, errors);
             renderHighScores();
         }
 
-        // ---- Récords (uno por modo) ----
-        const scoreKey = () => 'sinonimos_antonimos_scores_' + mode;
+        // ---- Récords (uno por modo; clave propia porque esta variante es más fácil) ----
+        const scoreKey = () => 'sinonimos_antonimos_visible_scores_' + mode;
 
         function loadScores() {
             try { return JSON.parse(localStorage.getItem(scoreKey()) || '[]'); }
             catch (e) { return []; }
         }
 
-        function saveScore(time, timestamp) {
+        function saveScore(time, timestamp, errs) {
             let scores = loadScores();
-            scores.push({ time, timestamp, date: new Date().toLocaleDateString() });
+            scores.push({ time, timestamp, errors: errs, date: new Date().toLocaleDateString() });
             scores.sort((a, b) => a.time - b.time);
             scores = scores.slice(0, 10);
             try { localStorage.setItem(scoreKey(), JSON.stringify(scores)); } catch (e) {}
@@ -452,6 +349,7 @@
                         <span class="flex items-center gap-2">
                             <span class="w-6 text-gray-400 font-semibold">#${idx + 1}</span>
                             <span>${entry.time.toFixed(2)}s</span>
+                            ${typeof entry.errors === 'number' ? `<span class="text-xs font-semibold ${entry.errors > 0 ? 'text-red-600' : 'text-emerald-600'}">❌ ${entry.errors}</span>` : ''}
                         </span>
                         <span class="text-xs text-gray-400">${entry.date || ''}</span>
                     </li>`;
