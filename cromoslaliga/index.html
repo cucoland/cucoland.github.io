@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Cromos LaLiga 2026-27</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --primary-color: #1e3a8a; 
+            --tengo-color: #2c3e50; 
+            --falta-color: #ffffff; 
+            --accent-color: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            margin: 5px 0 10px 0;
+            text-align: center;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Menú Superior de Países / Equipos y Escudos */
+        .menu-paises {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .btn-pais {
+            width: 32px;
+            height: 32px;
+            padding: 2px;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            background-color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .btn-pais img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .btn-pais.activo {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(30, 58, 138, 0.5);
+            background-color: #e0e7ff;
+        }
+
+        /* Sección de Cromos Inferior */
+        .contenedor-cromos {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        .titulo-seccion {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .btn-nav-pais {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        .btn-nav-pais:hover {
+            background-color: #1e1b4b;
+        }
+
+        .cuadricula-cromos {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* Botón estilo Fila para Nombre de Jugador y Datos en Columnas */
+        .btn-cromo {
+            min-height: 38px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            -webkit-tap-highlight-color: transparent;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .cromo-col-num {
+            font-weight: bold;
+            min-width: 55px;
+            flex-shrink: 0;
+        }
+
+        .cromo-col-nombre {
+            flex-grow: 1;
+            font-weight: 600;
+            margin: 0 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cromo-col-pos {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-right: 8px;
+            text-transform: capitalize;
+            min-width: 65px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .cromo-tag-ed {
+            font-size: 0.65rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            background-color: var(--accent-color);
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        /* Estados de los cromos */
+        .btn-cromo.falta {
+            background-color: var(--falta-color);
+            color: var(--text-color);
+            border-color: #ddd;
+        }
+
+        .btn-cromo.falta .cromo-col-num {
+            color: var(--primary-color);
+        }
+
+        .btn-cromo.tengo {
+            background-color: var(--tengo-color);
+            color: #ffffff;
+            border-color: var(--tengo-color);
+        }
+
+        .btn-cromo.tengo .cromo-col-num {
+            color: #38bdf8;
+        }
+
+        /* Contador discreto */
+        .contador-discreto {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .contador-discreto span {
+            margin: 0 5px;
+            font-weight: bold;
+        }
+
+        /* Mensajes emergentes modal simulados para alert y confirmación */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .modal-btn {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .modal-btn-confirm { background: #c0392b; color: white; }
+        .modal-btn-cancel { background: #ccc; color: #333; }
+
+        /* Estilos PDF de los que Tengo */
+        #printArea {
+            padding: 0px; 
+            background-color: #ffffff;
+            color: #333333;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+        }
+        .pdf-titulo {
+            text-align: center;
+            color: #1e3a8a;
+            font-size: 15px; 
+            margin-top: 0px; 
+            margin-bottom: 12px;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 5px;
+        }
+        .pdf-columnas-contenedor {
+            display: block; 
+            width: 100%;
+        }
+        .pdf-columnas-contenedor.doble-columna {
+            column-count: 2;
+            column-gap: 15px;
+            column-fill: auto; 
+            height: 270mm; 
+        }
+        .pdf-fila {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 5px; 
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+            break-inside: avoid; 
+            page-break-inside: avoid;
+        }
+        .pdf-bandera-contenedor {
+            width: 24px; 
+            height: 24px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .pdf-bandera-contenedor img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .pdf-cromos-contenedor {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+        }
+        .pdf-cromo-tag {
+            padding: 2px 5px;
+            font-size: 8px; 
+            font-weight: bold;
+            border-radius: 3px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .pdf-cromo-tag.tengo-pdf {
+            background-color: #fff;
+            color: #2c3e50;
+            border: 1px solid #dcdcdc;
+        }
+        .pdf-cromo-tag.falta-pdf {
+            background-color: #f2f2f2;
+            color: #aaa;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* Estilos PDF Completo */
+        #printAreaCompleto {
+            padding: 0px; 
+            background-color: #ffffff;
+            color: #333333;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        #printAreaCompleto .pdf-titulo {
+            font-size: 13px;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            color: #1e3a8a;
+            border-bottom: 2px solid #1e3a8a;
+            text-align: center;
+        }
+        #printAreaCompleto .pdf-columnas-contenedor {
+            display: block;
+            width: 100%;
+        }
+        #printAreaCompleto .pdf-fila {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #f0f0f0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #printAreaCompleto .pdf-bandera-contenedor {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+        #printAreaCompleto .pdf-team-name {
+            font-size: 8px;
+            font-weight: bold;
+            width: 110px;
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #printAreaCompleto .pdf-cromos-grid-fijo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            flex-grow: 1;
+        }
+        #printAreaCompleto .pdf-contador-final {
+            margin-top: 8px;
+            padding-top: 4px;
+            border-top: 2px solid #1e3a8a;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <h1>Cromos Pendientes LaLiga 2026-27 &nbsp;&nbsp;&nbsp;   
+        <a href="https://cucoland.github.io/cromos/repes" style="text-decoration: none;">
+            <button style="background-color: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                Ir a Repes
+            </button>
+        </a>
+    </h1> 
+
+    <div class="menu-paises" id="menuPaises"></div>
+
+    <div class="contenedor-cromos">
+        <div class="titulo-seccion" id="paisActual">
+            <button class="btn-nav-pais" onclick="paisAnterior()">◀</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <img id="escudoPaisActual" src="" alt="" style="width: 24px; height: 24px; object-fit: contain;">
+                <span id="textoPaisActual">Cargando...</span>
+            </div>
+            <button class="btn-nav-pais" onclick="paisSiguiente()">▶</button>
+        </div>
+        <div class="cuadricula-cromos" id="cuadriculaCromos"></div>
+    </div>
+
+    <div class="contador-discreto">
+        Pendientes: <span id="totalTengo" style="color: var(--tengo-color);">0</span> | 
+        Tengo: <span id="totalFaltan" style="color: #27ae60;">0</span> &nbsp;&nbsp;&nbsp; 
+        
+        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+            <button id="btnReset" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                Reset en blanco
+            </button> 
+            <button id="btnReset2" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                Reset en oscuro
+            </button>
+            <button id="btnPdf" style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                📄 Imprimir PDF de los pendientes
+            </button>
+            <button id="btnPdfCompleto" style="background-color: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
+                📄 Imprimir Lista Completa
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmación Personalizado -->
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box">
+            <p id="modalMessage" style="margin: 0 0 10px 0; font-size: 0.95rem;"></p>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Aceptar</button>
+                <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="printArea" style="display: none;"></div>
+    <div id="printAreaCompleto" style="display: none;"></div>
+
+    <script>
+        const listadoSecciones = [
+          {
+            id: "ALA",
+            nombre: "Deportivo Alavés",
+            logo: "https://assets.footylogos.com/previews/deportivo-alaves/deportivo-alaves-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Quique Sánchez Flores", pos: "entrenador"},
+              {num: "3", name: "Sivera", pos: "portero"},
+              {num: "4", name: "Adrián Rodríguez", pos: "portero", tag: "3ª ed"},
+              {num: "5", name: "Jonny", pos: "defensa"},
+              {num: "6", name: "Koski", pos: "defensa"},
+              {num: "7", name: "Tenaglia", pos: "defensa"},
+              {num: "8", name: "Parada", pos: "defensa"},
+              {num: "8 BIS", name: "Garcés", pos: "defensa", tag: "3ª ed"},
+              {num: "9", name: "Yusi", pos: "defensa"},
+              {num: "10", name: "Mikel Rodríguez", pos: "medio", tag: "3ª ed"},
+              {num: "11", name: "Benavidez", pos: "medio"},
+              {num: "12", name: "Blanco", pos: "medio"},
+              {num: "13", name: "Guevara", pos: "medio"},
+              {num: "14", name: "Aleñá", pos: "medio"},
+              {num: "15", name: "Pablo Ibáñez", pos: "medio"},
+              {num: "16", name: "Denis Suárez", pos: "medio"},
+              {num: "17", name: "Ángel Pérez", pos: "delantero"},
+              {num: "18A", name: "Abde", pos: "delantero"},
+              {num: "18B", name: "Mañas", pos: "delantero"},
+              {num: "19", name: "Toni Martínez", pos: "delantero"},
+              {num: "20", name: "Boyé", pos: "delantero"},
+              {num: "20 BIS", name: "Mariano", pos: "delantero"}
+            ]
+          },
+          {
+            id: "ATH",
+            nombre: "Athletic Club de Bilbao",
+            logo: "https://assets.footylogos.com/previews/athletic-club-bilbao/athletic-club-bilbao-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Edin Terzic", pos: "entrenador"},
+              {num: "3", name: "Unai Simón", pos: "portero"},
+              {num: "4", name: "Padilla", pos: "portero"},
+              {num: "5", name: "Areso", pos: "defensa"},
+              {num: "6A", name: "Paredes", pos: "defensa"},
+              {num: "6B", name: "Yeray", pos: "defensa"},
+              {num: "7", name: "Vivian", pos: "defensa"},
+              {num: "8", name: "Laporte", pos: "defensa"},
+              {num: "9A", name: "Yuri", pos: "defensa"},
+              {num: "9B", name: "Adama Boiro", pos: "defensa"},
+              {num: "10", name: "Jauregizar", pos: "medio"},
+              {num: "11", name: "Ruiz de Galarreta", pos: "medio"},
+              {num: "12", name: "Rego", pos: "medio"},
+              {num: "13", name: "Unai Gómez", pos: "medio"},
+              {num: "13 BIS", name: "Prados", pos: "medio", tag: "2ª ed"},
+              {num: "14", name: "Sancet", pos: "medio"},
+              {num: "15", name: "Nico Serrano", pos: "medio"},
+              {num: "16", name: "Berenguer", pos: "delantero"},
+              {num: "17A", name: "Robert Navarro", pos: "delantero"},
+              {num: "17B", name: "Maroan", pos: "delantero"},
+              {num: "18", name: "Nico Williams", pos: "delantero"},
+              {num: "19", name: "Williams", pos: "delantero"},
+              {num: "20", name: "Guruzeta", pos: "delantero"}
+            ]
+          },
+          {
+            id: "ATM",
+            nombre: "Atlético de Madrid",
+            logo: "https://assets.footylogos.com/previews/atletico-madrid/atletico-madrid-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Cholo Simeone", pos: "entrenador"},
+              {num: "3", name: "Oblak", pos: "portero"},
+              {num: "4", name: "Musso", pos: "portero"},
+              {num: "5", name: "Marcos Llorente", pos: "defensa"},
+              {num: "6", name: "Nahuel Molina", pos: "defensa"},
+              {num: "7", name: "Pubill", pos: "defensa"},
+              {num: "8A", name: "Le Normand", pos: "defensa"},
+              {num: "8B", name: "Giménez", pos: "defensa"},
+              {num: "9", name: "Hancko", pos: "defensa"},
+              {num: "10", name: "Ruggeri", pos: "defensa"},
+              {num: "10 BIS", name: "Grimaldo", pos: "defensa", tag: "3ª ed"},
+              {num: "11", name: "Koke", pos: "medio"},
+              {num: "12", name: "Barrios", pos: "medio"},
+              {num: "13", name: "Johnny Cardoso", pos: "medio"},
+              {num: "14A", name: "Rodri Mendoza", pos: "medio"},
+              {num: "14B", name: "Obed Vargas", pos: "medio"},
+              {num: "15", name: "Álex Baena", pos: "medio"},
+              {num: "16", name: "Almada", pos: "medio"},
+              {num: "16 BIS", name: "Arnau Ortiz", pos: "delantero", tag: "3ª ed"},
+              {num: "17", name: "Giuliano", pos: "delantero"},
+              {num: "18", name: "Lookman", pos: "delantero"},
+              {num: "19", name: "Sorloth", pos: "delantero"},
+              {num: "20", name: "Julián Álvarez", pos: "delantero"}
+            ]
+          },
+          {
+            id: "BET",
+            nombre: "Real Betis",
+            logo: "https://assets.footylogos.com/previews/real-betis-balompie/real-betis-balompie-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Manuel Pellegrini", pos: "entrenador"},
+              {num: "3", name: "Valles", pos: "portero"},
+              {num: "4", name: "Pau López", pos: "portero"},
+              {num: "4 BIS", name: "Diego Conde", pos: "portero", tag: "2ª ed"},
+              {num: "5A", name: "Aitor Ruibal", pos: "defensa"},
+              {num: "5B", name: "Bellerín", pos: "defensa"},
+              {num: "6", name: "Diego Llorente", pos: "defensa"},
+              {num: "7", name: "Bartra", pos: "defensa"},
+              {num: "8", name: "Natan", pos: "defensa"},
+              {num: "9", name: "Valentín Gómez", pos: "defensa"},
+              {num: "10", name: "Marc Roca", pos: "medio"},
+              {num: "11", name: "Amrabat", pos: "medio"},
+              {num: "11 BIS", name: "Deossa", pos: "medio", tag: "3ª ed"},
+              {num: "12", name: "Fidalgo", pos: "medio"},
+              {num: "13", name: "Facundo Bernal", pos: "medio", tag: "2ª ed"},
+              {num: "14", name: "Lo Celso", pos: "medio"},
+              {num: "15", name: "Pablo Fornals", pos: "medio"},
+              {num: "16", name: "Isco", pos: "medio"},
+              {num: "17", name: "Riquelme", pos: "delantero"},
+              {num: "18", name: "Antony", pos: "delantero"},
+              {num: "19", name: "Cucho Hernández", pos: "delantero"},
+              {num: "20", name: "Abde", pos: "delantero"}
+            ]
+          },
+          {
+            id: "FCB",
+            nombre: "FC Barcelona",
+            logo: "https://assets.footylogos.com/previews/fc-barcelona/fc-barcelona-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Hansi Flick", pos: "entrenador"},
+              {num: "3", name: "Joan García", pos: "portero"},
+              {num: "4", name: "Szczesny", pos: "portero"},
+              {num: "5", name: "Koundé", pos: "defensa"},
+              {num: "6A", name: "Araujo", pos: "defensa"},
+              {num: "6B", name: "Christensen", pos: "defensa"},
+              {num: "7", name: "Cubarsí", pos: "defensa"},
+              {num: "8", name: "Gerard Martín", pos: "defensa"},
+              {num: "9", name: "Joao Cancelo", pos: "defensa"},
+              {num: "10", name: "Balde", pos: "defensa"},
+              {num: "11", name: "Eric García", pos: "defensa"},
+              {num: "12", name: "De Jong", pos: "medio"},
+              {num: "13", name: "Gavi", pos: "medio"},
+              {num: "14", name: "Bernal", pos: "medio"},
+              {num: "15", name: "Pedri", pos: "medio"},
+              {num: "16", name: "Fermín", pos: "medio"},
+              {num: "17", name: "Dani Olmo", pos: "delantero"},
+              {num: "18", name: "Ferran Torres", pos: "delantero"},
+              {num: "18 BIS", name: "Abdelkarim", pos: "delantero", tag: "3ª ed"},
+              {num: "19", name: "Raphinha", pos: "delantero"},
+              {num: "20", name: "Lamine Yamal", pos: "delantero"}
+            ]
+          },
+          {
+            id: "CEL",
+            nombre: "RC Celta de Vigo",
+            logo: "https://assets.footylogos.com/previews/celta-vigo/celta-vigo-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Claudio Giráldez", pos: "entrenador"},
+              {num: "3", name: "Radu", pos: "portero"},
+              {num: "4", name: "Iván Villar", pos: "portero"},
+              {num: "5", name: "Álvaro Núñez", pos: "defensa"},
+              {num: "6", name: "Javi Rueda", pos: "defensa"},
+              {num: "7", name: "Javi Rodríguez", pos: "defensa"},
+              {num: "8", name: "Starfelt", pos: "defensa"},
+              {num: "9A", name: "Marcos Alonso", pos: "defensa"},
+              {num: "9B", name: "Yoel Lago", pos: "defensa"},
+              {num: "10", name: "Carreira", pos: "defensa"},
+              {num: "11", name: "Ilaix Moriba", pos: "medio"},
+              {num: "12", name: "Miguel Román", pos: "medio"},
+              {num: "13", name: "Hugo Álvarez", pos: "medio"},
+              {num: "14", name: "Sotelo", pos: "medio"},
+              {num: "14 BIS", name: "Vecino", pos: "medio", tag: "2ª ed"},
+              {num: "15", name: "Fer López", pos: "medio"},
+              {num: "16", name: "Swedberg", pos: "medio"},
+              {num: "17", name: "Iago Aspas", pos: "delantero"},
+              {num: "18A", name: "Pablo Durán", pos: "delantero"},
+              {num: "18B", name: "El-Abdellaoui", pos: "delantero"},
+              {num: "19", name: "Jutglà", pos: "delantero"},
+              {num: "19 BIS", name: "Hugo González", pos: "delantero", tag: "3ª ed"},
+              {num: "20", name: "Borja Iglesias", pos: "delantero"}
+            ]
+          },
+          {
+            id: "DEP",
+            nombre: "Deportivo de La Coruña",
+            logo: "https://assets.footylogos.com/previews/deportivo-la-coruna/deportivo-la-coruna-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Antonio Hidalgo", pos: "entrenador"},
+              {num: "3", name: "Álvaro Fernández", pos: "portero"},
+              {num: "4", name: "Germán Parreño", pos: "portero"},
+              {num: "5", name: "Adrià Altimira", pos: "defensa"},
+              {num: "6", name: "Loureiro", pos: "defensa"},
+              {num: "7", name: "Noubi", pos: "defensa"},
+              {num: "8", name: "Dani Barcia", pos: "defensa"},
+              {num: "8 BIS", name: "Bright Ede", pos: "defensa", tag: "3ª ed"},
+              {num: "9A", name: "Ximo Navarro", pos: "defensa"},
+              {num: "9B", name: "Arnau Comas", pos: "defensa"},
+              {num: "10", name: "Quagliata", pos: "defensa"},
+              {num: "11", name: "Villares", pos: "medio"},
+              {num: "12", name: "Riki", pos: "medio"},
+              {num: "13", name: "Mario Soriano", pos: "medio"},
+              {num: "14", name: "José Ángel", pos: "medio"},
+              {num: "14 BIS", name: "Gijselhart", pos: "medio", tag: "3ª ed"},
+              {num: "15", name: "Luismi Cruz", pos: "medio"},
+              {num: "16", name: "Mella", pos: "medio"},
+              {num: "17", name: "Asp Jensen", pos: "delantero", tag: "3ª ed"},
+              {num: "18", name: "Yeremay", pos: "delantero"},
+              {num: "19", name: "Eddahchouri", pos: "delantero"},
+              {num: "20", name: "Nsongo", pos: "delantero"}
+            ]
+          },
+          {
+            id: "ELC",
+            nombre: "Elche CF",
+            logo: "https://assets.footylogos.com/previews/elche-cf/elche-cf-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Martín Anselmi", pos: "entrenador", tag: "2ª ed"},
+              {num: "3", name: "Dituro", pos: "portero"},
+              {num: "4", name: "Iturbe", pos: "portero", tag: "2ª ed"},
+              {num: "5", name: "Pétrot", pos: "defensa"},
+              {num: "6", name: "Chust", pos: "defensa"},
+              {num: "7", name: "Bigas", pos: "defensa"},
+              {num: "8", name: "Affengruber", pos: "defensa"},
+              {num: "9A", name: "Pedrosa", pos: "defensa"},
+              {num: "9B", name: "Sangaré", pos: "defensa"},
+              {num: "10", name: "Germán Valera", pos: "medio"},
+              {num: "11", name: "Martim Neto", pos: "medio"},
+              {num: "12", name: "Gonzalo Villar", pos: "medio"},
+              {num: "13A", name: "Fede Redondo", pos: "medio"},
+              {num: "13B", name: "Jon Chetauya", pos: "medio"},
+              {num: "14", name: "Marc Aguado", pos: "medio"},
+              {num: "15", name: "Josan", pos: "medio"},
+              {num: "16", name: "Morente", pos: "medio"},
+              {num: "17", name: "Ali Houary", pos: "delantero", tag: "2ª ed"},
+              {num: "18", name: "Cepeda", pos: "delantero"},
+              {num: "19", name: "Diangana", pos: "delantero"},
+              {num: "20", name: "Yago Santiago", pos: "delantero"}
+            ]
+          },
+          {
+            id: "ESP",
+            nombre: "RCD Espanyol",
+            logo: "https://assets.footylogos.com/previews/rcd-espanyol-barcelona/rcd-espanyol-barcelona-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Manolo González", pos: "entrenador"},
+              {num: "3", name: "Dmitrovic", pos: "portero"},
+              {num: "4", name: "Fortuño", pos: "portero"},
+              {num: "5", name: "El Hilali", pos: "defensa"},
+              {num: "6", name: "Rubén Sánchez", pos: "defensa"},
+              {num: "6 BIS", name: "Drkusic", pos: "defensa"},
+              {num: "7", name: "Riedel", pos: "defensa"},
+              {num: "8", name: "Cabrera", pos: "defensa"},
+              {num: "9", name: "Miguel Rubio", pos: "defensa"},
+              {num: "9 BIS", name: "Hinojo", pos: "defensa", tag: "3ª ed"},
+              {num: "10", name: "Hartman", pos: "defensa", tag: "2ª ed"},
+              {num: "11", name: "Pol Lozano", pos: "medio"},
+              {num: "12", name: "Urko", pos: "medio"},
+              {num: "13", name: "Edu Expósito", pos: "medio"},
+              {num: "14", name: "Jofre", pos: "medio"},
+              {num: "15", name: "Marcos Fernández", pos: "delantero", tag: "2ª ed"},
+              {num: "15 BIS", name: "Javi Hernández", pos: "delantero"},
+              {num: "16", name: "Dolan", pos: "delantero"},
+              {num: "17", name: "Pere Milla", pos: "delantero"},
+              {num: "18", name: "Puado", pos: "delantero"},
+              {num: "19", name: "Kike García", pos: "delantero"},
+              {num: "20", name: "Roberto Fernández", pos: "delantero"}
+            ]
+          },
+          {
+            id: "GET",
+            nombre: "Getafe CF",
+            logo: "https://assets.footylogos.com/previews/getafe-cf/getafe-cf-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "José Bordalás", pos: "entrenador"},
+              {num: "3", name: "David Soria", pos: "portero"},
+              {num: "4", name: "Letacek", pos: "portero"},
+              {num: "5", name: "Kiko Femenía", pos: "defensa"},
+              {num: "6", name: "Djené", pos: "defensa"},
+              {num: "7", name: "Boselli", pos: "defensa"},
+              {num: "8", name: "Abqar", pos: "defensa"},
+              {num: "9", name: "Zaid Romero", pos: "defensa"},
+              {num: "10", name: "Davinchi", pos: "defensa"},
+              {num: "11", name: "Mario Martín", pos: "medio"},
+              {num: "12", name: "Javi Muñoz", pos: "medio"},
+              {num: "13", name: "Francho", pos: "medio", tag: "2ª ed"},
+              {num: "14", name: "Terrats", pos: "medio", tag: "2ª ed"},
+              {num: "15", name: "Mangala", pos: "medio", tag: "3ª ed"},
+              {num: "16", name: "Juanmi", pos: "delantero", tag: "2ª ed"},
+              {num: "17", name: "Alex Sancris", pos: "delantero"},
+              {num: "18", name: "Borja Mayoral", pos: "delantero"},
+              {num: "19 BIS", name: "Ünal", pos: "delantero", tag: "3ª ed"},
+              {num: "20", name: "Satriano", pos: "delantero"}
+            ]
+          },
+          {
+            id: "LEV",
+            nombre: "Levante UD",
+            logo: "https://assets.footylogos.com/previews/levante-ud/levante-ud-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Luís Castro", pos: "entrenador"},
+              {num: "3", name: "Ryan", pos: "portero"},
+              {num: "4", name: "Pablo Campos", pos: "portero"},
+              {num: "5", name: "Toljan", pos: "defensa", tag: "3ª ed"},
+              {num: "6", name: "Elgezabal", pos: "defensa"},
+              {num: "6 BIS", name: "Nacho Pérez", pos: "defensa", tag: "3ª ed"},
+              {num: "7", name: "Dela", pos: "defensa"},
+              {num: "8", name: "Mandi", pos: "defensa", tag: "2ª ed"},
+              {num: "9", name: "Manu Sánchez", pos: "defensa"},
+              {num: "10", name: "Arriaga", pos: "medio"},
+              {num: "11", name: "Oriol Rey", pos: "medio"},
+              {num: "12", name: "Olasagasti", pos: "medio"},
+              {num: "13", name: "Dani Requena", pos: "medio", tag: "2ª ed"},
+              {num: "14A", name: "Víctor García", pos: "medio"},
+              {num: "14B", name: "Paco Cortés", pos: "medio"},
+              {num: "15", name: "Carlos Álvarez", pos: "medio"},
+              {num: "16", name: "Tunde", pos: "delantero"},
+              {num: "16 BIS", name: "Thiago Fernández", pos: "delantero", tag: "3ª ed"},
+              {num: "17", name: "Brugué", pos: "delantero"},
+              {num: "18", name: "Iván Romero", pos: "delantero"},
+              {num: "19", name: "Etta Eyong", pos: "delantero"},
+              {num: "20", name: "Carlos Espí", pos: "delantero"},
+              {num: "20 BIS", name: "Musuayi", pos: "delantero", tag: "2ª ed"}
+            ]
+          },
+          {
+            id: "RMA",
+            nombre: "Real Madrid CF",
+            logo: "https://assets.footylogos.com/previews/real-madrid/real-madrid-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "José Mourinho", pos: "entrenador"},
+              {num: "3", name: "Courtois", pos: "portero"},
+              {num: "4", name: "Lunin", pos: "portero"},
+              {num: "5", name: "Trent", pos: "defensa"},
+              {num: "6", name: "Militao", pos: "defensa"},
+              {num: "7", name: "Asencio", pos: "defensa"},
+              {num: "7 BIS", name: "Konaté", pos: "defensa", tag: "3ª ed"},
+              {num: "8", name: "Rüdiger", pos: "defensa"},
+              {num: "9", name: "Huijsen", pos: "defensa"},
+              {num: "10A", name: "Carreras", pos: "defensa"},
+              {num: "10B", name: "Mendy", pos: "defensa"},
+              {num: "11", name: "Tchouaméni", pos: "medio"},
+              {num: "12", name: "Fede Valverde", pos: "medio"},
+              {num: "13", name: "Camavinga", pos: "medio"},
+              {num: "14", name: "Bellingham", pos: "medio"},
+              {num: "15A", name: "Güler", pos: "medio"},
+              {num: "15B", name: "Thiago Pitarch", pos: "medio"},
+              {num: "16A", name: "Mastantuono", pos: "medio"},
+              {num: "16B", name: "Brahim Díaz", pos: "delantero"},
+              {num: "17", name: "Gonzalo", pos: "delantero"},
+              {num: "17 BIS", name: "Carlos Espí", pos: "delantero", tag: "2ª ed"},
+              {num: "18", name: "Rodrygo", pos: "delantero"},
+              {num: "19", name: "Vinícius", pos: "delantero"},
+              {num: "20", name: "Mbappé", pos: "delantero"}
+            ]
+          },
+          {
+            id: "MAL",
+            nombre: "Málaga CF",
+            logo: "https://assets.footylogos.com/previews/malaga-cf/malaga-cf-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Juan Francisco Funes", pos: "entrenador"},
+              {num: "3", name: "Alfonso Herrero", pos: "portero"},
+              {num: "4", name: "Carlos López", pos: "portero"},
+              {num: "5", name: "Puga", pos: "defensa"},
+              {num: "6", name: "Murillo", pos: "defensa"},
+              {num: "6 BIS", name: "Recio", pos: "defensa", tag: "3ª ed"},
+              {num: "7", name: "Calero", pos: "defensa"},
+              {num: "8", name: "Einar Galilea", pos: "defensa"},
+              {num: "9", name: "Rafita", pos: "defensa"},
+              {num: "10", name: "Salinas", pos: "defensa", tag: "2ª ed"},
+              {num: "11", name: "Izan Merino", pos: "medio"},
+              {num: "12", name: "Dani Lorenzo", pos: "medio"},
+              {num: "13A", name: "Rafa Rodríguez", pos: "medio"},
+              {num: "13B", name: "Juanpe", pos: "medio"},
+              {num: "14", name: "Dotor", pos: "medio"},
+              {num: "15", name: "Aarón Ochoa", pos: "medio"},
+              {num: "16", name: "Larrubia", pos: "delantero"},
+              {num: "17", name: "Lobete", pos: "delantero"},
+              {num: "18", name: "Adrián Niño", pos: "delantero"},
+              {num: "19", name: "Joaquín", pos: "delantero"},
+              {num: "20", name: "Chupe", pos: "delantero"}
+            ]
+          },
+          {
+            id: "OSA",
+            nombre: "CA Osasuna",
+            logo: "https://assets.footylogos.com/previews/osasuna/osasuna-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Luis Miguel Ramis", pos: "entrenador"},
+              {num: "3", name: "Sergio Herrera", pos: "portero"},
+              {num: "4", name: "Aitor Fernández", pos: "portero"},
+              {num: "5A", name: "Rosier", pos: "defensa"},
+              {num: "5B", name: "Arguibide", pos: "defensa"},
+              {num: "6", name: "Boyomo", pos: "defensa"},
+              {num: "7", name: "Herrando", pos: "defensa"},
+              {num: "8", name: "Catena", pos: "defensa"},
+              {num: "9", name: "Abel Bretones", pos: "defensa"},
+              {num: "10", name: "Osambela", pos: "medio"},
+              {num: "11", name: "Torró", pos: "medio"},
+              {num: "12", name: "Moncayola", pos: "medio"},
+              {num: "13A", name: "Moi Gómez", pos: "medio"},
+              {num: "13B", name: "Iker Muñoz", pos: "medio"},
+              {num: "14", name: "Rubén García", pos: "medio"},
+              {num: "15", name: "Aimar Oroz", pos: "medio"},
+              {num: "16", name: "Iker Benito", pos: "medio"},
+              {num: "16 BIS", name: "Dubasin", pos: "delantero", tag: "3ª ed"},
+              {num: "17", name: "Raúl Moro", pos: "delantero"},
+              {num: "18", name: "Raúl García", pos: "delantero"},
+              {num: "19", name: "Kike Barja", pos: "delantero"},
+              {num: "20", name: "Budimir", pos: "delantero"}
+            ]
+          },
+          {
+            id: "RAC",
+            nombre: "Racing de Santander",
+            logo: "https://assets.footylogos.com/previews/racing-santander/racing-santander-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "José Alberto López", pos: "entrenador"},
+              {num: "3", name: "Agirrezabala", pos: "portero", tag: "3ª ed"},
+              {num: "4", name: "Eriksson", pos: "portero"},
+              {num: "5", name: "Mantilla", pos: "defensa"},
+              {num: "6", name: "Sangalli", pos: "defensa"},
+              {num: "6 BIS", name: "Pablo Ramón", pos: "defensa", tag: "3ª ed"},
+              {num: "7", name: "Facu González", pos: "defensa"},
+              {num: "8", name: "Javi Castro", pos: "defensa"},
+              {num: "8 BIS", name: "Pedro Felipe", pos: "defensa", tag: "3ª ed"},
+              {num: "9A", name: "Manu Hernando", pos: "defensa"},
+              {num: "9B", name: "Mario García", pos: "defensa"},
+              {num: "10", name: "Jorge Salinas", pos: "defensa"},
+              {num: "11", name: "Maguette", pos: "medio"},
+              {num: "12", name: "Gustavo Puerta", pos: "medio"},
+              {num: "13", name: "Iñigo", pos: "medio"},
+              {num: "13 BIS", name: "Sergio Martínez", pos: "medio", tag: "3ª ed"},
+              {num: "14", name: "Aldasoro", pos: "medio"},
+              {num: "15", name: "Suleiman", pos: "delantero"},
+              {num: "15 BIS", name: "Zabiri", pos: "delantero", tag: "3ª ed"},
+              {num: "16", name: "Andrés Martín", pos: "delantero"},
+              {num: "17", name: "Guliashvili", pos: "delantero"},
+              {num: "18", name: "Iñigo Vicente", pos: "delantero"},
+              {num: "19", name: "Arana", pos: "delantero"},
+              {num: "20", name: "Villalibre", pos: "delantero"}
+            ]
+          },
+          {
+            id: "RAY",
+            nombre: "Rayo Vallecano",
+            logo: "https://assets.footylogos.com/previews/rayo-vallecano/rayo-vallecano-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Beñat San José", pos: "entrenador"},
+              {num: "3", name: "Batalla", pos: "portero"},
+              {num: "4", name: "Cárdenas", pos: "portero"},
+              {num: "5", name: "Ratiu", pos: "defensa"},
+              {num: "6", name: "Balliu", pos: "defensa"},
+              {num: "7", name: "Nobel Mendy", pos: "defensa"},
+              {num: "7 BIS", name: "Vertrouwd", pos: "defensa", tag: "3ª ed"},
+              {num: "8", name: "Lejeune", pos: "defensa"},
+              {num: "9", name: "Luiz Felipe", pos: "defensa"},
+              {num: "10", name: "Pep Chavarría", pos: "defensa"},
+              {num: "10 BIS", name: "Pelayo", pos: "defensa", tag: "3ª ed"},
+              {num: "11A", name: "Pedro Díaz", pos: "medio"},
+              {num: "11B", name: "Nteka", pos: "medio"},
+              {num: "12", name: "Pathé Ciss", pos: "medio"},
+              {num: "13", name: "Óscar Valentín", pos: "medio"},
+              {num: "14", name: "Unai López", pos: "medio"},
+              {num: "15", name: "Isi", pos: "medio"},
+              {num: "16", name: "De Frutos", pos: "delantero"},
+              {num: "17", name: "Fran Pérez", pos: "delantero"},
+              {num: "18", name: "Álvaro García", pos: "delantero"},
+              {num: "19", name: "Camello", pos: "delantero"},
+              {num: "20", name: "Alemao", pos: "delantero"}
+            ]
+          },
+          {
+            id: "RSO",
+            nombre: "Real Sociedad",
+            logo: "https://assets.footylogos.com/previews/real-sociedad/real-sociedad-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Pellegrino Matarazzo", pos: "entrenador"},
+              {num: "3", name: "Remiro", pos: "portero"},
+              {num: "4", name: "Marrero", pos: "portero"},
+              {num: "5", name: "Aramburu", pos: "defensa"},
+              {num: "6", name: "Zubeldia", pos: "defensa"},
+              {num: "7", name: "Jon Martín", pos: "defensa"},
+              {num: "8", name: "Sergio Gómez", pos: "defensa"},
+              {num: "9", name: "Aihen Muñoz", pos: "defensa"},
+              {num: "10", name: "Gorrotxategi", pos: "medio"},
+              {num: "11", name: "Pablo Marín", pos: "medio"},
+              {num: "12", name: "Turrientes", pos: "medio"},
+              {num: "13A", name: "Yangel Herrera", pos: "medio"},
+              {num: "13B", name: "Zakharyan", pos: "medio", tag: "2ª ed"},
+              {num: "14", name: "Carlos Soler", pos: "medio"},
+              {num: "15", name: "Sucic", pos: "medio"},
+              {num: "16", name: "Barrenetxea", pos: "delantero"},
+              {num: "17", name: "Kubo", pos: "delantero"},
+              {num: "18", name: "Guedes", pos: "delantero"},
+              {num: "19", name: "Oskarsson", pos: "delantero"},
+              {num: "20", name: "Oyarzabal", pos: "delantero"}
+            ]
+          },
+          {
+            id: "SEV",
+            nombre: "Sevilla FC",
+            logo: "https://assets.footylogos.com/previews/sevilla-fc/sevilla-fc-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Luis García", pos: "entrenador"},
+              {num: "3", name: "Vlachodimos", pos: "portero"},
+              {num: "4", name: "Fran González", pos: "portero", tag: "3ª ed"},
+              {num: "5", name: "Carmona", pos: "defensa"},
+              {num: "6", name: "Juanlu", pos: "defensa"},
+              {num: "6 BIS", name: "Iglesias", pos: "defensa", tag: "2ª ed"},
+              {num: "7", name: "Kike Salas", pos: "defensa"},
+              {num: "8", name: "Nianzou", pos: "defensa"},
+              {num: "8 BIS", name: "Julio Díaz", pos: "defensa", tag: "3ª ed"},
+              {num: "9A", name: "Castrín", pos: "defensa"},
+              {num: "9B", name: "Marcao", pos: "defensa"},
+              {num: "10", name: "Suazo", pos: "defensa"},
+              {num: "11", name: "Oso", pos: "medio"},
+              {num: "12", name: "Agoumé", pos: "medio"},
+              {num: "13", name: "Guridi", pos: "medio", tag: "2ª ed"},
+              {num: "14", name: "Sow", pos: "medio"},
+              {num: "15", name: "Vargas", pos: "medio"},
+              {num: "16", name: "Manu Bueno", pos: "medio"},
+              {num: "17", name: "Peque", pos: "delantero"},
+              {num: "18", name: "Ejuke", pos: "delantero"},
+              {num: "19", name: "Akor Adams", pos: "delantero"},
+              {num: "19 BIS", name: "Miguel Sierra", pos: "delantero", tag: "3ª ed"},
+              {num: "20", name: "Isaac Romero", pos: "delantero"}
+            ]
+          },
+          {
+            id: "VAL",
+            nombre: "Valencia CF",
+            logo: "https://assets.footylogos.com/previews/valencia-cf/valencia-cf-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Carlos Corberán", pos: "entrenador"},
+              {num: "3", name: "Dimitrievski", pos: "portero"},
+              {num: "4", name: "Rivero", pos: "portero"},
+              {num: "5", name: "Foulquier", pos: "defensa"},
+              {num: "6", name: "Copete", pos: "defensa"},
+              {num: "7", name: "Tárrega", pos: "defensa"},
+              {num: "8A", name: "Comert", pos: "defensa"},
+              {num: "8B", name: "Diakhaby", pos: "defensa"},
+              {num: "9", name: "Gayà", pos: "defensa"},
+              {num: "10", name: "Jesús Vázquez", pos: "defensa"},
+              {num: "11", name: "Pepelu", pos: "medio"},
+              {num: "12", name: "Guido Rodríguez", pos: "medio"},
+              {num: "13", name: "Javi Guerra", pos: "medio"},
+              {num: "14", name: "Luis Rioja", pos: "medio"},
+              {num: "15", name: "Ugrinic", pos: "medio"},
+              {num: "16", name: "André Almeida", pos: "medio"},
+              {num: "16 BIS", name: "Dieng", pos: "medio", tag: "2ª ed"},
+              {num: "17", name: "Hugo Duro", pos: "delantero"},
+              {num: "18", name: "Diego López", pos: "delantero"},
+              {num: "19", name: "Ramazani", pos: "delantero"},
+              {num: "19 BIS", name: "Danjuma", pos: "delantero", tag: "2ª ed"},
+              {num: "20A", name: "Sadiq", pos: "delantero"},
+              {num: "20B", name: "Lucas Beltrán", pos: "delantero"}
+            ]
+          },
+          {
+            id: "VIL",
+            nombre: "Villarreal CF",
+            logo: "https://assets.footylogos.com/previews/villarreal-cf/villarreal-cf-logo-footylogos-320.webp",
+            stickers: [
+              {num: "1", name: "Escudo", pos: ""},
+              {num: "2", name: "Iñigo Pérez", pos: "entrenador"},
+              {num: "3", name: "Luiz Júnior", pos: "portero"},
+              {num: "4", name: "Arnau Tenas", pos: "portero"},
+              {num: "4 BIS", name: "Gulácsi", pos: "portero", tag: "2ª ed"},
+              {num: "5", name: "Mouriño", pos: "defensa"},
+              {num: "6A", name: "Pau Navarro", pos: "defensa"},
+              {num: "6B", name: "Logan Costa", pos: "defensa"},
+              {num: "7A", name: "Foyth", pos: "defensa"},
+              {num: "7B", name: "Freeman", pos: "defensa"},
+              {num: "8A", name: "Kambwala", pos: "defensa"},
+              {num: "8B", name: "Rafa Marín", pos: "defensa"},
+              {num: "9", name: "Renato Veiga", pos: "defensa"},
+              {num: "10", name: "Sergi Cardona", pos: "defensa"},
+              {num: "11", name: "Pape Gueye", pos: "medio"},
+              {num: "12", name: "Santi Comesaña", pos: "medio"},
+              {num: "13", name: "Maciá", pos: "medio"},
+              {num: "14", name: "Moleiro", pos: "medio"},
+              {num: "15", name: "Buchanan", pos: "delantero"},
+              {num: "16", name: "Oluwaseyi", pos: "delantero"},
+              {num: "17", name: "Ayoze", pos: "delantero"},
+              {num: "18", name: "Pépé", pos: "delantero"},
+              {num: "19", name: "Mikautadze", pos: "delantero"},
+              {num: "20", name: "Gerard Moreno", pos: "delantero"}
+            ]
+          },
+          {
+            id: "UF",
+            nombre: "Últimos Fichajes",
+            logo: "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png",
+            stickers: [
+              {num: "UF1", name: "Canales (Racing)", pos: "medio", tag: "2ª ed"},
+              {num: "UF2", name: "Calatrava (Espanyol)", pos: "medio", tag: "2ª ed"},
+              {num: "UF3", name: "Dumfries (Real Madrid)", pos: "defensa", tag: "2ª ed"},
+              {num: "UF4", name: "Carlos Romero (Espanyol)", pos: "defensa", tag: "2ª ed"},
+              {num: "UF5", name: "Hjulmand (Atlético)", pos: "medio", tag: "2ª ed"},
+              {num: "UF6", name: "Fran García (Real Madrid)", pos: "defensa", tag: "1ª ed"},
+              {num: "UF7", name: "Bardelli (Levante)", pos: "medio", tag: "2ª ed"},
+              {num: "UF8", name: "Leo Román (Deportivo)", pos: "portero", tag: "2ª ed"},
+              {num: "UF9", name: "De Haas (Valencia)", pos: "defensa", tag: "2ª ed"},
+              {num: "UF10", name: "Febas (Celta)", pos: "medio", tag: "2ª ed"},
+              {num: "UF11", name: "Juan Cruz (Málaga)", pos: "delantero", tag: "2ª ed"},
+              {num: "UF12", name: "Aubameyang (Deportivo)", pos: "delantero", tag: "2ª ed"},
+              {num: "UF13", name: "Sotelo (Celta)", pos: "medio", tag: "2ª ed"},
+              {num: "UF14", name: "Sato (Valencia)", pos: "delantero", tag: "2ª ed"},
+              {num: "UF15", name: "Fer Niño (Elche)", pos: "delantero", tag: "2ª ed"},
+              {num: "UF16", name: "Moscardo (Espanyol)", pos: "medio", tag: "2ª ed"},
+              {num: "UF17", name: "Sangante (Sevilla)", pos: "defensa", tag: "2ª ed"},
+              {num: "UF18", name: "Andrés García (Getafe)", pos: "defensa", tag: "1ª ed"},
+              {num: "UF19", name: "Adeyemi (Barcelona)", pos: "delantero", tag: "2ª ed"},
+              {num: "UF20", name: "Kang-In Lee (Atlético)", pos: "medio", tag: "2ª ed"},
+              {num: "UF21", name: "Bernardo Silva (R. Madrid)", pos: "medio", tag: "3ª ed"},
+              {num: "UF22", name: "Amatucci (Deportivo)", pos: "medio", tag: "3ª ed"},
+              {num: "UF23", name: "Mojica (Getafe)", pos: "defensa"},
+              {num: "UF24", name: "Gordon (Barcelona)", pos: "delantero", tag: "3ª ed"},
+              {num: "UF25", name: "Robbie Ure (Sevilla)", pos: "delantero", tag: "3ª ed"},
+              {num: "UF26", name: "Javi Morcillo (Sevilla)", pos: "medio", tag: "3ª ed"},
+              {num: "UF27", name: "Núñez (Espanyol)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF28", name: "Maffeo (Valencia)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF29", name: "Cucurella (Real Madrid)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF30", name: "Valentini (Alavés)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF31", name: "Sazonov (Getafe)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF32", name: "Buonanotte (Elche)", pos: "medio", tag: "3ª ed"},
+              {num: "UF33", name: "Angeliño (Deportivo)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF34", name: "Iván Martín (Racing)", pos: "medio", tag: "3ª ed"},
+              {num: "UF35", name: "Peio Canales (Athletic)", pos: "medio"},
+              {num: "UF36", name: "Kochorashvili (Sevilla)", pos: "medio", tag: "3ª ed"},
+              {num: "UF37", name: "Galán (Celta)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF38", name: "Parrott (Betis)", pos: "delantero", tag: "3ª ed"},
+              {num: "UF39", name: "Diomande (Real Madrid)", pos: "delantero", tag: "3ª ed"},
+              {num: "UF40", name: "Rodri (Barcelona)", pos: "medio", tag: "3ª ed"}
+            ]
+          },
+          {
+            id: "PRM",
+            nombre: "ADN / LaLiga Prime",
+            logo: "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png",
+            stickers: [
+              {num: "1", name: "Antony (Betis)", pos: "delantero"},
+              {num: "2", name: "Bellingham (Real Madrid)", pos: "medio"},
+              {num: "3", name: "Courtois (Real Madrid)", pos: "portero"},
+              {num: "4", name: "Fermín (Barcelona)", pos: "medio"},
+              {num: "5", name: "Julián Álvarez (Atlético)", pos: "delantero"},
+              {num: "6", name: "Lamine Yamal (Barcelona)", pos: "delantero"},
+              {num: "7", name: "Lookman (Atlético)", pos: "delantero"},
+              {num: "8", name: "Mbappé (Real Madrid)", pos: "delantero"},
+              {num: "9", name: "Moleiro (Villarreal)", pos: "medio"},
+              {num: "10", name: "Nico Williams (Athletic)", pos: "delantero"},
+              {num: "11", name: "Oyarzabal (Real Sociedad)", pos: "delantero"},
+              {num: "12", name: "Pedri (Barcelona)", pos: "medio"},
+              {num: "13", name: "Raphinha (Barcelona)", pos: "delantero"},
+              {num: "14", name: "Unai Simón (Athletic)", pos: "portero"},
+              {num: "15", name: "Vinícius (Real Madrid)", pos: "delantero"}
+            ]
+          },
+          {
+            id: "FNT",
+            nombre: "LaLiga Fantasy",
+            logo: "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png",
+            stickers: [
+              {num: "1", name: "Hansi Flick (Barcelona)", pos: "entrenador"},
+              {num: "2", name: "Joan García (Barcelona)", pos: "portero"},
+              {num: "3", name: "Lejeune (Rayo Vallecano)", pos: "defensa"},
+              {num: "4", name: "Fornals (Betis)", pos: "medio"},
+              {num: "5", name: "Lamine Yamal (Barcelona)", pos: "delantero"},
+              {num: "6", name: "Luis Milla (Getafe)", pos: "medio"},
+              {num: "7", name: "Pedri (Barcelona)", pos: "medio"},
+              {num: "8", name: "Luis Milla (Getafe)", pos: "medio"},
+              {num: "9", name: "Mbappé (Real Madrid)", pos: "delantero"}
+            ]
+          },
+          {
+            id: "D23",
+            nombre: "Draft 23",
+            logo: "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png",
+            stickers: [
+              {num: "1", name: "Asencio (Real Madrid)", pos: "defensa"},
+              {num: "2", name: "Balde (Barcelona)", pos: "defensa"},
+              {num: "3", name: "Barrios (Atlético)", pos: "medio"},
+              {num: "4", name: "Carlos Espí (Levante)", pos: "delantero"},
+              {num: "5", name: "Carreras (Real Madrid)", pos: "defensa"},
+              {num: "6", name: "Cubarsí (Barcelona)", pos: "defensa"},
+              {num: "7", name: "Fer López (Celta)", pos: "medio"},
+              {num: "8", name: "Gavi (Barcelona)", pos: "medio"},
+              {num: "9", name: "Gonzalo (Real Madrid)", pos: "delantero"},
+              {num: "10", name: "Huijsen (Real Madrid)", pos: "defensa"},
+              {num: "11", name: "Jauregizar (Athletic)", pos: "medio"},
+              {num: "12", name: "Javi Guerra (Valencia)", pos: "medio"},
+              {num: "13", name: "Jon Martín (Real Sociedad)", pos: "defensa"},
+              {num: "14", name: "Juanlu (Sevilla)", pos: "defensa"},
+              {num: "15", name: "Marc Bernal (Barcelona)", pos: "medio"},
+              {num: "16", name: "Mastantuono (Real Madrid)", pos: "medio"},
+              {num: "17", name: "Oso (Sevilla)", pos: "medio"},
+              {num: "18", name: "Pau Navarro (Villarreal)", pos: "defensa"},
+              {num: "19", name: "Pubill (Atlético)", pos: "defensa"},
+              {num: "20", name: "Renato Veiga (Villarreal)", pos: "defensa"},
+              {num: "21", name: "Rodri Mendoza (Atlético)", pos: "medio"},
+              {num: "22", name: "Thiago Pitarch (Real Madrid)", pos: "medio"},
+              {num: "23", name: "Yeremay (Deportivo)", pos: "delantero"}
+            ]
+          },
+          {
+            id: "KMX",
+            nombre: "Draft 23 Kromix",
+            logo: "https://openclipart.org/download/298922/GoldTypographyK.svg",
+            stickers: [
+              {num: "K1", name: "Asencio (Real Madrid)", pos: "defensa"},
+              {num: "K2", name: "Balde (Barcelona)", pos: "defensa"},
+              {num: "K3", name: "Barrios (Atlético)", pos: "medio"},
+              {num: "K4", name: "Carlos Espí (Levante)", pos: "delantero"},
+              {num: "K5", name: "Carreras (Real Madrid)", pos: "defensa"},
+              {num: "K6", name: "Cubarsí (Barcelona)", pos: "defensa"},
+              {num: "K7", name: "Fer López (Celta)", pos: "medio"},
+              {num: "K8", name: "Gavi (Barcelona)", pos: "medio"},
+              {num: "K9", name: "Gonzalo (Real Madrid)", pos: "delantero"},
+              {num: "K10", name: "Huijsen (Real Madrid)", pos: "defensa"},
+              {num: "K11", name: "Jauregizar (Athletic)", pos: "medio"},
+              {num: "K12", name: "Javi Guerra (Valencia)", pos: "medio"},
+              {num: "K13", name: "Jon Martín (Real Sociedad)", pos: "defensa"},
+              {num: "K14", name: "Juanlu (Sevilla)", pos: "defensa"},
+              {num: "K15", name: "Marc Bernal (Barcelona)", pos: "medio"},
+              {num: "K16", name: "Mastantuono (Real Madrid)", pos: "medio"},
+              {num: "K17", name: "Oso (Sevilla)", pos: "medio"},
+              {num: "K18", name: "Pau Navarro (Villarreal)", pos: "defensa"},
+              {num: "K19", name: "Pubill (Atlético)", pos: "defensa"},
+              {num: "K20", name: "Renato Veiga (Villarreal)", pos: "defensa"},
+              {num: "K21", name: "Rodri Mendoza (Atlético)", pos: "medio"},
+              {num: "K22", name: "Thiago Pitarch (Real Madrid)", pos: "medio"},
+              {num: "K23", name: "Yeremay (Deportivo)", pos: "delantero"}
+            ]
+          },
+          {
+            id: "EXT",
+            nombre: "Extra Stickers",
+            logo: "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png",
+            stickers: [
+              {num: "B1", name: "Bronce Lamine Yamal", pos: "delantero"},
+              {num: "B2", name: "Bronce Mbappé", pos: "delantero"},
+              {num: "B3", name: "Bronce Nico Williams", pos: "delantero"},
+              {num: "B4", name: "Bronce Pedri", pos: "medio"},
+              {num: "B5", name: "Bronce Oblak", pos: "portero"},
+              {num: "P1", name: "Plata Lamine Yamal", pos: "delantero"},
+              {num: "P2", name: "Plata Mbappé", pos: "delantero"},
+              {num: "P3", name: "Plata Nico Williams", pos: "delantero"},
+              {num: "P4", name: "Plata Pedri", pos: "medio"},
+              {num: "P5", name: "Plata Oblak", pos: "portero"},
+              {num: "O1", name: "Oro Lamine Yamal", pos: "delantero"},
+              {num: "O2", name: "Oro Mbappé", pos: "delantero"},
+              {num: "O3", name: "Oro Nico Williams", pos: "delantero"},
+              {num: "O4", name: "Oro Pedri", pos: "medio"},
+              {num: "O5", name: "Oro Oblak", pos: "portero"}
+            ]
+          }
+        ];
+
+        let seccionSeleccionada = listadoSecciones[0].id;
+        let coleccion = JSON.parse(localStorage.getItem('coleccionLaLiga2026')) || {};
+
+        function mostrarModal(mensaje, onConfirm) {
+            const modal = document.getElementById('customModal');
+            const msgEl = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+
+            msgEl.innerText = mensaje;
+            modal.classList.add('active');
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                confirmBtn.onclick = null;
+                cancelBtn.onclick = null;
+            };
+
+            confirmBtn.onclick = () => {
+                cleanup();
+                onConfirm();
+            };
+            cancelBtn.onclick = cleanup;
+        }
+
+        function inicializarDatos() {
+            listadoSecciones.forEach(sec => {
+                sec.stickers.forEach(stk => {
+                    const clave = `${sec.id}-${stk.num}`;
+                    if (coleccion[clave] === undefined) {
+                        coleccion[clave] = false; 
+                    }
+                });
+            });
+            guardarEnStorage();
+        }
+
+        function guardarEnStorage() {
+            localStorage.setItem('coleccionLaLiga2026', JSON.stringify(coleccion));
+        }
+
+        function renderizarMenu() {
+            const menu = document.getElementById('menuPaises');
+            menu.innerHTML = '';
+
+            listadoSecciones.forEach(sec => {
+                const boton = document.createElement('button');
+                boton.className = `btn-pais ${sec.id === seccionSeleccionada ? 'activo' : ''}`;
+                boton.title = sec.nombre;
+                boton.onclick = () => cambiarSeccion(sec.id);
+
+                const img = document.createElement('img');
+                img.src = sec.logo;
+                img.alt = sec.nombre;
+                img.onerror = function() {
+                    this.src = "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png";
+                };
+
+                boton.appendChild(img);
+                menu.appendChild(boton);
+            });
+        }
+
+        function cambiarSeccion(idSeccion) {
+            seccionSeleccionada = idSeccion;
+            
+            document.querySelectorAll('.btn-pais').forEach((btn, index) => {
+                if (listadoSecciones[index].id === idSeccion) {
+                    btn.classList.add('activo');
+                } else {
+                    btn.classList.remove('activo');
+                }
+            });
+
+            const secActual = listadoSecciones.find(s => s.id === idSeccion);
+            document.getElementById('textoPaisActual').innerText = `${secActual.nombre} (${secActual.id})`;
+            const escudoImg = document.getElementById('escudoPaisActual');
+            escudoImg.src = secActual.logo;
+            escudoImg.onerror = function() {
+                this.src = "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png";
+            };
+
+            renderizarCromos();
+        }
+
+        function paisAnterior() {
+            const indiceActual = listadoSecciones.findIndex(s => s.id === seccionSeleccionada);
+            const nuevoIndice = indiceActual === 0 ? listadoSecciones.length - 1 : indiceActual - 1;
+            cambiarSeccion(listadoSecciones[nuevoIndice].id);
+        }
+
+        function paisSiguiente() {
+            const indiceActual = listadoSecciones.findIndex(s => s.id === seccionSeleccionada);
+            const nuevoIndice = indiceActual === listadoSecciones.length - 1 ? 0 : indiceActual + 1;
+            cambiarSeccion(listadoSecciones[nuevoIndice].id);
+        }
+
+        window.addEventListener('keydown', function(evento) {
+            if (evento.key === "ArrowLeft") {
+                paisAnterior();
+            } else if (evento.key === "ArrowRight") {
+                paisSiguiente();
+            }
+        });
+
+        function renderizarCromos() {
+            const cuadricula = document.getElementById('cuadriculaCromos');
+            cuadricula.innerHTML = '';
+
+            const secActual = listadoSecciones.find(s => s.id === seccionSeleccionada);
+
+            secActual.stickers.forEach(stk => {
+                const claveCromo = `${secActual.id}-${stk.num}`;
+                const loTengo = coleccion[claveCromo];
+
+                const botonCromo = document.createElement('button');
+                botonCromo.className = `btn-cromo ${loTengo ? 'tengo' : 'falta'}`;
+                
+                const colNum = document.createElement('span');
+                colNum.className = 'cromo-col-num';
+                colNum.innerText = `${secActual.id} ${stk.num}`;
+
+                const colNombre = document.createElement('span');
+                colNombre.className = 'cromo-col-nombre';
+                colNombre.innerText = stk.name;
+
+                const colPos = document.createElement('span');
+                colPos.className = 'cromo-col-pos';
+                colPos.innerText = stk.pos || '';
+
+                botonCromo.appendChild(colNum);
+                botonCromo.appendChild(colNombre);
+                botonCromo.appendChild(colPos);
+
+                if (stk.tag) {
+                    const tagEd = document.createElement('span');
+                    tagEd.className = 'cromo-tag-ed';
+                    tagEd.innerText = stk.tag;
+                    botonCromo.appendChild(tagEd);
+                }
+
+                botonCromo.onclick = () => alternarCromo(claveCromo, `${secActual.id} ${stk.num} - ${stk.name}`);
+                cuadricula.appendChild(botonCromo);
+            });
+        }
+
+        function alternarCromo(claveCromo, textoNombre) {
+            if (coleccion[claveCromo] === false) {
+                mostrarModal(`¿Quieres marcar el cromo ${textoNombre} como PENDIENTE?`, () => {
+                    coleccion[claveCromo] = true;
+                    guardarEnStorage();
+                    renderizarCromos();
+                    actualizarContadores();
+                });
+            } else {
+                coleccion[claveCromo] = false;
+                guardarEnStorage();
+                renderizarCromos();
+                actualizarContadores();
+            }
+        }
+
+        function obtenerTotales() {
+            let tengo = 0;
+            let faltan = 0;
+
+            listadoSecciones.forEach(sec => {
+                sec.stickers.forEach(stk => {
+                    const clave = `${sec.id}-${stk.num}`;
+                    if (coleccion[clave] === true) {
+                        tengo++;
+                    } else {
+                        faltan++;
+                    }
+                });
+            });
+            return { tengo, faltan };
+        }
+
+        function actualizarContadores() {
+            const totales = obtenerTotales();
+            document.getElementById('totalTengo').innerText = totales.tengo;
+            document.getElementById('totalFaltan').innerText = totales.faltan;
+        }
+
+        function resetearColeccion() {
+            mostrarModal("¿Estás seguro de que quieres reiniciar toda tu colección? Todos quedarán faltantes.", () => {
+                Object.keys(coleccion).forEach(clave => {
+                    coleccion[clave] = false;
+                });
+                guardarEnStorage();
+                renderizarCromos();
+                actualizarContadores();
+            });
+        }
+
+        function resetearColeccion2() {
+            mostrarModal("¿Estás seguro de que quieres marcar toda la colección como pendiente?", () => {
+                Object.keys(coleccion).forEach(clave => {
+                    coleccion[clave] = true;
+                });
+                guardarEnStorage();
+                renderizarCromos();
+                actualizarContadores();
+            });
+        }
+
+        function generarPdfDeLosQueTengo() {
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = ''; 
+
+            const titulo = document.createElement('h1');
+            titulo.className = 'pdf-titulo';
+            titulo.innerText = 'Cromos Pendientes - Colección LaLiga 2026-27';
+            printArea.appendChild(titulo);
+
+            const columnasContenedor = document.createElement('div');
+            columnasContenedor.className = 'pdf-columnas-contenedor';
+            printArea.appendChild(columnasContenedor);
+
+            let totalPaisesConCromos = 0;
+
+            listadoSecciones.forEach(sec => {
+                let cromosObtenidosDeEstePais = [];
+
+                sec.stickers.forEach(stk => {
+                    const clave = `${sec.id}-${stk.num}`;
+                    if (coleccion[clave] === true) {
+                        cromosObtenidosDeEstePais.push(`${sec.id}${stk.num}`);
+                    }
+                });
+
+                if (cromosObtenidosDeEstePais.length > 0) {
+                    totalPaisesConCromos++;
+
+                    const fila = document.createElement('div');
+                    fila.className = 'pdf-fila';
+
+                    const banderaContenedor = document.createElement('div');
+                    banderaContenedor.className = 'pdf-bandera-contenedor';
+                    
+                    const img = document.createElement('img');
+                    img.src = sec.logo;
+                    img.onerror = function() {
+                        this.src = "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png";
+                    };
+                    banderaContenedor.appendChild(img);
+                    fila.appendChild(banderaContenedor);
+
+                    const cromosContenedor = document.createElement('div');
+                    cromosContenedor.className = 'pdf-cromos-contenedor';
+
+                    cromosObtenidosDeEstePais.forEach(cromoTexto => {
+                        const cromoTag = document.createElement('div');
+                        cromoTag.className = 'pdf-cromo-tag tengo-pdf';
+                        cromoTag.innerText = cromoTexto;
+                        cromosContenedor.appendChild(cromoTag);
+                    });
+
+                    fila.appendChild(cromosContenedor);
+                    columnasContenedor.appendChild(fila);
+                }
+            });
+
+            if (totalPaisesConCromos > 15) {
+                columnasContenedor.classList.add('doble-columna');
+            }
+
+            if (totalPaisesConCromos === 0) {
+                const vacioMensaje = document.createElement('p');
+                vacioMensaje.style.textAlign = 'center';
+                vacioMensaje.style.color = '#999';
+                vacioMensaje.style.fontSize = '12px';
+                vacioMensaje.innerText = 'No tienes ningún cromo marcado como pendiente todavía.';
+                columnasContenedor.appendChild(vacioMensaje);
+            }
+
+            const opciones = {
+                margin:       [5, 8, 5, 8], 
+                filename:     'CromosPendientesLaLiga.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            printArea.style.display = 'block';
+            
+            html2pdf().set(opciones).from(printArea).save().then(() => {
+                printArea.style.display = 'none';
+            }).catch(err => {
+                console.error(err);
+                printArea.style.display = 'none';
+            });
+        }
+
+        function generarPdfListaCompleta() {
+            const printArea = document.getElementById('printAreaCompleto');
+            printArea.innerHTML = ''; 
+
+            const titulo = document.createElement('h1');
+            titulo.className = 'pdf-titulo';
+            titulo.innerText = 'Lista Completa Colección LaLiga 2026-27';
+            printArea.appendChild(titulo);
+
+            const columnasContenedor = document.createElement('div');
+            columnasContenedor.className = 'pdf-columnas-contenedor';
+            printArea.appendChild(columnasContenedor);
+
+            listadoSecciones.forEach(sec => {
+                const fila = document.createElement('div');
+                fila.className = 'pdf-fila';
+
+                // Escudo
+                const banderaContenedor = document.createElement('div');
+                banderaContenedor.className = 'pdf-bandera-contenedor';
+                
+                const img = document.createElement('img');
+                img.src = sec.logo;
+                img.onerror = function() {
+                    this.src = "https://assets.laliga.com/assets/public/logospage/pressroom/laliga/LL_RGB_h_color.png";
+                };
+                banderaContenedor.appendChild(img);
+                fila.appendChild(banderaContenedor);
+
+                // Nombre Equipo
+                const teamName = document.createElement('div');
+                teamName.className = 'pdf-team-name';
+                teamName.innerText = sec.nombre;
+                fila.appendChild(teamName);
+
+                // Grid de cromos
+                const gridContenedor = document.createElement('div');
+                gridContenedor.className = 'pdf-cromos-grid-fijo';
+
+                sec.stickers.forEach(stk => {
+                    const clave = `${sec.id}-${stk.num}`;
+                    const cromoTag = document.createElement('div');
+                    cromoTag.className = 'pdf-cromo-tag';
+                    cromoTag.innerText = `${stk.num}`;
+
+                    if (coleccion[clave] === true) {
+                        cromoTag.classList.add('tengo-pdf'); 
+                    } else {
+                        cromoTag.classList.add('falta-pdf');
+                    }
+                    gridContenedor.appendChild(cromoTag);
+                });
+
+                fila.appendChild(gridContenedor);
+                columnasContenedor.appendChild(fila);
+            });
+
+            const totales = obtenerTotales();
+            const contadorFinal = document.createElement('div');
+            contadorFinal.className = 'pdf-contador-final';
+            contadorFinal.innerHTML = `Pendientes (Oscuros): <span>${totales.tengo}</span> | Tengo (Gris Claro): <span>${totales.faltan}</span>`;
+            printArea.appendChild(contadorFinal);
+
+            const opciones = {
+                margin:       [3, 5, 3, 5], 
+                filename:     'ListaCompletaLaLiga.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            printArea.style.display = 'block';
+            
+            html2pdf().set(opciones).from(printArea).save().then(() => {
+                printArea.style.display = 'none';
+            }).catch(err => {
+                console.error(err);
+                printArea.style.display = 'none';
+            });
+        }
+
+        inicializarDatos();
+        renderizarMenu();
+        cambiarSeccion(seccionSeleccionada);
+        actualizarContadores();
+
+        document.getElementById('btnReset').onclick = resetearColeccion;
+        document.getElementById('btnReset2').onclick = resetearColeccion2;
+        document.getElementById('btnPdf').onclick = generarPdfDeLosQueTengo;
+        document.getElementById('btnPdfCompleto').onclick = generarPdfListaCompleta;
+    </script>
+</body>
+</html>
