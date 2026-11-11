@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="gl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xogos: O noso lugar no universo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪐</text></svg>">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fbf7ee;--card:#fff;--ink:#1e2a47;--mut:#5b6580;--pri:#e5572d;--ok:#2e9e57;--ko:#d63c3c;--line:#e4dcc9;--hd:#1e2a47;--hdt:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111628;--card:#1c2440;--ink:#eef1fa;--mut:#a3adc8;--pri:#ff7a4f;--ok:#4cc77b;--ko:#ff6b6b;--line:#34406a;--hd:#0a0e1d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111628;--card:#1c2440;--ink:#eef1fa;--mut:#a3adc8;--pri:#ff7a4f;--ok:#4cc77b;--ko:#ff6b6b;--line:#34406a;--hd:#0a0e1d;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--hd);color:var(--hdt);padding:16px;text-align:center}
+header h1{margin:0;font-size:1.4rem}header p{margin:4px 0 0;opacity:.85;font-size:.9rem}
+.tot{display:inline-block;margin-top:8px;background:#f5c518;color:#1e2a47;border-radius:20px;padding:2px 14px;font-weight:700}
+nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px}
+nav button,.btn{font:inherit;font-weight:700;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:10px 14px;cursor:pointer}
+nav button.on,.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+main{max-width:720px;margin:0 auto;padding:0 14px 40px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+h2{margin:0 0 6px;font-size:1.25rem}.mut{color:var(--mut);font-size:.9rem}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;font:inherit;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:12px;cursor:pointer}
+.opt.ok,.pick.ok,.pair.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.ko,.pick.ko{background:var(--ko);border-color:var(--ko);color:#fff;animation:sh .3s}
+.opt:disabled{cursor:default}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}.bar i{display:block;height:100%;background:var(--pri);transition:width .3s}
+.fb{margin-top:8px;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.row .btn{flex:1}
+.track{display:flex;flex-wrap:wrap;gap:6px;min-height:50px;padding:8px;border:2px dashed var(--line);border-radius:12px;margin:10px 0}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.pick{font:inherit;font-weight:600;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:20px;padding:8px 14px;cursor:pointer;margin:4px}
+.pick:disabled{opacity:.9;cursor:default}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair{font:inherit;font-size:.9rem;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;cursor:pointer;text-align:left}
+.pair.sel{border-color:var(--pri);background:var(--pri);color:#fff}
+.end{text-align:center}.end .big{font-size:2.4rem}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style></head><body>
+<header><h1>🌌 O noso lugar no universo</h1><p>Xogos de Ciencias Sociais · 5.º EP</p><span class="tot" id="tot">⭐ 0</span></header>
+<nav id="nav"></nav><main id="app"></main>
+<script>
+const $=s=>document.querySelector(s);
+const sh=a=>[...a].sort(()=>Math.random()-.5);
+const best={};let cur="quiz";
+const games={quiz:"🧠 Quiz",planets:"🪐 Planetas",tf:"✅ V ou F",match:"🔗 Une"};
+function stars(n,max){return n<=0?0:Math.max(1,Math.round(3*n/max))}
+function save(g,s){best[g]=Math.max(best[g]||0,s);$("#tot").textContent="⭐ "+Object.values(best).reduce((a,b)=>a+b,0)}
+function nav(){$("#nav").innerHTML=Object.entries(games).map(([k,v])=>`<button class="${k==cur?"on":""}" onclick="go('${k}')">${v}</button>`).join("")}
+function go(g){cur=g;nav();({quiz,planets,tf,match})[g]()}
+function end(g,good,max,extra){const s=stars(good,max);save(g,s);
+ $("#app").innerHTML=`<div class="card end"><div class="big">${"⭐".repeat(s)||"💪"}</div><h2>${good} de ${max}</h2><p>${extra||(s==3?"Fantástico! Es un/unha astronauta!":s==2?"Moi ben! Un pouco máis e tres estrelas.":"Ánimo! Le o resumo e proba outra vez.")}</p><button class="btn pri" onclick="go('${g}')">Xogar outra vez</button></div>`}
+
+/* QUIZ */
+const Q=[
+["Que é un ano luz?",["A distancia que percorre a luz nun ano","O tempo que tarda a Terra en dar unha volta","Un ano con moita luz"],0,"A luz viaxa a 300 000 km por segundo."],
+["Como se chama a nosa galaxia?",["Andrómeda","Vía Láctea","Sistema Solar"],1,"Parece un camiño de leite no ceo."],
+["Cal destes astros ten luz propia?",["A Lúa","Marte","O Sol"],2,"O Sol é unha estrela; os planetas reflicten a súa luz."],
+["Cantos planetas hai no sistema solar?",["7","8","9"],1,"Mercurio, Venus, Terra, Marte, Xúpiter, Saturno, Urano e Neptuno."],
+["Cal é un planeta rochoso (interior)?",["Marte","Saturno","Neptuno"],0,"Os interiores son Mercurio, Venus, Terra e Marte."],
+["Canto dura a rotación da Terra?",["24 horas","365 días","28 días"],0,"Orixina o día e a noite."],
+["Que orixina a translación da Terra?",["O día e a noite","O ano e as estacións","As mareas"],1,"Dura 365 días e 6 horas."],
+["Cantos días ten un ano bisesto?",["365","364","366"],2,"As 6 horas que sobran súmanse cada catro anos."],
+["Por que temos catro estacións?",["Porque o eixe da Terra está inclinado","Porque a Terra está máis preto ou lonxe do Sol","Porque a Lúa nos tapa"],0,"Os raios do Sol chegan con distinta inclinación."],
+["Por que vemos sempre a mesma cara da Lúa?",["Porque non xira","A súa rotación e translación duran o mesmo","Porque é redonda"],1,"Uns 28 días ambas."],
+["Que pasa nun eclipse de Sol?",["A Terra tapa a Lúa","A Lúa ponse entre o Sol e a Terra","O Sol se apaga"],1,"Sol → Lúa → Terra."],
+["Cal é o paralelo máis importante?",["Greenwich","O Trópico","O Ecuador"],2,"Greenwich é o meridiano máis importante."],
+["Para que serve a lenda dun mapa?",["Para dicir a orientación","Para explicar cores e símbolos","Para medir distancias"],1,"A rosa dos ventos indica a orientación."],
+["A forma da Lúa crecente é como unha...",["C","D","O"],1,"Crecente ten forma de D; minguante, de C."]];
+let qs,qi,qok;
+function quiz(){qs=sh(Q).slice(0,10);qi=0;qok=0;qshow()}
+function qshow(){if(qi>=qs.length)return end("quiz",qok,qs.length);
+ const [t,o,a]=qs[qi];const idx=sh(o.map((_,i)=>i));
+ $("#app").innerHTML=`<div class="bar"><i style="width:${qi*10}%"></i></div><div class="card"><div class="mut">Pregunta ${qi+1} de ${qs.length}</div><h2>${t}</h2>${idx.map(i=>`<button class="opt" data-i="${i}">${o[i]}</button>`).join("")}<div class="fb" id="fb"></div></div>`;
+ document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const ok=+b.dataset.i==a;if(ok)qok++;
+  document.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i==a)x.classList.add("ok")});
+  if(!ok)b.classList.add("ko");
+  $("#fb").innerHTML=(ok?"🎉 Correcto! ":"Case! ")+qs[qi][3]+`<div class="row"><button class="btn pri" onclick="qi++;qshow()">Seguinte ➜</button></div>`})}
+
+/* PLANETAS */
+const P=[["Mercurio","#9c9c9c"],["Venus","#e8b04a"],["Terra","#3a8fd9"],["Marte","#d9532c"],["Xúpiter","#c99b6b"],["Saturno","#e3c77a"],["Urano","#6fd0d9"],["Neptuno","#3d56c9"]];
+let pi,pe;
+function planets(){pi=0;pe=0;pdraw()}
+function pdraw(msg){
+ $("#app").innerHTML=`<div class="card"><h2>🪐 Ordena os planetas</h2><p class="mut">Toca os planetas na orde correcta, empezando polo máis próximo ao Sol ☀️.</p>
+ <div class="track">${P.slice(0,pi).map(p=>`<span class="pick ok">${p[0]}</span>`).join("")||'<span class="mut">☀️ Sol…</span>'}</div>
+ <div>${P.map((p,i)=>[p,i]).filter(([p,i])=>i>=pi).sort((a,b)=>a[0][0].localeCompare(b[0][0],"gl")).map(([p,i])=>`<button class="pick" data-i="${i}"><span class="dot" style="background:${p[1]}"></span>${p[0]}</button>`).join("")}</div>
+ <div class="fb">${msg||""}</div></div>`;
+ document.querySelectorAll(".pick[data-i]").forEach(b=>b.onclick=()=>{
+  if(+b.dataset.i==pi){pi++;if(pi==8)return end("planets",Math.max(0,8-pe),8,pe?`Fallaches ${pe} vez/veces. Lembra: rochosos (Mercurio–Marte), asteroides, xigantes!`:"Perfecto, sen erros! 🚀");pdraw("✅ Ben! Seguinte…")}
+  else{pe++;b.classList.add("ko");$(".fb").textContent="❌ Ese non é o seguinte. Pensa na orde!"}})}
+
+/* V OU F */
+const T=[["O Sol é un planeta.",0,"O Sol é unha estrela."],["A Lúa ten luz propia.",0,"Reflicte a luz do Sol."],["Os planetas non teñen luz propia.",1,"Reflicten a luz do Sol."],["A rotación da Terra dura 365 días.",0,"Dura 24 horas; a translación dura 365 días e 6 horas."],["A Lúa é o único satélite natural da Terra.",1,""],["Os meridianos son liñas horizontais.",0,"Son verticais, de polo a polo. Os paralelos son horizontais."],["O globo terráqueo é a representación máis exacta da Terra.",1,""],["Xúpiter é un planeta rochoso.",0,"É un planeta exterior ou xigante."],["Nun eclipse de Lúa, a Terra fai sombra sobre a Lúa.",1,""],["A escala indica cantas veces se reduciu a realidade no mapa.",1,""],["Un planisferio é un mapa de toda a Terra.",1,""],["Mercurio é o planeta máis próximo ao Sol.",1,""],["Os mapas temáticos mostran só montañas e ríos.",0,"Eses son os mapas físicos."]];
+let ts,ti,tok;
+function tf(){ts=sh(T).slice(0,10);ti=0;tok=0;tshow()}
+function tshow(){if(ti>=ts.length)return end("tf",tok,ts.length);
+ $("#app").innerHTML=`<div class="bar"><i style="width:${ti*10}%"></i></div><div class="card"><div class="mut">Afirmación ${ti+1} de ${ts.length}</div><h2>${ts[ti][0]}</h2>
+ <div class="row"><button class="btn tfb" data-v="1">👍 Verdadeiro</button><button class="btn tfb" data-v="0">👎 Falso</button></div><div class="fb" id="fb"></div></div>`;
+ document.querySelectorAll(".tfb").forEach(b=>b.onclick=()=>{const ok=+b.dataset.v==ts[ti][1];if(ok)tok++;
+  document.querySelectorAll(".tfb").forEach(x=>{x.disabled=true;if(+x.dataset.v==ts[ti][1])x.classList.add("pri")});
+  $("#fb").innerHTML=(ok?"🎉 Correcto! ":"Ups! Era "+(ts[ti][1]?"verdadeira. ":"falsa. "))+ts[ti][2]+`<div class="row"><button class="btn pri" onclick="ti++;tshow()">Seguinte ➜</button></div>`})}
+
+/* UNE */
+const V=[["Astro","Corpo que está no espazo"],["Ano luz","Distancia que percorre a luz nun ano"],["Satélite","Astro que xira arredor dun planeta"],["Eixe","Liña imaxinaria arredor da cal xira a Terra"],["Eclipse","Un astro tapa a outro"],["Escala","Relación entre o mapa e a realidade"],["Lenda","Explicación dos símbolos dun mapa"],["Planisferio","Mapa de toda a Terra"]];
+let ms,mr,mdone,merr,mfail;
+function match(){ms=null;mdone=new Set();merr=0;
+ const L=sh(V.map((_,i)=>i)).slice(0,6),R=sh(L);mr={L,R};mdraw()}
+function mdraw(){
+ $("#app").innerHTML=`<div class="card"><h2>🔗 Une cada palabra coa súa definición</h2><p class="mut">Toca unha palabra e despois a súa definición.</p>
+ <div class="cols"><div>${mr.L.map(i=>`<button class="pair ${mdone.has(i)?"ok":ms===i?"sel":""}" style="width:100%;margin-bottom:8px" data-l="${i}" ${mdone.has(i)?"disabled":""}>${V[i][0]}</button>`).join("")}</div>
+ <div>${mr.R.map(i=>`<button class="pair ${mdone.has(i)?"ok":""}" style="width:100%;margin-bottom:8px" data-r="${i}" ${mdone.has(i)?"disabled":""}>${V[i][1]}</button>`).join("")}</div></div><div class="fb" id="fb">${mfail||""}</div></div>`;
+ document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ms=+b.dataset.l;mfail="";mdraw()});
+ document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{if(ms===null){$("#fb").textContent="👈 Primeiro toca unha palabra.";return}
+  if(+b.dataset.r===ms){mdone.add(ms);ms=null;mfail="";if(mdone.size==6)return end("match",Math.max(0,6-merr),6,merr?`Fallaches ${merr} vez/veces.`:"Sen ningún erro! 🌟");mdraw()}
+  else{merr++;mfail="❌ Esa definición non é. Proba outra!";mdraw()}})}
+go("quiz");
+</script></body></html>
