@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="gl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Xogos: Somos células</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧫</text></svg>">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fbf7ee;--card:#fff;--ink:#1e2a47;--mut:#5b6580;--pri:#e5572d;--ok:#2e9e57;--ko:#d63c3c;--line:#e4dcc9;--hd:#1e2a47;--hdt:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111628;--card:#1c2440;--ink:#eef1fa;--mut:#a3adc8;--pri:#ff7a4f;--ok:#4cc77b;--ko:#ff6b6b;--line:#34406a;--hd:#0a0e1d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111628;--card:#1c2440;--ink:#eef1fa;--mut:#a3adc8;--pri:#ff7a4f;--ok:#4cc77b;--ko:#ff6b6b;--line:#34406a;--hd:#0a0e1d;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--hd);color:var(--hdt);padding:16px;text-align:center}
+header h1{margin:0;font-size:1.4rem}header p{margin:4px 0 0;opacity:.85;font-size:.9rem}
+.tot{display:inline-block;margin-top:8px;background:#f5c518;color:#1e2a47;border-radius:20px;padding:2px 14px;font-weight:700}
+nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px}
+nav button,.btn{font:inherit;font-weight:700;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:10px 14px;cursor:pointer}
+nav button.on,.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+main{max-width:720px;margin:0 auto;padding:0 14px 40px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+h2{margin:0 0 6px;font-size:1.25rem}.mut{color:var(--mut);font-size:.9rem}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;font:inherit;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:12px;cursor:pointer}
+.opt.ok,.pick.ok,.pair.ok,.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.ko,.pick.ko,.btn.ko{background:var(--ko);border-color:var(--ko);color:#fff;animation:sh .3s}
+.opt:disabled,.btn:disabled{cursor:default}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}.bar i{display:block;height:100%;background:var(--pri);transition:width .3s}
+.fb{margin-top:8px;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.row .btn{flex:1}
+.track{display:flex;flex-wrap:wrap;gap:6px;min-height:50px;padding:8px;border:2px dashed var(--line);border-radius:12px;margin:10px 0}
+.pick{font:inherit;font-weight:600;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:20px;padding:8px 14px;cursor:pointer;margin:4px}
+.pick:disabled{opacity:.9;cursor:default}
+.pick.sel{border-color:var(--pri);background:var(--pri);color:#fff}
+svg.cell{width:100%;max-width:460px;display:block;margin:8px auto}
+svg.cell g{cursor:pointer}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pair{width:100%;margin-bottom:8px;font:inherit;font-size:.9rem;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;cursor:pointer;text-align:left}
+.pair.sel{border-color:var(--pri);background:var(--pri);color:#fff}
+.item{font-size:1.6rem;text-align:center;font-weight:700;padding:14px 0}
+.end{text-align:center}.end .big{font-size:2.4rem}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style></head><body>
+<header><h1>🧫 Somos células</h1><p>Xogos de Ciencias Naturais · 5.º EP</p><span class="tot" id="tot">⭐ 0</span></header>
+<nav id="nav"></nav><main id="app"></main>
+<script>
+const $=s=>document.querySelector(s);
+const sh=a=>[...a].sort(()=>Math.random()-.5);
+const best={};let cur="quiz";
+const games={quiz:"🧠 Quiz",niv:"🧩 Niveis",cel:"🔬 Célula",lab:"🏷️ Etiquetas",fun:"❤️ Funcións",emo:"😊 Emocións",tf:"✅ V ou F",match:"🔗 Une"};
+const stars=(n,max)=>n<=0?0:Math.max(1,Math.round(3*n/max));
+function save(g,s){best[g]=Math.max(best[g]||0,s);$("#tot").textContent="⭐ "+Object.values(best).reduce((a,b)=>a+b,0)}
+function nav(){$("#nav").innerHTML=Object.entries(games).map(([k,v])=>`<button class="${k==cur?"on":""}" onclick="go('${k}')">${v}</button>`).join("")}
+function go(g){cur=g;nav();R[g]()}
+function end(g,good,max,extra){const s=stars(good,max);save(g,s);
+ $("#app").innerHTML=`<div class="card end"><div class="big">${"⭐".repeat(s)||"💪"}</div><h2>${good} de ${max}</h2><p>${extra||(s==3?"Fantástico! Es un/unha científico/a!":s==2?"Moi ben! Un pouco máis e tres estrelas.":"Ánimo! Le o resumo e proba outra vez.")}</p><button class="btn pri" onclick="go('${g}')">Xogar outra vez</button></div>`}
+
+/* QUIZ */
+const Q=[
+["Que é a célula?",["A parte máis pequena dun ser vivo con vida propia","Un tipo de órgano","Un instrumento para ver o pequeno"],0,"Fai as funcións vitais, por iso é un ser vivo."],
+["Cales son as tres funcións vitais?",["Nutrición, relación e reprodución","Respirar, correr e durmir","Comer, xogar e crecer"],0,"Unha pedra non as fai, polo tanto non é un ser vivo."],
+["Que parte dirixe a célula?",["A membrana","O núcleo","O citoplasma"],1,"O núcleo é o “xefe” da célula."],
+["Que parte envolve a célula?",["A membrana celular","O núcleo","O cloroplasto"],0,"O citoplasma é o seu interior."],
+["Que teñen as células vexetais e non as animais?",["Núcleo e membrana","Parede celular e cloroplastos","Citoplasma e orgánulos"],1,"A parede fainas ríxidas."],
+["Para que serven os cloroplastos?",["Para dirixir a célula","Para fabricar alimento coa luz do Sol","Para envolver a célula"],1,"Están só nas células das plantas."],
+["Cal é un ser unicelular?",["Unha persoa","Unha ameba","Un can"],1,"Tamén as bacterias."],
+["Que significa “uni”?",["Moitas","Unha","Pequena"],1,"Pluri = moitas."],
+["Con que se ven a maioría das células?",["Cos ollos","Co microscopio","Cunha lupa de xoguete"],1,"Son moi pequenas."],
+["As células do mesmo tipo forman un...",["Tecido","Aparato","Organismo"],0,"Por exemplo, o tecido muscular."],
+["Varios tecidos forman un...",["Órgano","Tecido","Orgánulo"],0,"O corazón é un órgano."],
+["Que é a alegría?",["Un sentimento","Unha emoción","Un órgano"],1,"O benestar si é un sentimento."],
+["Que é a saúde social?",["Comer variado","Sentirse ben ao relacionarnos coas demais persoas","Facer deporte"],1,"A amizade axuda á saúde social."],
+["Que debemos facer coas emocións?",["Ocultalas","Recoñecelas e aprender a xestionalas","Ignoralas"],1,"Todas as emocións son válidas."]];
+function quiz(){let qs=sh(Q).slice(0,10),qi=0,ok=0;
+ (function show(){if(qi>=qs.length)return end("quiz",ok,qs.length);
+ const [t,o,a,e]=qs[qi];
+ $("#app").innerHTML=`<div class="bar"><i style="width:${qi*10}%"></i></div><div class="card"><div class="mut">Pregunta ${qi+1} de ${qs.length}</div><h2>${t}</h2>${sh(o.map((_,i)=>i)).map(i=>`<button class="opt" data-i="${i}">${o[i]}</button>`).join("")}<div class="fb" id="fb"></div></div>`;
+ document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const k=+b.dataset.i==a;if(k)ok++;
+  document.querySelectorAll(".opt").forEach(x=>{x.disabled=true;if(+x.dataset.i==a)x.classList.add("ok")});
+  if(!k)b.classList.add("ko");
+  $("#fb").innerHTML=(k?"🎉 Correcto! ":"Case! ")+e+`<div class="row"><button class="btn pri" id="nx">Seguinte ➜</button></div>`;$("#nx").onclick=()=>{qi++;show()}})})()}
+
+/* ORDE: niveis */
+const SETS=[["🧩 Niveis de organización",["Célula","Tecido","Órgano","Aparato ou sistema","Organismo"],"Do máis pequeno ao máis grande."],
+["🫀 Exemplo: o aparato circulatorio",["Célula muscular","Músculo","Corazón","Aparato circulatorio","Persoa"],"Do máis pequeno ao máis grande."]];
+function niv(){let si=0,pi=0,pe=0;
+ (function draw(msg){const [tt,list,hint]=SETS[si];
+ $("#app").innerHTML=`<div class="card"><div class="mut">Parte ${si+1} de 2</div><h2>${tt}</h2><p class="mut">${hint} Toca na orde correcta.</p>
+ <div class="track">${list.slice(0,pi).map(p=>`<span class="pick ok">${p}</span>`).join("")||'<span class="mut">Empeza polo máis pequeno…</span>'}</div>
+ <div>${list.map((p,i)=>[p,i]).filter(([p,i])=>i>=pi).sort((a,b)=>a[0].localeCompare(b[0],"gl")).map(([p,i])=>`<button class="pick" data-i="${i}">${p}</button>`).join("")}</div><div class="fb">${msg||""}</div></div>`;
+ document.querySelectorAll(".pick[data-i]").forEach(b=>b.onclick=()=>{
+  if(+b.dataset.i==pi){pi++;if(pi==list.length){si++;pi=0;if(si==2)return end("niv",Math.max(0,10-pe),10,pe?`Fallaches ${pe} vez/veces.`:"Perfecto, sen erros! 🔬");return draw("✅ Parte 1 feita! Agora un exemplo.")}draw("✅ Ben!")}
+  else{pe++;b.classList.add("ko");$(".fb").textContent="❌ Ese non é o seguinte. Pensa en tamaños!"}})})()}
+
+/* CLASIFICAR */
+function classify(g,title,intro,cats,items){let s=sh(items).slice(0,10),i=0,ok=0;
+ (function show(){if(i>=s.length)return end(g,ok,s.length);
+ $("#app").innerHTML=`<div class="bar"><i style="width:${i*100/s.length}%"></i></div><div class="card"><h2>${title}</h2><p class="mut">${intro}</p><div class="item">${s[i][0]}</div>
+ <div class="row">${cats.map((c,k)=>`<button class="btn cb" data-k="${k}">${c}</button>`).join("")}</div><div class="fb" id="fb"></div></div>`;
+ document.querySelectorAll(".cb").forEach(b=>b.onclick=()=>{const k=+b.dataset.k==s[i][1];if(k)ok++;
+  document.querySelectorAll(".cb").forEach(x=>{x.disabled=true;if(+x.dataset.k==s[i][1])x.classList.add("ok")});
+  if(!k)b.classList.add("ko");
+  $("#fb").innerHTML=(k?"🎉 Correcto!":"Ups! Era “"+cats[s[i][1]]+"”.")+`<div class="row"><button class="btn pri" id="nx">Seguinte ➜</button></div>`;$("#nx").onclick=()=>{i++;show()}})})()}
+function cel(){classify("cel","🔬 Todas as células ou só as vexetais?","Esta parte aparece en...",["🐾🌿 Todas as células","🌿 Só as vexetais"],
+ [["Membrana",0],["Citoplasma",0],["Núcleo",0],["Orgánulos",0],["Parede celular",1],["Cloroplastos",1]])}
+function fun(){classify("fun","❤️ Que función vital é?","Este aparato ou órgano intervén na...",["🍽 Nutrición","👀 Relación","👶 Reprodución"],
+ [["Aparato dixestivo",0],["Aparato respiratorio",0],["Aparato circulatorio",0],["Aparato excretor",0],["Órganos dos sentidos",1],["Sistema nervioso",1],["Aparato locomotor (ósos e músculos)",1],["Aparato reprodutor",2]])}
+function emo(){classify("emo","😊 Emoción ou sentimento?","Lembra: as emocións duran pouco; os sentimentos duran máis.",["😄 Emoción","💛 Sentimento"],
+ [["Alegría",0],["Enfado",0],["Medo",0],["Tristeza",0],["Sorpresa",0],["Noxo",0],["Confianza",0],["Vergoña",0],["Amor",1],["Benestar",1],["Indignación",1],["Satisfacción",1]])}
+
+/* V OU F */
+const T=[["Unha pedra é un ser vivo porque ten células.",0,"Unha pedra é material, non fai as funcións vitais."],["As células vexetais teñen parede celular.",1,""],["As células animais teñen cloroplastos.",0,"Só os teñen as vexetais."],["Os seres unicelulares teñen moitas células.",0,"Teñen só unha."],["As bacterias son seres unicelulares.",1,""],["O núcleo dirixe a célula.",1,""],["Un tecido é un conxunto de órganos.",0,"É un conxunto de células iguais."],["O corazón é un órgano.",1,""],["A maioría das células vense a simple vista.",0,"Necesitamos un microscopio."],["Os sentimentos duran máis tempo que as emocións.",1,""],["Hai emocións que non son válidas.",0,"Todas son válidas: hai que recoñecelas e xestionalas."],["A alimentación debe ser variada.",1,""],["O sistema nervioso intervén nas emocións.",1,""],["Os seres pluricelulares teñen moitas células de distintos tipos.",1,""]];
+function tf(){let ts=sh(T).slice(0,10),ti=0,ok=0;
+ (function show(){if(ti>=ts.length)return end("tf",ok,ts.length);
+ $("#app").innerHTML=`<div class="bar"><i style="width:${ti*10}%"></i></div><div class="card"><div class="mut">Afirmación ${ti+1} de ${ts.length}</div><h2>${ts[ti][0]}</h2>
+ <div class="row"><button class="btn tfb" data-v="1">👍 Verdadeiro</button><button class="btn tfb" data-v="0">👎 Falso</button></div><div class="fb" id="fb"></div></div>`;
+ document.querySelectorAll(".tfb").forEach(b=>b.onclick=()=>{const k=+b.dataset.v==ts[ti][1];if(k)ok++;
+  document.querySelectorAll(".tfb").forEach(x=>{x.disabled=true;if(+x.dataset.v==ts[ti][1])x.classList.add("ok")});
+  $("#fb").innerHTML=(k?"🎉 Correcto! ":"Ups! Era "+(ts[ti][1]?"verdadeira. ":"falsa. "))+ts[ti][2]+`<div class="row"><button class="btn pri" id="nx">Seguinte ➜</button></div>`;$("#nx").onclick=()=>{ti++;show()}})})()}
+
+/* UNE */
+const V=[["Célula","Parte máis pequena dun ser vivo con vida propia"],["Núcleo","Parte que dirixe a célula"],["Tecido","Conxunto de células iguais"],["Microscopio","Instrumento para ver o moi pequeno"],["Orgánulo","Parte da célula que fai un traballo concreto"],["Cloroplasto","Orgánulo verde onde a planta fabrica o alimento"],["Órgano","Conxunto de tecidos"],["Sentimento","Estado que nace dunha emoción e dura máis"]];
+function match(){let ms=null,done=new Set(),err=0,fail="";
+ const L=sh(V.map((_,i)=>i)).slice(0,6),Rr=sh(L);
+ (function draw(){
+ $("#app").innerHTML=`<div class="card"><h2>🔗 Une cada palabra coa súa definición</h2><p class="mut">Toca unha palabra e despois a súa definición.</p>
+ <div class="cols"><div>${L.map(i=>`<button class="pair ${done.has(i)?"ok":ms===i?"sel":""}" data-l="${i}" ${done.has(i)?"disabled":""}>${V[i][0]}</button>`).join("")}</div>
+ <div>${Rr.map(i=>`<button class="pair ${done.has(i)?"ok":""}" data-r="${i}" ${done.has(i)?"disabled":""}>${V[i][1]}</button>`).join("")}</div></div><div class="fb" id="fb">${fail}</div></div>`;
+ document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{ms=+b.dataset.l;fail="";draw()});
+ document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{if(ms===null){$("#fb").textContent="👈 Primeiro toca unha palabra.";return}
+  if(+b.dataset.r===ms){done.add(ms);ms=null;fail="";if(done.size==6)return end("match",Math.max(0,6-err),6,err?`Fallaches ${err} vez/veces.`:"Sen ningún erro! 🌟");draw()}
+  else{err++;fail="❌ Esa definición non é. Proba outra!";draw()}})})()}
+
+/* ETIQUETAS */
+const CE=[{t:"🐾 Célula animal",bank:["Membrana","Orgánulo","Núcleo","Citoplasma"],
+ svg:`<ellipse cx="150" cy="100" rx="130" ry="85" fill="#fde3d8" stroke="#e5572d" stroke-width="5"/><circle cx="140" cy="100" r="28" fill="#f5a05a" stroke="#e5572d" stroke-width="3"/><circle cx="145" cy="96" r="6" fill="#b5381a"/><ellipse cx="75" cy="112" rx="16" ry="9" fill="#c9a0e0"/><ellipse cx="205" cy="62" rx="14" ry="8" fill="#c9a0e0"/><ellipse cx="110" cy="150" rx="13" ry="7" fill="#c9a0e0"/>`,
+ m:[[150,18,"Membrana"],[75,112,"Orgánulo"],[140,100,"Núcleo"],[215,140,"Citoplasma"]]},
+{t:"🌿 Célula vexetal",bank:["Parede celular","Núcleo","Cloroplasto","Citoplasma"],
+ svg:`<rect x="12" y="12" width="276" height="176" rx="14" fill="#2e8b4a"/><rect x="24" y="24" width="252" height="152" rx="8" fill="#dff3dc"/><circle cx="150" cy="100" r="28" fill="#f5a05a" stroke="#e5572d" stroke-width="3"/><circle cx="155" cy="96" r="6" fill="#b5381a"/><ellipse cx="70" cy="60" rx="18" ry="10" fill="#3aa655"/><ellipse cx="230" cy="140" rx="18" ry="10" fill="#3aa655"/><ellipse cx="75" cy="140" rx="18" ry="10" fill="#3aa655"/><ellipse cx="228" cy="58" rx="18" ry="10" fill="#3aa655"/>`,
+ m:[[18,100,"Parede celular"],[150,100,"Núcleo"],[70,60,"Cloroplasto"],[230,140,"Cloroplasto"],[150,155,"Citoplasma"]]}];
+function lab(){let ci=0,err=0,done=new Set(),sw=null,sm=null,msg="";
+ (function draw(){const c=CE[ci];
+ $("#app").innerHTML=`<div class="card"><div class="mut">Célula ${ci+1} de 2</div><h2>${c.t}</h2><p class="mut">Toca unha palabra e despois o número da parte que é.</p>
+ <svg class="cell" viewBox="0 0 300 200">${c.svg}${c.m.map((m,i)=>`<g data-m="${i}"><circle cx="${m[0]}" cy="${m[1]}" r="12" fill="${done.has(i)?"#2e9e57":"#e5572d"}" stroke="#fff" stroke-width="${sm===i?4:2}"/><text x="${m[0]}" y="${m[1]+5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">${done.has(i)?"✔":i+1}</text></g>`).join("")}</svg>
+ <div style="text-align:center">${c.bank.map((w,i)=>`<button class="pick ${sw===i?"sel":""}" data-w="${i}">${w}</button>`).join("")}</div>
+ <div class="fb">${msg}</div><div class="mut" style="margin-top:6px">${[...done].sort().map(i=>`${i+1} = ${c.m[i][2]}`).join(" · ")}</div></div>`;
+ function check(){if(sw===null||sm===null)return draw();
+  if(c.m[sm][2]===c.bank[sw]){done.add(sm);msg="✅ Ben!"}else{err++;msg="❌ Esa non é. Proba outra!"}
+  sw=sm=null;
+  if(done.size==c.m.length){ci++;done=new Set();if(ci==2)return end("lab",Math.max(0,9-err),9,err?`Fallaches ${err} vez/veces.`:"Todas ben etiquetadas! 🔬");msg="✅ Célula animal feita! Agora a vexetal."}
+  draw()}
+ document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{sw=+b.dataset.w;msg="";check()});
+ document.querySelectorAll("[data-m]").forEach(g=>g.onclick=()=>{const i=+g.dataset.m;if(done.has(i))return;sm=i;msg="";check()})})()}
+
+const R={quiz,niv,cel,lab,fun,emo,tf,match};
+go("quiz");
+</script></body></html>
