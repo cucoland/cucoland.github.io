@@ -24,6 +24,9 @@
             #d6d8ff
             );
                 --cubos:rgba(255, 248, 46, 0.5);
+                --error-bg: #fff1f2;
+                --error-border: #fda4af;
+                --error-ink: #e11d48;
             }
             @media (prefers-color-scheme: dark) {
                 :root {
@@ -40,6 +43,9 @@
             #585865
             );
                 --cubos:rgba(35, 199, 115, 0.5);
+                    --error-bg: rgba(159, 18, 57, 0.25);
+                    --error-border: #fb7185;
+                    --error-ink: #fda4af;
                 }
             }
             *, *::before, *::after {
@@ -70,13 +76,13 @@
             }
 
 
-	.btn {
-            	animation: flotar 3s ease-in-out infinite;
-	}
-        .btn2 {
-            	animation: flotar 3s ease-in-out infinite;
-            animation-delay: 1.5s; 
-        }
+            .btn {
+                animation: flotar 3s ease-in-out infinite;
+            }
+            .btn2 {
+                animation: flotar 3s ease-in-out infinite;
+                animation-delay: 1.5s; 
+            }
 
 
             .btn, .btn2 {
@@ -96,18 +102,14 @@
                 font-family: inherit;
                 text-decoration: none;
                 transition: background .15s, color .15s, transform .15s;
-
             }
 
-
-
-
-            .btn:hover, .btn2:hover{
+            .btn:hover, .btn2:hover {
                 background: var(--btn-hover);
                 color: var(--ink-hover);
                 border-color: var(--border-hover);
-            	transform: scale(1.05);
-            	box-shadow: 0 15px 20px rgba(0, 123, 255, 0.4);
+                transform: scale(1.05);
+                box-shadow: 0 15px 20px rgba(0, 123, 255, 0.4);
             }
             .btn:active, .btn2:active {
                 transform: scale(.96);
@@ -143,10 +145,6 @@
             .btn:hover, .name:hover {
                 font-weight: 500;
             }
-/* botones con efecto delay
-
-
-
 
             /* Fondo animado */
             body {
@@ -255,58 +253,308 @@
                 }
             }
 
-
- /* Definición de la animación de arriba a abajo */
-        @keyframes flotar {
-            0% {
-                transform: translateY(0px);
+            /* Definición de la animación de arriba a abajo */
+            @keyframes flotar {
+                0% {
+                    transform: translateY(0px);
+                }
+                50% {
+                    transform: translateY(-2px);
+                }
+                100% {
+                    transform: translateY(0px);
+                }
             }
-            50% {
-                transform: translateY(-2px); /* Sube 20 píxeles */
-            }
-            100% {
-                transform: translateY(0px);
-            }
-        }
-
 
             /* Mantiene los botones por delante del fondo */
             .grid {
                 position: relative;
                 z-index: 1;
             }
+
+            /* --- Estilos adaptados para el formulario de ID dentro de .grid --- */
+            .id-card {
+                grid-column: 1 / -1;
+                width: 100%;
+                max-width: 380px;
+                justify-self: center;
+                background: var(--btn);
+                color: var(--ink);
+                border: 1.5px solid var(--border);
+                border-radius: 14px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+                transition: border-color .15s, box-shadow .15s;
+            }
+
+            .id-card-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .id-label {
+                color: var(--ink-hover);
+                font-weight: 600;
+                font-size: 14px;
+            }
+
+            .id-attempts {
+                font-size: 11px;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 999px;
+                background: var(--error-bg);
+                color: var(--error-ink);
+                border: 1px solid var(--error-border);
+            }
+
+            .id-input-row {
+                display: flex;
+                gap: 8px;
+                align-items: stretch;
+            }
+
+            .id-input-wrap {
+                position: relative;
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+
+            .id-input {
+                width: 100%;
+                height: 44px;
+                padding: 0 32px 0 12px;
+                border: 1.5px solid var(--border);
+                border-radius: 14px;
+                background-color: var(--btn-hover);
+                color: #202a36;
+                font-family: inherit;
+                font-size: 14px;
+                outline: none;
+                transition: border-color .15s, box-shadow .15s, background-color .15s;
+            }
+
+            .id-input::placeholder {
+                color: #7c8b99;
+            }
+
+            .id-input:focus {
+                border-color: var(--border-hover);
+                box-shadow: 0 0 0 3px rgba(173, 255, 217, 0.45);
+            }
+
+            .id-input.is-error {
+                border-color: var(--error-border);
+            }
+
+            .id-clear {
+                position: absolute;
+                right: 8px;
+                width: 24px;
+                height: 24px;
+                border: none;
+                background: transparent;
+                color: #5b6776;
+                font-size: 16px;
+                line-height: 1;
+                border-radius: 8px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background .15s, color .15s;
+            }
+
+            .id-clear:hover {
+                background: rgba(0, 0, 0, 0.08);
+                color: #141a22;
+            }
+
+            .id-submit {
+                height: 44px;
+                padding: 0 16px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                background: var(--btn);
+                color: var(--ink);
+                border: 1.5px solid var(--border);
+                border-radius: 14px;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 13px;
+                font-weight: 600;
+                transition: background .15s, color .15s, transform .15s, border-color .15s, box-shadow .15s;
+                animation: flotar 3s ease-in-out infinite;
+            }
+
+            .id-submit:hover {
+                background: var(--btn-hover);
+                color: var(--ink-hover);
+                border-color: var(--border-hover);
+                transform: scale(1.04);
+                box-shadow: 0 8px 15px rgba(0, 123, 255, 0.25);
+            }
+
+            .id-submit:active {
+                transform: scale(0.96);
+            }
+
+            .id-error-msg {
+                padding: 10px 12px;
+                border-radius: 12px;
+                background: var(--error-bg);
+                border: 1px solid var(--error-border);
+                color: var(--error-ink);
+                font-size: 12.5px;
+                line-height: 1.4;
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .id-error-msg svg {
+                width: 16px;
+                height: 16px;
+                flex: none;
+                margin-top: 1px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25%, 75% { transform: translateX(-5px); }
+                50% { transform: translateX(5px); }
+            }
+
+            .shake {
+                animation: shake 0.3s ease-in-out;
+            }
         </style>
     </head>
     <body>
         <div class="area" aria-hidden="true">
             <ul class="circles">
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
-                <li>
-                </li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
             </ul>
         </div>
+
         <main class="grid">
-			            
-					
+            <form id="idForm" class="id-card" novalidate>
+                <div class="id-card-header">
+                    <label for="idInput" class="id-label">Introduce id</label>
+                    <span id="idAttempts" class="id-attempts hidden">Intentos: 0</span>
+                </div>
 
+                <div class="id-input-row">
+                    <div class="id-input-wrap">
+                        <input
+                            type="text"
+                            id="idInput"
+                            class="id-input"
+                            placeholder="Escribe tu ID..."
+                            autocomplete="off"
+                            spellcheck="false"
+                            autofocus
+                        >
+                        <button
+                            type="button"
+                            id="idClear"
+                            class="id-clear hidden"
+                            title="Limpiar ID"
+                            aria-label="Limpiar ID"
+                        >&times;</button>
+                    </div>
+                    <button type="submit" class="id-submit">Verificar</button>
+                </div>
 
+                <div id="idError" class="id-error-msg hidden" role="alert" aria-live="assertive">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span id="idErrorText">ID erróneo. Por favor, introduce otro ID.</span>
+                </div>
+            </form>
         </main>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const form = document.getElementById('idForm');
+                const input = document.getElementById('idInput');
+                const clearBtn = document.getElementById('idClear');
+                const errorBox = document.getElementById('idError');
+                const errorText = document.getElementById('idErrorText');
+                const attemptsBadge = document.getElementById('idAttempts');
+
+                let intentos = 0;
+
+                function toggleClearBtn() {
+                    clearBtn.classList.toggle('hidden', input.value.length === 0);
+                }
+
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    intentos++;
+
+                    const valor = input.value.trim();
+                    attemptsBadge.textContent = `Intentos: ${intentos}`;
+                    attemptsBadge.classList.remove('hidden');
+
+                    if (valor === '') {
+                        errorText.textContent = 'ID erróneo: el campo está vacío. Introduce un ID para volver a intentarlo.';
+                    } else {
+                        errorText.textContent = `ID erróneo: "${valor}" no es válido. Introduce otro ID.`;
+                    }
+
+                    input.classList.add('is-error');
+                    errorBox.classList.remove('hidden');
+
+                    // Efecto de sacudida en la tarjeta
+                    form.classList.remove('shake');
+                    void form.offsetWidth;
+                    form.classList.add('shake');
+
+                    // Mantiene el foco y selecciona el texto para escribir otro ID al instante
+                    input.focus();
+                    if (input.value.length > 0) {
+                        input.select();
+                    }
+                });
+
+                input.addEventListener('input', toggleClearBtn);
+
+                clearBtn.addEventListener('click', () => {
+                    input.value = '';
+                    toggleClearBtn();
+                    input.focus();
+                });
+            });
+        </script>
     </body>
 </html>
