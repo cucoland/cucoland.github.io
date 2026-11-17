@@ -1785,18 +1785,17 @@
 
 
 
+
         function getJsPdf() {
             if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
             if (window.jsPDF) return window.jsPDF;
             return null;
         }
 
-        // Convierte cualquier data URI (webp/png/jpeg) a PNG para jsPDF
         function logoToPngDataUrl(dataUri, size) {
             size = size || 48;
             return new Promise(function(resolve) {
                 if (!dataUri) { resolve(null); return; }
-                // Si ya es PNG/JPEG, jsPDF lo acepta; aun así unificamos a PNG pequeño
                 var img = new Image();
                 img.onload = function() {
                     try {
@@ -1805,7 +1804,6 @@
                         c.height = size;
                         var ctx = c.getContext('2d');
                         ctx.clearRect(0, 0, size, size);
-                        // centrar manteniendo aspect ratio
                         var r = Math.min(size / img.width, size / img.height);
                         var w = img.width * r;
                         var h = img.height * r;
@@ -1831,6 +1829,43 @@
             return mapa;
         }
 
+        // Dibuja un número de cromo dentro de un recuadro tipo botón
+        function dibujarCromoTag(doc, texto, x, y, opts) {
+            opts = opts || {};
+            var fontSize = opts.fontSize || 6.2;
+            var padX = opts.padX != null ? opts.padX : 1.2;
+            var pendiente = opts.pendiente !== false;
+            var h = opts.h || 4.0; // más bajos
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(fontSize);
+            var tw = doc.getTextWidth(String(texto));
+            var w = Math.max(tw + padX * 2, h * 0.9);
+
+            var rectY = y - h + 0.9;
+
+            if (pendiente) {
+                // Pendiente: fondo blanco, texto azul LaLiga, borde gris
+                doc.setFillColor(255, 255, 255);
+                doc.setDrawColor(160, 165, 170);
+                doc.setTextColor(30, 58, 138);   // #1e3a8a
+                doc.setLineWidth(0.25);
+                doc.roundedRect(x, rectY, w, h, 0.5, 0.5, 'FD');
+            } else {
+                // Tengo: estilo discreto (fondo gris, texto gris)
+                doc.setFillColor(245, 246, 247);
+                doc.setDrawColor(210, 215, 220);
+                doc.setTextColor(155, 160, 165);
+                doc.setLineWidth(0.2);
+                doc.roundedRect(x, rectY, w, h, 0.5, 0.5, 'FD');
+            }
+
+            var textY = rectY + h / 2 + fontSize * 0.11;
+            doc.text(String(texto), x + w / 2, textY, { align: 'center', baseline: 'middle' });
+
+            return w;
+        }
+
         async function generarPdfDeLosQueTengo() {
             var JsPDF = getJsPdf();
             if (!JsPDF) {
@@ -1854,9 +1889,10 @@
                 var marginL = 10;
                 var marginR = 10;
                 var marginT = 12;
-                var maxW = pageW - marginL - marginR;
                 var y = marginT;
-                var iconSize = 5.5; // mm
+                var iconSize = 5.5;
+                var gap = 1.3;
+                var tagH = 4.0;
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(13);
@@ -1866,11 +1902,7 @@
                 doc.setDrawColor(30, 58, 138);
                 doc.setLineWidth(0.4);
                 doc.line(marginL, y, pageW - marginR, y);
-                y += 6;
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(8);
-                doc.setTextColor(40, 40, 40);
+                y += 7;
 
                 var totalPendientes = 0;
                 var equiposConPendientes = 0;
@@ -1896,32 +1928,50 @@
                         y = marginT;
                     }
 
-                    var textX = marginL;
-                    // Escudo
+                    // Escudo + código equipo
+                    var rowX = marginL;
                     var png = escudos[sec.id];
                     if (png) {
                         try {
                             doc.addImage(png, 'PNG', marginL, y - 4, iconSize, iconSize);
-                            textX = marginL + iconSize + 2;
-                        } catch (eImg) {
-                            textX = marginL;
-                        }
+                            rowX = marginL + iconSize + 2;
+                        } catch (eImg) {}
                     }
 
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(8);
                     doc.setTextColor(30, 58, 138);
-                    var label = sec.id + '  ';
-                    doc.text(label, textX, y);
+                    var label = sec.id;
+                    doc.text(label, rowX, y);
+                    rowX += doc.getTextWidth(label) + 2.5;
 
-                    var labelW = doc.getTextWidth(label);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(40, 40, 40);
+                    // Tags enmarcados
+                    var lineStartX = rowX;
+                    for (var k = 0; k < pendientes.length; k++) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(6.5);
+                        var tw = doc.getTextWidth(pendientes[k]);
+                        var tagW = Math.max(tw + 2.4, tagH);
 
-                    var texto = pendientes.join(', ');
-                    var lines = doc.splitTextToSize(texto, pageW - marginR - textX - labelW - 1);
-                    doc.text(lines, textX + labelW, y);
-                    y += Math.max(iconSize + 1.5, lines.length * 4 + 1.5);
+                        if (rowX + tagW > pageW - marginR) {
+                            rowX = lineStartX;
+                            y += tagH + 1.2;
+                            if (y > 280) {
+                                doc.addPage();
+                                y = marginT;
+                            }
+                        }
+
+                        dibujarCromoTag(doc, pendientes[k], rowX, y, {
+                            fontSize: 6.5,
+                            padX: 1.2,
+                            padY: 1.0,
+                            h: tagH,
+                            pendiente: true
+                        });
+                        rowX += tagW + gap;
+                    }
+                    y += tagH + 2.0;
                 }
 
                 if (equiposConPendientes === 0) {
@@ -1933,7 +1983,7 @@
                         doc.addPage();
                         y = marginT;
                     }
-                    y += 4;
+                    y += 2;
                     doc.setDrawColor(30, 58, 138);
                     doc.line(marginL, y, pageW - marginR, y);
                     y += 5;
@@ -1977,6 +2027,8 @@
                 var marginT = 10;
                 var y = marginT;
                 var iconSize = 4.5;
+                var gap = 1.1;
+                var tagH = 3.8;
 
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(12);
@@ -2010,7 +2062,7 @@
                     doc.setFontSize(7);
                     doc.setTextColor(30, 58, 138);
                     doc.text(sec.id + ' · ' + sec.nombre, textX, y);
-                    y += 3.8;
+                    y += 4.5;
 
                     var partes = [];
                     for (var j = 0; j < sec.stickers.length; j++) {
@@ -2021,32 +2073,33 @@
                         partes.push({ t: tag, pendiente: !!data.pendiente });
                     }
 
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(6.5);
                     var x = marginL;
-                    var lineH = 3.8;
-                    var gap = 1.2;
-
                     for (var k = 0; k < partes.length; k++) {
                         var p = partes[k];
-                        var tw = doc.getTextWidth(p.t) + 1.5;
-                        if (x + tw > pageW - marginR) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(6);
+                        var tw = doc.getTextWidth(p.t);
+                        var tagW = Math.max(tw + 2.2, tagH);
+
+                        if (x + tagW > pageW - marginR) {
                             x = marginL;
-                            y += lineH;
+                            y += tagH + 1.0;
                             if (y > 285) {
                                 doc.addPage();
                                 y = marginT;
                             }
                         }
-                        if (p.pendiente) {
-                            doc.setTextColor(20, 20, 20);
-                        } else {
-                            doc.setTextColor(170, 170, 170);
-                        }
-                        doc.text(p.t, x, y);
-                        x += tw + gap;
+
+                        dibujarCromoTag(doc, p.t, x, y, {
+                            fontSize: 6,
+                            padX: 1.1,
+                            padY: 0.9,
+                            h: tagH,
+                            pendiente: p.pendiente
+                        });
+                        x += tagW + gap;
                     }
-                    y += lineH + 1.5;
+                    y += tagH + 1.8;
                 }
 
                 if (y > 275) {
