@@ -318,143 +318,238 @@
         .modal-btn-confirm { background: #c0392b; color: white; }
         .modal-btn-cancel { background: #ccc; color: #333; }
 
-        /* Estilos PDF de los que Tengo */
-        #printArea {
-            padding: 0px; 
-            background-color: #ffffff;
-            color: #333333;
-            font-family: Arial, sans-serif;
+
+        /* ========== Estilos PDF / captura (html2pdf) ========== */
+        #printArea, #printAreaCompleto {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 190mm;          /* ancho útil A4 con márgenes */
+            max-width: 190mm;
+            padding: 0;
+            margin: 0;
+            background: #fff;
+            color: #222;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt;
+            line-height: 1.25;
             box-sizing: border-box;
+            visibility: hidden;
+            z-index: -1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
+
         .pdf-titulo {
             text-align: center;
             color: #1e3a8a;
-            font-size: 15px; 
-            margin-top: 0px; 
-            margin-bottom: 12px;
-            border-bottom: 2px solid #1e3a8a;
-            padding-bottom: 5px;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 0 0 6pt 0;
+            padding: 0 0 4pt 0;
+            border-bottom: 1.5pt solid #1e3a8a;
+            line-height: 1.2;
         }
+
         .pdf-columnas-contenedor {
-            display: block; 
+            display: block;
             width: 100%;
         }
+
         .pdf-columnas-contenedor.doble-columna {
             column-count: 2;
-            column-gap: 15px;
-            column-fill: auto; 
-            height: 270mm; 
+            column-gap: 8mm;
+            column-fill: balance;
         }
+
         .pdf-fila {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 5px; 
-            border-bottom: 1px solid #eee;
-            padding-bottom: 4px;
-            break-inside: avoid; 
+            margin: 0 0 3pt 0;
+            padding: 0 0 2pt 0;
+            border-bottom: 0.5pt solid #e5e5e5;
+            break-inside: avoid;
             page-break-inside: avoid;
+            -webkit-column-break-inside: avoid;
         }
+
         .pdf-bandera-contenedor {
-            width: 24px; 
-            height: 24px;
-            margin-right: 8px;
+            width: 5mm;
+            height: 5mm;
+            min-width: 5mm;
+            margin-right: 2mm;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
+
         .pdf-bandera-contenedor img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
+
         .pdf-cromos-contenedor {
             display: flex;
             flex-wrap: wrap;
-            gap: 3px;
-        }
-        .pdf-cromo-tag {
-            padding: 2px 5px;
-            font-size: 8px; 
-            font-weight: bold;
-            border-radius: 3px;
-            text-align: center;
-            box-sizing: border-box;
-        }
-        .pdf-cromo-tag.tengo-pdf {
-            background-color: #fff;
-            color: #2c3e50;
-            border: 1px solid #dcdcdc;
-        }
-        .pdf-cromo-tag.falta-pdf {
-            background-color: #f2f2f2;
-            color: #aaa;
-            border: 1px solid #e0e0e0;
+            gap: 1.5pt;
+            align-items: center;
         }
 
-        /* Estilos PDF Completo */
-        #printAreaCompleto {
-            padding: 0px; 
-            background-color: #ffffff;
-            color: #333333;
-            font-family: Arial, sans-serif;
-            box-sizing: border-box;
-            width: 100%;
-        }
-        #printAreaCompleto .pdf-titulo {
-            font-size: 13px;
-            margin-bottom: 5px;
-            padding-bottom: 3px;
-            color: #1e3a8a;
-            border-bottom: 2px solid #1e3a8a;
-            text-align: center;
-        }
-        #printAreaCompleto .pdf-columnas-contenedor {
-            display: block;
-            width: 100%;
-        }
-        #printAreaCompleto .pdf-fila {
-            display: flex;
-            align-items: center;
-            margin-bottom: 2px;
-            padding-bottom: 2px;
-            border-bottom: 1px solid #f0f0f0;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        #printAreaCompleto .pdf-bandera-contenedor {
-            width: 18px;
-            height: 18px;
-            margin-right: 6px;
-            flex-shrink: 0;
-        }
-        #printAreaCompleto .pdf-team-name {
-            font-size: 8px;
+        .pdf-cromo-tag {
+            padding: 0.5pt 2.5pt;
+            font-size: 7pt;
             font-weight: bold;
-            width: 110px;
+            border-radius: 1.5pt;
+            text-align: center;
+            box-sizing: border-box;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+
+        .pdf-cromo-tag.tengo-pdf {
+            background: #fff;
+            color: #1a1a1a;
+            border: 0.6pt solid #bbb;
+        }
+
+        .pdf-cromo-tag.falta-pdf {
+            background: #f0f0f0;
+            color: #999;
+            border: 0.6pt solid #ddd;
+        }
+
+        /* Lista completa */
+        #printAreaCompleto .pdf-titulo {
+            font-size: 11pt;
+            margin-bottom: 4pt;
+            padding-bottom: 3pt;
+        }
+
+        #printAreaCompleto .pdf-fila {
+            align-items: center;
+            margin: 0 0 1.5pt 0;
+            padding: 0 0 1.5pt 0;
+            border-bottom: 0.4pt solid #eee;
+        }
+
+        #printAreaCompleto .pdf-bandera-contenedor {
+            width: 4mm;
+            height: 4mm;
+            min-width: 4mm;
+            margin-right: 1.5mm;
+        }
+
+        #printAreaCompleto .pdf-team-name {
+            font-size: 7pt;
+            font-weight: bold;
+            width: 28mm;
+            min-width: 28mm;
             flex-shrink: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-right: 1.5mm;
         }
+
         #printAreaCompleto .pdf-cromos-grid-fijo {
             display: flex;
             flex-wrap: wrap;
-            gap: 2px;
+            gap: 1pt;
             flex-grow: 1;
         }
+
         #printAreaCompleto .pdf-contador-final {
-            margin-top: 8px;
-            padding-top: 4px;
-            border-top: 2px solid #1e3a8a;
+            margin-top: 6pt;
+            padding-top: 4pt;
+            border-top: 1.5pt solid #1e3a8a;
             text-align: center;
-            font-size: 10px;
+            font-size: 9pt;
             font-weight: bold;
-            color: #333;
+            color: #222;
+            break-before: avoid;
         }
-    </style>
+
+        /* ========== @media print: impresión nativa del navegador ========== */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm 8mm;
+            }
+
+            html, body {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+                font-size: 10pt !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Ocultar toda la UI de la app al imprimir */
+            body > *:not(#printArea):not(#printAreaCompleto) {
+                display: none !important;
+            }
+
+            #printArea,
+            #printAreaCompleto {
+                position: static !important;
+                left: auto !important;
+                top: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                z-index: auto !important;
+                background: #fff !important;
+                overflow: visible !important;
+            }
+
+            .pdf-titulo {
+                font-size: 12pt !important;
+                margin-bottom: 6pt !important;
+                color: #1e3a8a !important;
+            }
+
+            .pdf-columnas-contenedor.doble-columna {
+                column-count: 2 !important;
+                column-gap: 6mm !important;
+            }
+
+            .pdf-fila {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            .pdf-bandera-contenedor img {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .pdf-cromo-tag.tengo-pdf {
+                background: #fff !important;
+                border: 0.6pt solid #999 !important;
+                color: #111 !important;
+            }
+
+            .pdf-cromo-tag.falta-pdf {
+                background: #eee !important;
+                color: #888 !important;
+            }
+
+            a, button {
+                display: none !important;
+            }
+        }
+</style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
@@ -539,8 +634,8 @@
         </div>
     </div>
 
-    <div id="printArea" style="display: none;"></div>
-    <div id="printAreaCompleto" style="display: none;"></div>
+    <div id="printArea"></div>
+    <div id="printAreaCompleto"></div>
 
     <script>
         const listadoSecciones = [
@@ -571,7 +666,7 @@
               {num: "18B", name: "Mañas", pos: "delantero"},
               {num: "19", name: "Toni Martínez", pos: "delantero"},
               {num: "20", name: "Boyé", pos: "delantero"},
-              {num: "20 BIS", name: "Mariano", pos: "delantero", tag: "3ª ed"}
+              {num: "20 BIS", name: "Mariano", pos: "delantero"}
             ]
           },
           {
@@ -584,7 +679,6 @@
               {num: "3", name: "Unai Simón", pos: "portero"},
               {num: "4", name: "Padilla", pos: "portero"},
               {num: "5", name: "Areso", pos: "defensa"},
-              {num: "5 BIS", name: "Hugo Rincón", pos: "defensa", tag: "4ª ed"},
               {num: "6A", name: "Paredes", pos: "defensa"},
               {num: "6B", name: "Yeray", pos: "defensa"},
               {num: "7", name: "Vivian", pos: "defensa"},
@@ -594,7 +688,6 @@
               {num: "10", name: "Jauregizar", pos: "medio"},
               {num: "11", name: "Ruiz de Galarreta", pos: "medio"},
               {num: "12", name: "Rego", pos: "medio"},
-              {num: "12 BIS", name: "Gerenabarrena", pos: "medio", tag: "4ª ed"},
               {num: "13", name: "Unai Gómez", pos: "medio"},
               {num: "13 BIS", name: "Prados", pos: "medio", tag: "2ª ed"},
               {num: "14", name: "Sancet", pos: "medio"},
@@ -618,7 +711,6 @@
               {num: "4", name: "Musso", pos: "portero"},
               {num: "5", name: "Marcos Llorente", pos: "defensa"},
               {num: "6", name: "Nahuel Molina", pos: "defensa"},
-              {num: "6 BIS", name: "Dani Martínez", pos: "defensa", tag: "4ª ed"},
               {num: "7", name: "Pubill", pos: "defensa"},
               {num: "8A", name: "Le Normand", pos: "defensa"},
               {num: "8B", name: "Giménez", pos: "defensa"},
@@ -655,7 +747,6 @@
               {num: "7", name: "Bartra", pos: "defensa"},
               {num: "8", name: "Natan", pos: "defensa"},
               {num: "9", name: "Valentín Gómez", pos: "defensa"},
-              {num: "9 BIS", name: "Junior", pos: "defensa", tag: "4ª ed"},
               {num: "10", name: "Marc Roca", pos: "medio"},
               {num: "11", name: "Amrabat", pos: "medio"},
               {num: "11 BIS", name: "Deossa", pos: "medio", tag: "3ª ed"},
@@ -686,7 +777,6 @@
               {num: "8", name: "Gerard Martín", pos: "defensa"},
               {num: "9", name: "Joao Cancelo", pos: "defensa"},
               {num: "10", name: "Balde", pos: "defensa"},
-              {num: "10 BIS", name: "Xavi Espart", pos: "defensa", tag: "4ª ed"},
               {num: "11", name: "Eric García", pos: "defensa"},
               {num: "12", name: "De Jong", pos: "medio"},
               {num: "13", name: "Gavi", pos: "medio"},
@@ -709,7 +799,6 @@
               {num: "2", name: "Claudio Giráldez", pos: "entrenador"},
               {num: "3", name: "Radu", pos: "portero"},
               {num: "4", name: "Iván Villar", pos: "portero"},
-              {num: "4 BIS", name: "Bayindir", pos: "portero", tag: "4ª ed"},
               {num: "5", name: "Álvaro Núñez", pos: "defensa"},
               {num: "6", name: "Javi Rueda", pos: "defensa"},
               {num: "7", name: "Javi Rodríguez", pos: "defensa"},
@@ -722,7 +811,6 @@
               {num: "13", name: "Hugo Álvarez", pos: "medio"},
               {num: "14", name: "Sotelo", pos: "medio"},
               {num: "14 BIS", name: "Vecino", pos: "medio", tag: "2ª ed"},
-              {num: "4 BIS 2", name: "Burcio", pos: "medio", tag: "4ª ed"},
               {num: "15", name: "Fer López", pos: "medio"},
               {num: "16", name: "Swedberg", pos: "medio"},
               {num: "17", name: "Iago Aspas", pos: "delantero"},
@@ -755,7 +843,6 @@
               {num: "13", name: "Mario Soriano", pos: "medio"},
               {num: "14", name: "José Ángel", pos: "medio"},
               {num: "14 BIS", name: "Gijselhart", pos: "medio", tag: "3ª ed"},
-              {num: "14 BIS 2", name: "Casadó", pos: "medio", tag: "4ª ed"},
               {num: "15", name: "Luismi Cruz", pos: "medio"},
               {num: "16", name: "Mella", pos: "medio"},
               {num: "17", name: "Asp Jensen", pos: "delantero", tag: "3ª ed"},
@@ -774,11 +861,9 @@
               {num: "3", name: "Dituro", pos: "portero"},
               {num: "4", name: "Iturbe", pos: "portero", tag: "2ª ed"},
               {num: "5", name: "Pétrot", pos: "defensa"},
-              {num: "5 BIS", name: "Rubén Sánchez", pos: "defensa", tag: "4ª ed"},
               {num: "6", name: "Chust", pos: "defensa"},
               {num: "7", name: "Bigas", pos: "defensa"},
               {num: "8", name: "Affengruber", pos: "defensa"},
-              {num: "8 BIS", name: "Revivo", pos: "defensa", tag: "4ª ed"},
               {num: "9A", name: "Pedrosa", pos: "defensa"},
               {num: "9B", name: "Sangaré", pos: "defensa"},
               {num: "10", name: "Germán Valera", pos: "medio"},
@@ -788,7 +873,6 @@
               {num: "13B", name: "Jon Chetauya", pos: "medio"},
               {num: "14", name: "Marc Aguado", pos: "medio"},
               {num: "15", name: "Josan", pos: "medio"},
-              {num: "15 BIS", name: "Lemar", pos: "medio", tag: "4ª ed"},
               {num: "16", name: "Morente", pos: "medio"},
               {num: "17", name: "Ali Houary", pos: "delantero", tag: "2ª ed"},
               {num: "18", name: "Cepeda", pos: "delantero"},
@@ -843,13 +927,11 @@
               {num: "10", name: "Davinchi", pos: "defensa"},
               {num: "11", name: "Mario Martín", pos: "medio"},
               {num: "12", name: "Javi Muñoz", pos: "medio"},
-              {num: "12 BIS", name: "Uche", pos: "delantero", tag: "4ª ed"},
               {num: "13", name: "Francho", pos: "medio", tag: "2ª ed"},
               {num: "14", name: "Terrats", pos: "medio", tag: "2ª ed"},
               {num: "15", name: "Mangala", pos: "medio", tag: "3ª ed"},
               {num: "16", name: "Juanmi", pos: "delantero", tag: "2ª ed"},
               {num: "17", name: "Alex Sancris", pos: "delantero"},
-              {num: "17 BIS", name: "Iván Azón", pos: "delantero", tag: "4ª ed"},
               {num: "18", name: "Borja Mayoral", pos: "delantero"},
               {num: "19 BIS", name: "Ünal", pos: "delantero", tag: "3ª ed"},
               {num: "20", name: "Satriano", pos: "delantero"}
@@ -871,14 +953,12 @@
               {num: "8", name: "Mandi", pos: "defensa", tag: "2ª ed"},
               {num: "9", name: "Manu Sánchez", pos: "defensa"},
               {num: "10", name: "Arriaga", pos: "medio"},
-              {num: "10 BIS", name: "Ndukwe", pos: "defensa", tag: "4ª ed"},
               {num: "11", name: "Oriol Rey", pos: "medio"},
               {num: "12", name: "Olasagasti", pos: "medio"},
               {num: "13", name: "Dani Requena", pos: "medio", tag: "2ª ed"},
               {num: "14A", name: "Víctor García", pos: "medio"},
               {num: "14B", name: "Paco Cortés", pos: "medio"},
               {num: "15", name: "Carlos Álvarez", pos: "medio"},
-              {num: "15 BIS", name: "Ratkov", pos: "delantero", tag: "4ª ed"},
               {num: "16", name: "Tunde", pos: "delantero"},
               {num: "16 BIS", name: "Thiago Fernández", pos: "delantero", tag: "3ª ed"},
               {num: "17", name: "Brugué", pos: "delantero"},
@@ -916,7 +996,6 @@
               {num: "17", name: "Gonzalo", pos: "delantero"},
               {num: "17 BIS", name: "Carlos Espí", pos: "delantero", tag: "2ª ed"},
               {num: "18", name: "Rodrygo", pos: "delantero"},
-              {num: "18 BIS", name: "Endrick", pos: "delantero", tag: "4ª ed"},
               {num: "19", name: "Vinícius", pos: "delantero"},
               {num: "20", name: "Mbappé", pos: "delantero"}
             ]
@@ -935,7 +1014,6 @@
               {num: "6 BIS", name: "Recio", pos: "defensa", tag: "3ª ed"},
               {num: "7", name: "Calero", pos: "defensa"},
               {num: "8", name: "Einar Galilea", pos: "defensa"},
-              {num: "8 BIS", name: "Berrocal", pos: "defensa", tag: "4ª ed"},
               {num: "9", name: "Rafita", pos: "defensa"},
               {num: "10", name: "Salinas", pos: "defensa", tag: "2ª ed"},
               {num: "11", name: "Izan Merino", pos: "medio"},
@@ -944,7 +1022,6 @@
               {num: "13B", name: "Juanpe", pos: "medio"},
               {num: "14", name: "Dotor", pos: "medio"},
               {num: "15", name: "Aarón Ochoa", pos: "medio"},
-              {num: "15 BIS", name: "Cajuste", pos: "medio", tag: "4ª ed"},
               {num: "16", name: "Larrubia", pos: "delantero"},
               {num: "17", name: "Lobete", pos: "delantero"},
               {num: "18", name: "Adrián Niño", pos: "delantero"},
@@ -965,10 +1042,8 @@
               {num: "5B", name: "Arguibide", pos: "defensa"},
               {num: "6", name: "Boyomo", pos: "defensa"},
               {num: "7", name: "Herrando", pos: "defensa"},
-              {num: "7 BIS", name: "Yeboah", pos: "defensa", tag: "4ª ed"},
               {num: "8", name: "Catena", pos: "defensa"},
               {num: "9", name: "Abel Bretones", pos: "defensa"},
-              {num: "9 BIS", name: "Diego Rico", pos: "defensa", tag: "4ª ed"},
               {num: "10", name: "Osambela", pos: "medio"},
               {num: "11", name: "Torró", pos: "medio"},
               {num: "12", name: "Moncayola", pos: "medio"},
@@ -1002,21 +1077,17 @@
               {num: "9A", name: "Manu Hernando", pos: "defensa"},
               {num: "9B", name: "Mario García", pos: "defensa"},
               {num: "10", name: "Jorge Salinas", pos: "defensa"},
-              {num: "10 BIS", name: "Aarón Martín", pos: "defensa", tag: "4ª ed"},
               {num: "11", name: "Maguette", pos: "medio"},
               {num: "12", name: "Gustavo Puerta", pos: "medio"},
-              {num: "12 BIS", name: "Prati", pos: "medio", tag: "4ª ed"},
               {num: "13", name: "Iñigo", pos: "medio"},
               {num: "13 BIS", name: "Sergio Martínez", pos: "medio", tag: "3ª ed"},
               {num: "14", name: "Aldasoro", pos: "medio"},
-              {num: "14 BIS", name: "André Almeida", pos: "medio", tag: "4ª ed"},
               {num: "15", name: "Suleiman", pos: "delantero"},
               {num: "15 BIS", name: "Zabiri", pos: "delantero", tag: "3ª ed"},
               {num: "16", name: "Andrés Martín", pos: "delantero"},
               {num: "17", name: "Guliashvili", pos: "delantero"},
               {num: "18", name: "Iñigo Vicente", pos: "delantero"},
               {num: "19", name: "Arana", pos: "delantero"},
-              {num: "19 BIS", name: "Iker Luque", pos: "delantero", tag: "4ª ed"},
               {num: "20", name: "Villalibre", pos: "delantero"}
             ]
           },
@@ -1029,7 +1100,6 @@
               {num: "2", name: "Beñat San José", pos: "entrenador"},
               {num: "3", name: "Batalla", pos: "portero"},
               {num: "4", name: "Cárdenas", pos: "portero"},
-              {num: "4 BIS", name: "Audero", pos: "portero", tag: "4ª ed"},
               {num: "5", name: "Ratiu", pos: "defensa"},
               {num: "6", name: "Balliu", pos: "defensa"},
               {num: "7", name: "Nobel Mendy", pos: "defensa"},
@@ -1041,13 +1111,11 @@
               {num: "11A", name: "Pedro Díaz", pos: "medio"},
               {num: "11B", name: "Nteka", pos: "medio"},
               {num: "12", name: "Pathé Ciss", pos: "medio"},
-              {num: "12 BIS", name: "Bouare", pos: "medio", tag: "4ª ed"},
               {num: "13", name: "Óscar Valentín", pos: "medio"},
               {num: "14", name: "Unai López", pos: "medio"},
               {num: "15", name: "Isi", pos: "medio"},
               {num: "16", name: "De Frutos", pos: "delantero"},
               {num: "17", name: "Fran Pérez", pos: "delantero"},
-              {num: "17 BIS", name: "Tsitaishvili", pos: "delantero", tag: "4ª ed"},
               {num: "18", name: "Álvaro García", pos: "delantero"},
               {num: "19", name: "Camello", pos: "delantero"},
               {num: "20", name: "Alemao", pos: "delantero"}
@@ -1074,7 +1142,6 @@
               {num: "13B", name: "Zakharyan", pos: "medio", tag: "2ª ed"},
               {num: "14", name: "Carlos Soler", pos: "medio"},
               {num: "15", name: "Sucic", pos: "medio"},
-              {num: "15 BIS", name: "Ochieng", pos: "delantero", tag: "4ª ed"},
               {num: "16", name: "Barrenetxea", pos: "delantero"},
               {num: "17", name: "Kubo", pos: "delantero"},
               {num: "18", name: "Guedes", pos: "delantero"},
@@ -1101,14 +1168,11 @@
               {num: "9B", name: "Marcao", pos: "defensa"},
               {num: "10", name: "Suazo", pos: "defensa"},
               {num: "11", name: "Oso", pos: "medio"},
-              {num: "11 BIS", name: "Fofana", pos: "medio", tag: "4ª ed"},
               {num: "12", name: "Agoumé", pos: "medio"},
               {num: "13", name: "Guridi", pos: "medio", tag: "2ª ed"},
               {num: "14", name: "Sow", pos: "medio"},
-              {num: "14 BIS", name: "Nico Guillén", pos: "medio", tag: "4ª ed"},
               {num: "15", name: "Vargas", pos: "medio"},
               {num: "16", name: "Manu Bueno", pos: "medio"},
-              {num: "16 BIS", name: "Alfón", pos: "delantero", tag: "4ª ed"},
               {num: "17", name: "Peque", pos: "delantero"},
               {num: "18", name: "Ejuke", pos: "delantero"},
               {num: "19", name: "Akor Adams", pos: "delantero"},
@@ -1123,10 +1187,8 @@
             stickers: [
               {num: "1", name: "Escudo", pos: ""},
               {num: "2", name: "Carlos Corberán", pos: "entrenador"},
-              {num: "2 BIS", name: "Javier Aguirre", pos: "entrenador", tag: "4ª ed"},
               {num: "3", name: "Dimitrievski", pos: "portero"},
               {num: "4", name: "Rivero", pos: "portero"},
-              {num: "4 BIS", name: "Van Oevelen", pos: "portero", tag: "4ª ed"},
               {num: "5", name: "Foulquier", pos: "defensa"},
               {num: "6", name: "Copete", pos: "defensa"},
               {num: "7", name: "Tárrega", pos: "defensa"},
@@ -1143,7 +1205,6 @@
               {num: "16 BIS", name: "Dieng", pos: "medio", tag: "2ª ed"},
               {num: "17", name: "Hugo Duro", pos: "delantero"},
               {num: "18", name: "Diego López", pos: "delantero"},
-              {num: "18 BIS", name: "Otorbi", pos: "delantero", tag: "4ª ed"},
               {num: "19", name: "Ramazani", pos: "delantero"},
               {num: "19 BIS", name: "Danjuma", pos: "delantero", tag: "2ª ed"},
               {num: "20A", name: "Sadiq", pos: "delantero"},
@@ -1166,7 +1227,6 @@
               {num: "7A", name: "Foyth", pos: "defensa"},
               {num: "7B", name: "Freeman", pos: "defensa"},
               {num: "8A", name: "Kambwala", pos: "defensa"},
-              {num: "8 BIS", name: "Diatta", pos: "defensa", tag: "4ª ed"},
               {num: "8B", name: "Rafa Marín", pos: "defensa"},
               {num: "9", name: "Renato Veiga", pos: "defensa"},
               {num: "10", name: "Sergi Cardona", pos: "defensa"},
@@ -1176,7 +1236,6 @@
               {num: "14", name: "Moleiro", pos: "medio"},
               {num: "15", name: "Buchanan", pos: "delantero"},
               {num: "16", name: "Oluwaseyi", pos: "delantero"},
-              {num: "16 BIS", name: "Ilias", pos: "delantero", tag: "4ª ed"},
               {num: "17", name: "Ayoze", pos: "delantero"},
               {num: "18", name: "Pépé", pos: "delantero"},
               {num: "19", name: "Mikautadze", pos: "delantero"},
@@ -1210,7 +1269,7 @@
               {num: "UF20", name: "Kang-In Lee (Atlético)", pos: "medio", tag: "2ª ed"},
               {num: "UF21", name: "Bernardo Silva (R. Madrid)", pos: "medio", tag: "3ª ed"},
               {num: "UF22", name: "Amatucci (Deportivo)", pos: "medio", tag: "3ª ed"},
-              {num: "UF23", name: "Mojica (Getafe)", pos: "defensa", tag: "3ª ed"},
+              {num: "UF23", name: "Mojica (Getafe)", pos: "defensa"},
               {num: "UF24", name: "Gordon (Barcelona)", pos: "delantero", tag: "3ª ed"},
               {num: "UF25", name: "Robbie Ure (Sevilla)", pos: "delantero", tag: "3ª ed"},
               {num: "UF26", name: "Javi Morcillo (Sevilla)", pos: "medio", tag: "3ª ed"},
@@ -1222,47 +1281,12 @@
               {num: "UF32", name: "Buonanotte (Elche)", pos: "medio", tag: "3ª ed"},
               {num: "UF33", name: "Angeliño (Deportivo)", pos: "defensa", tag: "3ª ed"},
               {num: "UF34", name: "Iván Martín (Racing)", pos: "medio", tag: "3ª ed"},
-              {num: "UF35", name: "Peio Canales (Athletic)", pos: "medio", tag: "3ª ed"},
+              {num: "UF35", name: "Peio Canales (Athletic)", pos: "medio"},
               {num: "UF36", name: "Kochorashvili (Sevilla)", pos: "medio", tag: "3ª ed"},
               {num: "UF37", name: "Galán (Celta)", pos: "defensa", tag: "3ª ed"},
               {num: "UF38", name: "Parrott (Betis)", pos: "delantero", tag: "3ª ed"},
               {num: "UF39", name: "Diomande (Real Madrid)", pos: "delantero", tag: "3ª ed"},
-              {num: "UF40", name: "Rodri (Barcelona)", pos: "medio", tag: "3ª ed"},
-
-              {num: "UF41", name: "Ezequiel Ponce",  pos: "delantero", tag: "4ªed"},
-              {num: "UF42", name: "Gudelj",  pos: "medio", tag: "4ªed"},
-              {num: "UF43", name: "Sarr",  pos: "defensa", tag: "4ªed"},
-              {num: "UF44", name: "Ezequiel Ponce",  pos: "delantero", tag: "4ªed"},
-              {num: "UF45", name: "Gudelj",  pos: "medio", tag: "4ªed"},
-              {num: "UF46", name: "Sarr",  pos: "delantero", tag: "4ªed"},
-              {num: "UF47", name: "Ezequiel Ponce",  pos: "defensa", tag: "4ªed"},
-              {num: "UF48", name: "Gudelj",  pos: "delantero", tag: "4ªed"},
-              {num: "UF49", name: "Sarr",  pos: "defensa", tag: "4ªed"},
-              {num: "UF50", name: "Ezequiel Ponce",  pos: "delantero", tag: "4ªed"},
-              {num: "UF51", name: "Gudelj",  pos: "medio", tag: "4ªed"},
-              {num: "UF52", name: "Sarr",  pos: "defensa", tag: "4ªed"},
-              {num: "UF53", name: "Ezequiel Ponce",  pos: "defensa", tag: "4ªed"},
-              {num: "UF54", name: "Gudelj",  pos: "defensa", tag: "4ªed"},
-              {num: "UF55", name: "Sarr",  pos: "portero", tag: "4ªed"},
-              {num: "UF56", name: "Ezequiel Ponce",  pos: "delantero", tag: "4ªed"},
-              {num: "UF57", name: "Gudelj",  pos: "defensa", tag: "4ªed"},
-              {num: "UF58", name: "Sarr",  pos: "delantero", tag: "4ªed"},
-              {num: "UF59", name: "Ezequiel Ponce",  pos: "defensa", tag: "4ªed"},
-              {num: "UF60", name: "Gudelj",  pos: "defensa", tag: "4ªed"},
-              {num: "UF61", name: "Sarr",  pos: "delantero", tag: "4ªed"},
-              {num: "UF62", name: "Ezequiel Ponce",  pos: "delantero", tag: "4ªed"},
-              {num: "UF63", name: "Gudelj",  pos: "delantero", tag: "4ªed"},
-              {num: "UF64", name: "Sarr",  pos: "medio", tag: "4ªed"},
-              {num: "UF65", name: "Ezequiel Ponce",  pos: "medio", tag: "4ªed"},
-              {num: "UF66", name: "Gudelj",  pos: "delantero", tag: "4ªed"},
-
-              {num: "UF67", name: "Rodri",  pos: "medio", tag: "4ªed"},
-              {num: "UF68", name: "Cucurella",  pos: "defensa", tag: "4ªed"},
-              {num: "UF69", name: "Kang-in Lee",  pos: "medio", tag: "4ªed"},
-
-
-
-
+              {num: "UF40", name: "Rodri (Barcelona)", pos: "medio", tag: "3ª ed"}
             ]
           },
           {
@@ -1373,23 +1397,16 @@
               {num: "B3", name: "Bronce Nico Williams", pos: "delantero"},
               {num: "B4", name: "Bronce Pedri", pos: "medio"},
               {num: "B5", name: "Bronce Oblak", pos: "portero"},
-              {num: "B6", name: "Bronce Rodri", pos: "medio", tag: "4ª ed"},
-              {num: "B7", name: "Bronce Bellingham", pos: "medio", tag: "4ª ed"},
               {num: "P1", name: "Plata Lamine Yamal", pos: "delantero"},
               {num: "P2", name: "Plata Mbappé", pos: "delantero"},
               {num: "P3", name: "Plata Nico Williams", pos: "delantero"},
               {num: "P4", name: "Plata Pedri", pos: "medio"},
               {num: "P5", name: "Plata Oblak", pos: "portero"},
-              {num: "P6", name: "Plata Rodri", pos: "medio", tag: "4ª ed"},
-              {num: "P7", name: "Plata Bellingham", pos: "medio", tag: "4ª ed"},
               {num: "O1", name: "Oro Lamine Yamal", pos: "delantero"},
               {num: "O2", name: "Oro Mbappé", pos: "delantero"},
               {num: "O3", name: "Oro Nico Williams", pos: "delantero"},
               {num: "O4", name: "Oro Pedri", pos: "medio"},
-              {num: "O5", name: "Oro Oblak", pos: "portero"},
-              {num: "O6", name: "Oro Rodri", pos: "medio", tag: "4ª ed"},
-              {num: "O7", name: "Oro Bellingham", pos: "medio", tag: "4ª ed"},
-
+              {num: "O5", name: "Oro Oblak", pos: "portero"}
             ]
           }
         ];
@@ -1672,177 +1689,390 @@
             });
         }
 
-        function generarPdfDeLosQueTengo() {
-            const printArea = document.getElementById('printArea');
-            printArea.innerHTML = ''; 
 
-            const titulo = document.createElement('h1');
-            titulo.className = 'pdf-titulo';
-            titulo.innerText = 'Cromos Pendientes - Colección LaLiga 2026-27';
-            printArea.appendChild(titulo);
+        function mostrarOverlayPdf(texto) {
+            let ov = document.getElementById('pdfOverlay');
+            if (!ov) {
+                ov = document.createElement('div');
+                ov.id = 'pdfOverlay';
+                ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.1rem;font-weight:bold;';
+                document.body.appendChild(ov);
+            }
+            ov.innerHTML = '<div style="background:#1e3a8a;padding:20px 28px;border-radius:10px;text-align:center;">' + (texto || 'Generando PDF…') + '</div>';
+            ov.style.display = 'flex';
+        }
 
-            const columnasContenedor = document.createElement('div');
-            columnasContenedor.className = 'pdf-columnas-contenedor';
-            printArea.appendChild(columnasContenedor);
+        function ocultarOverlayPdf() {
+            const ov = document.getElementById('pdfOverlay');
+            if (ov) ov.style.display = 'none';
+        }
 
-            let totalPaisesConCromos = 0;
+        function prepararAreaParaPdf(el) {
+            // Debe ser completamente visible y opaco para que html2canvas lo capture
+            // (opacity baja o z-index negativo = PDF en blanco en muchos móviles)
+            el.style.cssText = [
+                'position:fixed',
+                'left:0',
+                'top:0',
+                'width:794px',
+                'max-width:100vw',
+                'padding:16px',
+                'margin:0',
+                'background:#ffffff',
+                'color:#222222',
+                'font-family:Arial,Helvetica,sans-serif',
+                'font-size:12px',
+                'line-height:1.3',
+                'box-sizing:border-box',
+                'visibility:visible',
+                'opacity:1',
+                'z-index:99998',
+                'overflow:visible',
+                'pointer-events:none'
+            ].join(';');
+        }
 
-            listadoSecciones.forEach(sec => {
-                let cromosObtenidosDeEstePais = [];
+        function limpiarAreaPdf(el) {
+            el.style.cssText = 'position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;visibility:hidden;opacity:0;';
+            el.innerHTML = '';
+            ocultarOverlayPdf();
+        }
 
-                sec.stickers.forEach(stk => {
-                    const clave = `${sec.id}-${stk.num}`;
-                    const dataPdf = coleccion[clave] || { pendiente: true, repes: 0 };
-                    if (dataPdf.pendiente === true) {
-                        cromosObtenidosDeEstePais.push(`${sec.id}${stk.num}`);
-                    }
-                });
-
-                if (cromosObtenidosDeEstePais.length > 0) {
-                    totalPaisesConCromos++;
-
-                    const fila = document.createElement('div');
-                    fila.className = 'pdf-fila';
-
-                    const banderaContenedor = document.createElement('div');
-                    banderaContenedor.className = 'pdf-bandera-contenedor';
-                    
-                    const img = document.createElement('img');
-                    img.src = sec.logo;
-                    img.onerror = function() {
-                        this.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABRQAAAUWCAMAAADU8M/RAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAACxMAAAsTAQCanBgAAADSUExURf/////7+/9PSP9NRv/u7f9mYf/Myv9LRP////+fm/9YUv/4+P/x8P/W1P9RSv/19P/k4v/R0P+Ig/9VTv+UkP9jXf9cVf/n5v/9/f/f3f9/ev9TTP+rqP+5tv/Ixf+8uf9xbP9nYf+1s/9dVv90bv/q6f+Piv/t7P/Bv/9sZ/9gWv/Z2P/Lyf9rZf96dP+emv+Df/94c//d2/91cP99eP/39v+Yk/+/vP+vq/+lov+xr/+Mh/+opP+koP+RjP+bl/+inv/Ewf9uaP+qpv/Pzf9lXyKC0pAAAAABdFJOU2ANVLk+AAA1SUlEQVR42uzd0VqTVxCGUQOokQQIIoqIiNiKFRWxolYq0ur9X1PPehRO2/3NrHUJ5slr/s0/s29NAfjXLf8EAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogiAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIgCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAiCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogiAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCIIoAogggigCiCCCKAKIIIIoAosgN9rbWKrqI+yBm87U2LkSRgS2O7xX05XHa53Dx5vpeFz9ORZFxzf98cbeezcu0KO5tv7vbxerHDVFkWJNXv1X82h29SfsgHj3YbBPF288mosiwHt9fKfite/FlK+xz2Pryuk0T169PpqLIqNau1wt+6548eJT28HznlzZN3Lz/YSqKjGr27HnFI6t322kfxOJypU0Ujw4nosiwTvcdWY1g/m29TRMfHmxNRZFRnXzfqXhkdS/tyGr2+W2bJj65WkxFkVFdHO8W/NatvI97Ca7mD/blRxvn21NRZNjD/Zpvxr19lfbwXPMH+3K7xzNRZFg134x7+OfcD/Zh7Xz/dSqKjKrmm3GbL9OOrDqNsqzsb0xFkWG/iyXfjFvNG2VZXPUZZck72hDFThYvK74Z9/pr3CjLwYs2TVz/Yz4VRUZVcw/Ezqe0UZbJYaNRlrgtHaLYSc09EIHbV2rOni+Xd7Qhip3U/C7mjbLUnD1fLm9Lhyh2UvO7mLd9pebs+XJ5WzpEsZOa38WVuO0rextGWUSRIdQcK/v7r7SH50ef+oyy3H46E0WGVXOsLG/7SqdRlrwtHaLYSc3vYuAoy8/zNk0M3NIhio3UHCtb/f1O2gdR8/X55YqPsohiuJp7IPK2r8x/9BllydvSIYqd1NwDkbd9ZXJ41KaJeUcbotjq4bnmHoi8UZYP79s8PK+WH2URxWg1D7Kef44bZTnr8zZO3pYOUeyk5h6IvO0rRllEkUEOskrugdgMHGX52KaJgRfOimInNfdA5F0kXPMNgOXytnSIYic190DkjbJsfW00ynJ9MhVFHGT9p0dWcRcJ13wDYLm8LR2i2ErJPRCB21c6jbLkbekQxU5q7oHI275S8w2AKkcbothJzT0QO2dpR1Y13wC44b2AJqMsopip5h6IwIuEO42y5G3pEMVOar4Fkrd9pdUoy/FMFBlWzT0QeaMsF0/7jLLkXTgriq0enku+BZJ3kXDNQ4wbHp7ztnSIYic13wLJ277SaZQlb0uHKHZS8y2QvIuEax5iVDnaEMVOar4Fkrd9pdMoy2anURZRzFNyD0Tg9pXFZZ9RlrwtHaLYSc09EHnbV+bf1ts0sdcoiyimqbkHIu8i4VmjUZa8LR2i2ErJPRCBFwmfNhplOd+eiiLDqrkHIm+UpebnsNxus1EWUcxScw9E3kXCNT+H5fIunBXFTmqOUORtX+k0yhK4pUMUOyk5QhF4kfDiqs8oS97Rhih2UnOEIu8i4a2DPotlG46yiGLSQ1vJEYq87SuTw0ajLHFbOkSxlZJ7IAK3r9S8Wna5vKMNUeyk5h4Ioywjy9vSIYqd1NwDkXeR8Ozz2zZNzNvSIYqtlHxoy7tIeG9jv00Tm46yiGKKmnsg8i4SfvSpzyhL3oWzothJzT0QedtXOo2y5G3pEMVWSu6BCBxl+XnepomBWzpEsZOS+wcCLxKueTvOcm1HWUTRQ9v/Jm/7yvxHn1GWvC0dothJzf0DedtXJodHbZqYd7Qhiq3U3ANhlGXkT6fxKIsoBqi5ByLvIuGab0Utl7elQxRbPTyX3AORt32l5ltRy7UeZRHF8ZX8i+emUZaRH57fbfveieK4au6ByLtIuNUoy7OJL54oDqvmHoi8UZatr41GWa5PfPFEcVwl/+KZd5FwzYPd5fK2dIhiKyX/4hm4faXTKEvelg5R7KTmXzzztq/UPNitcrQhiq2U3AOxc5Z2ZFXzYPeG9wLaj7KI4tBK7oEIvEj4w/s+oyx5WzpEsZOaeyDytq+snfV5G+f18cwXTxSHVXMPhFGWoY82PhllEcWBldwDkXeR8N7GxzZNDNzSIYqd1NwDkbd9peT/TTfI29Ihiq0enku+Lpx3kXDN/5uqHG2IYislXxfO277SaZRl0yiLKI6s5OvCgdtXFpd9RlnytnSIYic1XxfO274y/9ZnsaxRFlEcWsk9EHkXCc8ajbLkbekQxVZK7oEIvEj4tNEoy7nFsqI48g+Ukq8LG2UZ2a5RFlEc+gdKxT0QeRcJXzxtNMoSd+GsKLZScg9E3vaVmmOWNxxt7BtlEcWRf6BU3AMRuH1lcdVnlCXvaEMUO6n5AyVv+8rWQZ/FskZZRHFoJWdt87avTA4bjbLEbekQxVZKXhv3D3tnm1vVlUVBuWMhIRvZ+UB+QfhDpGOIHWxMG0PAAUcw/zH1BPr0P552rVVrCk+33j37nlUbaF+JvCm6CM/SIRSrDs+RXVurLJPDs3QIxapEeiB4i4T33r+uYSLP0iEUq7L/NXC6D1wkHHlTdDHasMoiFGdP988CHzveIuHIm6Kr0caxVRah6HR/u+HZVzI3hi1GGzhLh1DsOjwnTvd59pWqKgvP0iEUmxI53QeOrKyyGKHodP/7hWdfifzYtRpt3FtlEYqDEymq4tlXMj92/e/wLB1CsSqRoiqrLKN/HassQtHp/rbDWyQcKT1f5OKjVRahODiRHgiefSVTer64F2CVRShOTqQHgrdIePOkqMpyZZVFKE5+GCM9ELxFwkd3RVWWU2/jCMXBifRA8OwrVVWWB6ssQnFwIq/G8UZWm283NUwEWjqEYlMir8YRqyznPWJZnqVDKFYl8mocz76yf19UZXnubRyhOPlhTPRA/HxNG1ntvPqjholWWYTi6ER6IICLhN++6amy8BbOCsWqRHogePaVyOr5IjxLh1CsSuTDaJVl9GgDZ+kQilWJ9EDwFglvntzWMBFo6RCKTYn0QADtK5HV80V4lg6hWJXIh5FnX4msnseMNoRiVSIfRmCVJbJ6vhhtWGURij6M2z488+wrh596qiw8S4dQrEpkr4xnX4m8Pb+IVRahOPthTPRA8BYJ7xVVWXgLZ4ViVSI9EMBFwpdFVZYbxbJCcXIiPRBWWUaPNo6tsghFJ1lbHlnhFglH3p5fhGfpEIpVifRA8OwrmVsUF6ONZ1ZZhOLoSVagBwJoX2mqsvBGG0KxKpGTrAucfeXgw0UNE62yCEUnWVsfWd1ZZRk82sBZOoRiVTI9EDz7SlWV5U+fO6HoJGvL9z2ssgwOb+GsUKxKpAeCt0g48gLAIjxLh1DsOjwnTrKAi4QjF0EsRhtXVlmE4uhJVqIHgrdI+OWXoirLqbdxhOLkSVaiB4JnX3n3okgs+9gqi1AcnEgPBM++UlVl4Vk6hGJVEj0QQPvK4WerLEYozjg8J14D4S0SPnj+Ww0TeZYOoViVyGsgvEXCOydFVZZzxbJCcXIiPRC8Kkuky3Lx61hlEYqjE+mB4C0S3n3oqbLwFs4KxapEeiB49pW90yKx7J1VFqE4OJHXQHiLhDdPiqost4plheLkRHogeIuEj+6sshihOCKRHgiefaWqyvJglUUoTj61JXogePaVzbebGiYCLR1CsSqJHghileW8RyzLs3QIxapEeiB4i4Qjf4ZFeJYOoViVSA8Eb5Fw5M+wuhdglUUojk5ihwK4SPjtm54qC2/hrFDsOjwneiB49pXIRtEiPEuHUKxKpAfCKsvo0QbO0iEUu5LogeAtEt48ua1holUWoeipbetPHc++EtkoWoRn6RCKVYn0QPDsK5GNopjRhlCsSqQHAlhleVQklrXKIhQ9tW378HxllWVweJYOoViVyFMbz76yf2+VxQhFT23fbWSFWyS88+qPGibyFs4Kxa4kntqAi4Sbqiw8S4dQrEqkgMAqy+jRxrFVFqE4+dSWKCDgLRKOvBS1CM/SIRS7kuiB4NlXIi9FrUYbz6yyCMXRh+dADwTQvtJUZeGNNoRiVSI9EBc4+8rBh4saJlplEYqzk+iB4C0Srqqy4CwdQrErkR4Inn3l8FNRleVPHzuhODiRnzyBVZZEv+8ivIWzQrEqkZ88eYuE95qqLDhLh1DsSuInT+Ai4cuiKsuVVRahODmRHgjeIuGXX4qqLKfexhGKkw/PiZ88efaVdy+KxLKPrbIIxclJ9EDw7CtVVRaepUMoViXRAwG0rxx+tspihOKIRHogeIuED54XiWXvrbIIxclJ9EDwFgnvnBRVWc4VywrF0YfnRA8Er8qS+Ne0+nWssgjF0Yn0QPAWCTdVWXgLZ4ViVxI9EDz7SuRf02q0cWeVRShOTqIHgmdf2Tx5VsNE4GhDKHYdnk8DPRC8kdXRnVUWIxSHvKHc5j11PPtKVZXlwSqLUBz9hhLogeDZVzbfbmqYCLR0CMWqJL6hEKss5z1iWZ6lQyh2HZ4T31B4i4Qjt20vwrN0CMWuJL6h8BYJR7YsV/cCrLIIxdFJLNsCFwk3VVl4C2eFYlUiy7Y8+8ruQ0+VhWfpEIpdSXxD4dlXIi+KrkYbOEuHUOxKYtmWN7KyymKE4pg3lMC9cT9YZZkcnqVDKHYlcW8cz74SuTBsEZ6lQyh2JdEDAayyPCoSy1plEYqO97d9eL6yyjI4ZycenoXi6PF+oAeCZ1/Zv7fKYoTikPF+oAeCt0h4J/Bb13K08dkqi1CcnEQPBHCR8Ns3PVUWnqVDKHYdnhM9EDz7SuK3ruVo49gqi1B0vO/I6v+nqspyrVhWKE5OogeCWGW5rWEi0NIhFKuS6IEA2lcSv3WtwrN0CMWuJHogLnD2lYMPFzVMtMoiFGcn0QPBWyRcVWXBLZwVil2J9EDw7CuHn3pu4/AsHUKxK4keCGCV5e8esSzP0iEUu5J4N463SHivqcqCs3QIxbLDc+DdOKB95bKoynJllUUojh7vJ96N49lXqqosp97GEYqTk3g3jldleXfcU2XhWTqEYlcSPRA8+8rmx6saJgItHUKx6/Ac6IEA2lcOP1tlMUJxyNMY6IHgLRJObJ4vRxv3VlmEok/jdsNbJJzYPF/eCzhXLCsUfRq3fHjmVVkSm+erX4dn6RCKXUl8GnmLhKuqLC8UywpFn8Yt3/fA2Vf23r+uYSLP0iEUu5JYLAPaVy6f1TARONoQil1JLJbx7Csvv1hlMUJxRhKLZb99wFVZAi/PL0cbD1ZZhOLow3OgB4JnX6mqsvAsHUKxKokeCKsso8NbOCsUu5LogeAtEt7/WlRlea5YVig6ytryfQ/cIuGdk7MaJvIsHUKx7PAc6IEALhJuqrLcKJYVirNHWYEeCJ59Zfehp8ry1CqLUBydRA8Ez76S+P1/OdrAWTqEYlcSPRA8+8rmiVUWIxQdZX23p45XZTm666my8CwdQrEriR4I3iLhqirLX4plheLoUVagBwJYZQn8/r8cbVhlEYqzE+iBAC4STvz+vwpv4axQ7EqiB4JnX9m/76my8CwdQrHs8Bx4D4S3SHgncISRM9oQil1J9EAAFwm/fWOVxQjFGUn0QPDsK4kjjOVo49gqi1CcnMR7IDz7SlWV5VqxrFAcfXgOvAdCrLLc1jARaOkQil0JvAcCXCScOMJYhWfpEIpdSfRA8BYJH3y0ymKE4owkeiB4i4Q3j/5dw0Tgwlmh2JVEDwTPvnL4qec2Ds/SIRS7kuiBAFZZ/u4Ry/IsHUKxK4keCN4i4T2rLEYoTkmgBwJoX7ksqrJcWWURiqOTWKLg2Veqqiyn3sYRiqOPbYElCl6V5d1xT5WFZ+kQil1JLFHwFglvfryqYSLQ0iEUuxJYogDaV6yyGKE45tgW6IHgLRI++HBRw0TewlmhWHZ4DvRA8BYJJxaKlvcCcJYOoViWRA8Er8oSWCha/jo8S4dQ7EqiB4K3SLiqyvJCsaxQ9Ni25fseOPvK3vvXNUzkWTqEYlkCj21A+8rlsxomAkcbQrEricc2nn3l5RerLEYoDjm2BRoIeIuEE+9ELUcbD1ZZhOLsY1uegYBnX6mqsvAsHUKxK4EGAmCV5fBzT5WFt3BWKJYdngM9ELxFwol3olbhWTqEYlcSPRC8RcJNVRaepUMoliXQQABcJNxUZblRLCsURyfxmyfPvrL70FNleWqVRSjOPjwHeiB49pXEse5ytIGzdAjFsgR6IHj2lc0TqyxGKA5J4DdP4CLho7ueKgvP0iEUu5L4zZO3SLiqyvKXYlmhODqB3zyBVZbAse5ytGGVRSjOTqAHArhIOHCsuwxv4axQLDs8B3ogePaV/a89VRaepUMoluVtngeCt0h45+Sshom80YZQLEugBwK4SDjwn2k52rDKIhRnJ/HCMM++EvjPtB5tHFtlEYqTk3hhmGdfqaqyXCuWFYqjE3hhmFhlua1hItDSIRS7EnhhGLhIONBQtAzP0iEUyw7Pge573iLhg49WWYxQHJJA9z1vkfDmUY9YFrhwVih2JdEDwbOvFFVZgJYOoVh2eA58ReHZV/bve6osPEuHUGw7PH/Kq7LgRlaJy7ZXscoiFKe/ouR5IID2lcuiKsuVVRahODqJHgiefaWqynLqbRyhODqBbVteleXdcU+VhWfpEIplCXxF4S0STrwnugrQ0iEUuxLYtgXaV6yyGKE45hUl0APBWyR88OGihom8hbNCsSyBHgjeIuGqKgvO0iEUyxLogQDaVwLviS5HGzxLh1AsOzwHzvd5I6vAe6LL8CwdQrEsgR4IqyyjRxt3VlmE4uz5fp4HAmhfaaqy3CqWFYrO97ccnn3l5RerLEYoOt//XuEtEg781LUebTxYZRGKzve3G559parKwrN0CMWuBHoggFWWwE9dy/AWzgrFsgR6IHiLhAM/dS3Ds3QIxbIEeiB49pWdk54qC8/SIRTLEuiBANpXfv2p5zbOjWJZoTh7vh/ogbDKMjlPrbIIxdkJ9EDw7Ct771/XMJFn6RCKZQm8HMezryS+rS8Pz1ZZhOLwxzHvchxwkXDg2/oyvIWzQrEsgZfjeIuEq6osfymWFYqjE3g5Dlhl+XZTw0SgpUMolh2e8zwQwEXCh+c1t3GAlg6h2HZ4zvNA8Owr+197qiw8S4dQLEvg5TiefWXn5KyGibzRhlAsS6AHAmhfscpihOKYBHogePaV3YeeKgvP0iEUyxLogeDZVwKL58v8fK1YVij6OG75vgewynJbw0Tgwlmh2JXAZhlwkfDRLz1iWZ6lQyiWJbBZxlskfPCxp8rCs3QIxbIENst4i4QTdyjmjDaEYtvhOdADwbOvFFVZfrDKIhSnP455HgiefWX/vqfKwrN0CMWyBHogePaVwLvzy1hlEYrOsrY+suJVWQLvzi8Pz1dWWYTi8MNzngfi7ARXZbnuEcvyLB2mDIqBHgirLKNHG4+tsghFZ1lbHll9tsoyN8CFs6YMinmzLKB9panKwrN0mDIoBs6yeIuEDz5c1DCRN9owZVAMnGXxFglbZTFCcdAsK84DAbSvBH7+X442eJYOUwbFQA8Ez74S+Pl/GZ6lw5RBMdADwauy7BVVWXiWDtMGxTwPBHCR8GVRleVWsaxQnJ3dL3EXQXj2FassRijOObflfXnmLRJ+d1xUZXmwyiIUZ+dt3Jdnnn0l0GS5Hm3wLB2mDIp5Hz2BVZZAk+V6tHHi4Vkozn5H+SfuoydvkXCgyXIZqyxCcXqO4uT3PPvKzklPlYVn6TBtUNx7kVa3BdpXfv2p5zbOjWJZoTg8eV9ZrLJMzlOrLEJx+jDrPu155C0S3nv/uoaJPEuHqYPit/+k3ffg2Vcun9Uw0SqLUJx/cHscdhMEuEj45ZeeKgtv4axpg+Lmz7Owp463SDhQxrG+F4CzdJg6KP5+F/aiCKyyfLupYSLQ0mHaoLh5Fda3BS4SPjyvuY0DtHSYOij+/kvYA8mzr+x/7amy8Cwdpg6KcS+KPPvKzslZDRN5ow3TB8Xdu6wXxX/x7CtWWYxQnJRHYW8pvEXCuw89VRaepcP0QTHtjiLPvhJo913m52vFskJxfL5lmVl4VZbAvbLr0cYzqyxCcXze3UcVKYCLhAP3yi7Ds3SYQiiG6XF4i4Sbqiw8S4cphOJOlkeRt0i4qspyrlhWKALObp+iDs88+0pRleUHqyxCkZB/ohx+PPvK/n1PlYVn6TCNUDx4SLqPw7Ov7Lz6o4aJVlmEIiJRYlPgIuG3b3oOz1dWWYQiYcp/nPSZhbdIePe65zYOz9JhKqG4+0vSfQ+rLJNHG/9l70y0ElmyKLoAtUNmFQREUKHKCUVUFBQHHPr/f6mrut+rrldlIUNmkjfO3n+AK3MbEXnPiXWiLEjRAhtdj46snuxFWfoyTjR44SxISrHa8ufTp8H2lUopLyNFey0doClFn3bP9i4SLtwLRVl2mcZBiuyeo8XeRcLVtS8yTiTKghTZPUd+ZGWvfaU40pnGsdfSAaJSzN5689rZa1/JPuoUy9pr6QBVKfozuW0vypIRirLYa+kAWSkOfDnoN3iRcEcoytKnWBYpWlms3PkyEWKvfYUoCyDFGOJNa5i9i4RvGkJRljFRFqRohfdrP946e+0rVZ+SRJ8dbdhr6QBdKXpSBmGwfUUpymKvpQN0pZh48OPNtHdkVRieyjiRKAtSNMSRHxk/e+0riaZOlMVeSwcoS9GPKUWD7Su1TZ1pnEuKZZGiIfy4nYUoS5wpE2VBipZobftwZGXuIuHM4FzGifZaOkBaiolHDzZxBttXvLoV55PNM1EWpGgKH7oUDV4kfPSsE2Wxd+EsaEuxtmn/rbN3kfBNS6dY1l5LB4hL0YM8i732Fakoi72WDhCXov2PzwaPrIpPQlGWM9SBFG1hP+RnMMqy25Zxor2WDpCX4tD6gb+99hWpKEuJYlmkaI07429d0l77ClEWQIox5ubC+Gtn7yLhlbFOlGW1QZQFKVqjcmj7rbPXvpLZ0ymW3bqgWBYpIsWI5z3MRVmqOZ0oi8ELZwEpuqLp2W2DFwlXbnWiLPZaOgApOpfrW37r7LWvKEVZ7LV0AFL8xsal5SMrc+0r1fdLGScabOkApGhcihajLIc60zhEWZAiUowae+0r2TedKIu9lg5AitalaK99JdHcl3EiURakiBQjP7KyF2W56ulsnrtEWZAiUowYexcJr1zoTOPYa+kApGhdikRZYn20MSbKghSRYsS8DteMsadTLGuwpQOQonkppldNcdDtHcgcKBps6QCk6MGZoqnPDu2dcelU5ufaO9oApIgUI1bi7pVQsSxRFqRomlwXaYW90b98qyWUoiz2WjoAKf5ErYe1wlXi9Xou47IPQlGWFsWySNEy1ktmTSjRZY5PZH6yvQtnASkixYiV6FxHKMrSp1gWKdome4u7wlaiVJTFXksHIMVfuMNeISvR3TSEoix3FMsiReu8JRFYCAdrX34o0VU3dL7w54myIEX7tLZRWNDUT243/v8FtlLKy/xyey0dgBR/Y7CKxIJWYqn50x6yMCTKAkjREmf7aCxEJbrqmk6Upf5ElAUpekBnB5GFp0TniiOdaZxLimWRog8clVBZeEp02ce0zM8vE2VBil6QuUBmoSlRK8pi7sJZQIofM6zjswBIrj41fx/RE4qyJHeIsiBFTzg+wGiLG6G8ufdBAf/Rs06U5fyYaRyk6Ak0KgahxMZHW8ebVlnmb0CUBSn6Q2WE1UJRolaUZVTDEEjRmy8tY4J+YSjRueKTUJTlDEEgRX9otFFbCEp0hV2dP2x7SJQFKXrE+zVym4/UBCW6hNCtLPUSxbJIkUNFSLV37idM5tU2ibIAUjR6qPiYx3DzKHG3NmEIRSnKstogyoIU/WJQxnEBK9FlBuc60zjrR9gBKfoFnRBBK9FVczp/02SvgxyQomcULhjKCVSJzlVuibIAUjRM4xTVBalEqSjL9gNRFqTI/lmYdPdzJbrqu050Mn9IsSxSZP8srMTr9c4Ue8Xioc40DlEWpOgng38jvKmUmJtm9iT7phNlOb0nyoIUvaS4ifKCUqJLNHWuvSHKghR9JfOwhfWCUaJWlKVLlAUp+gr556CU6FbGQlGWPaZxkKKvZJ/51PJHtr5Mr0SX2dNpMk+PibIgRX/hUoI/Hpud3G5MH+2t5voyf5nk5hVWQIr+UnlK4b8PlVhqzjKcXCnptGu8vrB5Rooek2iRallcia5wLxRl2WUaByl6/etqmywVF1Wiq67pFMsSZQHfpchScWElakVZrtdQAvgtRZaKCyvRZR+EoiwtimXBdymyVPzpu+rBHEp0ieMTnTGlW6Is4L0UWSr+UGJ5czBPHdZVT2fz3M8hBPBfiiwV/1Zi4+s8f7+VC52s5MGAaRwQkCJLxUWUqBVluaNYFiSkmGiUUeKcSpSKsuSJsoCIFN3XUh4lzolSlGW/yeYZRKTomq8ocT4KQ50DWaIsICTF7Fi1VzHV7rXmV6JUlKX+RJQFdKToNvopTSVOcUXfJIojnWmcS4plQUmKmftTlDjHCvtRp1i2TJQFpKToiod5lDjzvxKlKMvzV1QAUlJU+9YSgBKd6+hEWZI7RFlATYrZuzRKnA2lKMv5MdM4oCZFd6VzGV26H4AS3U2DKAsgRZ9JHJ+LvODX46sAlj3Vja6ME/OjGh4APSmKbKBnubV0IsUnoSjLGRoARSkqbKADU6Ir7OoUy7aHRFlAU4reb6CDU6JLNIWiLCWKZUFUip5voANU4ve6NaIsgBQlNtB5lDjVvw+hKMtqgygL6Eox0dz3dAd48hygEl1mcC7jxPT6EQ4AXSm6wrDtpRLnuY9qAp0dGScmex0UAMpSdJVSHSV+xtEzURZAijJsdFMocTI3LZ3rG7YfiLKAuhQTgwOUOJHq+6WME/OHFMuCvBR9mssJQ4nfW9Z0pnGIsgBS/EZt5MdcTvIgDCW67JtOlOX0nigLIMVvrF17cKyYLG8OwjgO83Zq6aOVNlEWQIr/JWO/E2uxK/omrqOFoixdoiyAFP/aIT5so8SPWRkLRVn2mMYBpPgXxdIWSvxwEb0nVCw7JsoCSPEHuV4eJf5ONScUZdm84t0HpPiDRHM/hRJ/o3KrE2V5fWHzDEjxJwr3BlMbqXYvTCVqRVl2mcYBpPgPvl6kzSlxZzfU/AVRFgBlKbraqG5NibVwN3xKUZbrNV58QIq/YqkaIgIluuyDUJSlRbEsIMXfSJhpUo1CiS5xfCLjxK1boiyAFD/ASONsJEp07qqns3nu53jtASl+ROXWwMeW7UiU6FYudKZxDgZM4wBS/JhO7C+ySl/fRaFErSjLHcWygBT/dI52Fu/CnGCv6JtANdfXmcYhygJIccICqbGKEr8fJJTyMlLcb7J5BqT4Z44et1GizXwPURZAiqEQ08KcKJXoqmtfZJxYfyLKAkhxMrmdpLYSv/1jGOlM41xSLAtI8RMSL68x+9hSf72IUoku+6hTLFsmygJI0dqBWv2kdBbpqVdGKcry/JUXHpDip8SpMCecW0sn0tGJsiR3iLIAUpyG2Fx6ugQlSkVZzo+ZxgGkOBXvsZjhXoYS3U2DKAsAUvyVOBTmLEWJrrrR1YmyjGo86oAUp2TphTn582UoUSzKcsaDDkhxejkstTAnWR69LGVnVxieyjixPSTKAkhxBpZYmBPyFX2Tjg2aQlGWEsWygBRn8sOyCnOWp0Tnaps6UZYuURZAirOxnMKcZSpRKsqyusc0DiDFGVlCYc5SlegyZi6pCWAaZ/2IJxyQ4qxEXZizXCU619mRcWKy1+H5BqQ4O5EW5qTavaUq0R09E2UBQIoTibAw5/sVfcst9rtpCRXLPhBlAaQ4F1EV5kR0a+kkpKIshxTLAlKck0gKc2KgROeKTzJRlhRRFkCK83MV+gx3LJToCrttmYXi6T1RFkCK8xNyYU48lCgVZdm6JcoCSHERXQwOvFeiVpSlT7EsIMWFyL6FtrFMX77FQoluZUyUBQApTktYhTkRX9E3gcyeULHsmCgLIMVFCaUwJz5KdNWcUJRl84oHGpDiwseKzf2Uv0r8vhTWibK8vrB5BqS4OIXWqr9K1Iqy7DKNA0gxCAItzImXEl31/ZIoCwBSnJHiUz2g97K+HyslfvtphzrTONdrPMqAFANiox+IOuonpbVYKTHMiaPYUW5leJIBKQZEIIU5y7m1dPLvau7rRFmev/IgA1IMjMULc2KoROeuekRZAJDiXCxYmBNLJbqVC51pnIMB0ziAFINdVC0wwx1PJWpFWe4olgWkGDBzF+bEVImumuvrTOMQZQGkGDhzFuYky4fNeC5SKiWZYtl/7TfZPANSDJx5xleWfUXfBKK6bIEoCyBFb5k5JRxjJbrqmk6xbP2JKAsgxVDI9fKeKFErynK5wbMLSDGcY8UZCnPirUSXfdCJsqw2iLIAUgzrHG7awpyYK9Fljk90oiwXFMsCUgyNo6ma+1On8Vaicx2dKEtyhygLIMUQqY0+LcxJtXeGMb8xTinKcn7MNA4gxTD5rDAnNlf0TeCmQZQFACkGROLl1bgSXXWjqxNlGdV4ZgEphktheGpaiWJRljOeWECKYfOnwhwjSpxkde9oD4myAFIMnw8Lc6woUSvKUqrwuAJSjIC13wtz0pdvNRtfOYsjnShLlygLIMVIyPz69TZmV/RNIvuYllkoru4xjQNIMSKz/KMwx5ASpaIs6XWiLIAUo+KnwhxLStSKsvQ6PKiAFCPj78IcW0p0R89EWQCQYhj8rzDHmBLdTUuoWPaBKAsgxSgptFa3vthSolaU5T/s3YlSGtsWgOECoqcEBFTEAcWBqzEq4hQHMA7E+/6vdM+pWzacqqS7iYlA7+97hbb+ou291j60WBZR/OA30d7T0ozt6as9BjPKUjDKgih+uNKsrS6tboWzWPa4Z5QFUSRerhXOKMvKjVEWRJEEG8vhjLJcWyyLKJLAKAuIIkOl2044oyzPRlkQReKtL24G08T88qUHjigSb2QuMfMGL16eEUXiBTXKsuU0DqJIwsvz64VRFhBF3tQOwzmNczXveSOKxPv3+sdsW90veeCIIrFyrd1wRlmeDjxwRJF4RllAFBn69BzOKMverdM4iCLxSjt74Yyy3FssiygSb33xOpzTOEZZEEWSrNWDWSz7127LyzOiSLxqzygLiCLRy/N8OItlm49GWRBFEoQ0ynKx5HkjisQrP4QzyjK3bZQFUSRe7uhLOKMsXYtlEUUSXJ4H8/Kc3zTKgiiS4FM3nMWynSOncRBF4hllAVFkKKhRlv6GB44oEi+oUZZTzxtRJF717jiYJrbvjLIgiiS8PIc0ylJf88ARReLV+uGMspwZZUEUSVD+Fs5i2bkdp3EQReKVAhplKS4YZUEUSXAS0CjL+YnnjSgSzygLiCJDX7fDGWVpPBhlQRSJt750Fs4oy6HFsogiCWqPwYyyFIyyIIokqW6Fs1j2uGeUBVEkXq4VzijLyo1RFkSRBBvL4YyyXFssiyiSwCgLiCJDpdtOOKMsz0ZZEEUSnGwG08T88qXnjSgS7/NTOKMsgxcvz4gi8b7ur4YzyrLlNA6iSLz114twFss+GmVBFElQOwznNM6FxbKIIglCGmVZ3S954Igi8S/PAd3KsvJ04IEjinh5NsqCKJLW17twXp73bp3GQRRJeHkOaIli8d5iWUSRBAc3wSxRrBhlQRRJUtoJ5waC3ZaXZ0SRBJfhzDy374yyIIokKN8HszCsWbdYFlEkwXpr1ygLiCJvDurBHFGc2zbKgiiSIBfOV5aVrsWyiCJJasvBLJbdNMqCKJLka+84lCh2jpzGQRRJsnhtlAVEkeiH4vdQjuNU+hseN6KIH4pvp3F2Tz1tRJEk5edQ7qo67hllQRRJNB/KuW2jLIgiaX4oLgSyHadwZpQFUcQPxeEoy47TOIgiiarPgfxQLC4YZUEUSbYYyL7t/PmJh40okiiYM4pGWRBF0jgJZLds48EoC6JIslwvjBv8Koc1DxtRJFmtH8ZpnKt5zxpRJNn6zn/DGGXZt1gWUSSFTzdBLNxeuTHKgiiSxut/gnh5vrZYFlEkjdJDEKsgjLIgiqSzcR7EKMuzURZEkVR2VkMYZVm+9KQRRdKodkP4zDJ48fKMKJJKEBu3G1sWyyKKpLK+H8A0S/PRKAuiSDqf6gGcxrmwWBZRJKWlAJaGrRplQRTx9jwcZXk68KARRdIp3xhlAVEkEsAmxb1bp3EQRdLK/snt4r3FsogiaZWes35yu2KUBVEkvbXMr5fdbXl5RhRJbT7rW8Pad0ZZEEXS62X8Fr9m3WJZRJH0vnaNsoAoEqktZ3yx7LZRFkSRMbxeZXuUpWuxLKLIOLaPM71YdtMoC6LIONa/V7Icxc6R0ziIIuPI9uCzURZEkTFtZPk7S6W/4Qkjiowly0e3C7unHjCiyHiO9rIbxeOeURZEkTHtN4yygCgSecjsipzCmVEWRJFxZXjIb27HaRxEkXGtHWb2NM6CURZEkbFl9kRO/vzE00UUGdvShVEWEEUyH8XGg1EWRJFf0Bpkc5TlsObZIor8gp1M7sgpXM17tIgiohiNsuxbLIsoIorRYtkboyyIIqIYvTxfWyyLKCKKRlkQRUTxhz8Ut+cz47Um8KKIKL5zlqU9lxV7Z0+vPhmJIqLI/3/ytje3NvxQFEVEEUkURUQRSRRFRJGfjW5LoigiirwpXt1LoigyIbdzGjR1SVxY9MlZFJmU010VkkREkUhml8xKIqLIr1i8ViJJRBSJ1Ja1SBIRRSIHj2okiYgikeqTHk2B5qAriaLIdHgoSNLEk/ilflr1pyiKTIdeUZQmnsSWqwdFkanh9LYkIoqMcHpbEhFFRpxsSpMkIopEPtXFSRIRRSK5bz4/T0KlI4miyHTy+XkC8qv9F0kURaZTa6BRH57E5e0Df3miyJTypUUSEUVGlG90ShIRRYbumlIliYgikZeOWEkiooh/KkoiosiP/6nopOKfV2ifSyKiOCOcVPyAJG5u1fylIYozwk6ID0iii5wRxdmx1tctSUQUieQeKtIliYgikaM98ZJERJGIe04lEVFkROlhRcF+v4YkIoqzyvfn3694dS+JiOKsWnt0fvt3J9Hd9ojiDMv1GjomiYgikaUzJZNERJFIueuooiQiigzZHyaJiCIjfGqRRESREbleW9PeqTnoSiKimBmXVs2+M4lf6qdVf0eIYmaUvtuq+L4kutseUcyWxWtpk0REkeFPRQPQkogoMuL1St8kEVEkUl5wAbQkIooMzduVM6ZKRxIRxSz/VPzmA/Q48qv9F0lEFLPMB+ixkuhue0Qx65xVlEREkVEn5yagJRFRJJLbP1Y8SUQUidT6edGTRESRiCugJRFRZMTnJye4f67QPpdERDEwS4b9fp7Eza2avxBEMTClOxf7/TSJLnJGFAPkW4skIoqMcoeVJCKKjCjfm2uRRESRoctlL9CSiCgSyR15gY40JBFRxAv0m+LVvSQiivz9Al0RRHfbI4pEL9AtS7glEVFkqLrVkERJRBSJ1B6bkgiiSGTprCCJIIq8yd3uSSKIIpHyQ5D/VmwOupKIKPIjIf5bsfmlflr16BFFfii4fyv+nUR32yOK/FTutiOJIIpEqndtSQRRJLJ2U5REEEUiJ0EMQUsiokhKudOrzH9sqXQkEVEkrdL2XLaTmF/tv0giokhqn781Mp1Ed9sjioynVl+RRBBFIoubeUkEUeRN7mVQkEQQRd5Ue6uSCKJI5KBblEQQRSKZusiq0D6XRESR93nNzBnuf+62r3mgiCLvk5U93P8k0UXOiCLvV/7elkQQRSJrNyuSCKJIZPG8IokgirzJtXYLkgiiyJvq/swuzGlIIqLI7/f5eTbPcBev7iURUeQP2Og3ZzGJ7rZHFPlDlq7zkgiiyJvcy0ASQRSJVO+OJRFEkcjsLMyRRESRjzAjl55KIqLIx5iJS0+bg64kIop8jNL2tC/MaX6pn1Y9KESRD1J+aEx5Et1tjyjykab50lNJRBT5eFO7MEcSEUUmYUoX5kgiosiETOOlp5KIKDI5U3eGu9KRRESRCdroT9O/FfOr/RdJRBSZpCm69NTd9ogik5e77UgiiCKR6l1bEkEUiazdFCURRJHIpBfmSCKiyFSZ7MIcSUQUmTal7Yldelpon0siovi/9u5nJYEojMMwKrWQyjFtomyVCyn6R0UYpqR1/9cURp4WJWhO45yZ57mEs3hXh+9H0QzG6ZaSeHqWeH5EkcJJJr3tJNGQM6JIIeU/eiqJiCIFVpvOGpIIoshCrgdzJBFRpPDyO5gjiYgiMbjP6Q93KomIIlHYzeMPd/PhWRIRRaKQw+ipbXtEkYjsvfUlEUSR4PipI4kgigT/N3oqiYgiEfqv0VNJRBSJU+t8RxJBFAkGr1n/4e7NbiURUSRaJ6NMD+b0LrpXLa+KKBKv9k0jyyTatkcUiVt2o6eSiChSBq3hpSSCKBJkcTBHEhFFymPj0VNJRBQpkw1HTw+uJRFRpFQ2OZhTPxpNJRFRpFz2XtK/JtG2PaJICSXdjiSCKBLsn9YlEUSRhbVHTyURUaTU1hs9lUREkbJb4w+3JCKKVMDJaLU/3I3+nSQiilTA+yp/uOfb9om3QhSpgBUO5syTaMgZUaQiWsO+JIIoEhw/NSURRJFg+cEcSUQUqaBlo6eSiChSTb+PnqaSiChSUYNx+nPI+VkSEUWqKpn0bNuDKBK0H+uSCKLIQm06k0QQRYLF6Kkkgigy93kwRxJBFPlyf9iXRBBFgvZQEkEUAUQRQBQBRBFAFAFEEUAUAUQRQBQBRBFAFAFEEUAUAUQRQBQBRBFAFAFEEUAUAUQRQBQBRBFAFAEQRQBRBBBFAFEEEEUAUQQQRQBRBBBFAFEEEEUAUQQQRQBRBBBFAFEEEEUAUQQQRQBRBBBFAFEEEEUAUfQEAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogiAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIgCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAiCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIkH8UAfj2AUbecQU+nBM5AAAAAElFTkSuQmCC";
-                    };
-                    banderaContenedor.appendChild(img);
-                    fila.appendChild(banderaContenedor);
-
-                    const cromosContenedor = document.createElement('div');
-                    cromosContenedor.className = 'pdf-cromos-contenedor';
-
-                    cromosObtenidosDeEstePais.forEach(cromoTexto => {
-                        const cromoTag = document.createElement('div');
-                        cromoTag.className = 'pdf-cromo-tag tengo-pdf';
-                        cromoTag.innerText = cromoTexto;
-                        cromosContenedor.appendChild(cromoTag);
+        function esperarImagenes(contenedor, timeoutMs) {
+            const imgs = Array.from(contenedor.querySelectorAll('img'));
+            if (imgs.length === 0) return Promise.resolve();
+            return Promise.race([
+                Promise.all(imgs.map(img => {
+                    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                    return new Promise(res => {
+                        const t = setTimeout(res, 1500);
+                        img.onload = img.onerror = () => { clearTimeout(t); res(); };
                     });
-
-                    fila.appendChild(cromosContenedor);
-                    columnasContenedor.appendChild(fila);
-                }
-            });
-
-            if (totalPaisesConCromos > 15) {
-                columnasContenedor.classList.add('doble-columna');
-            }
-
-            if (totalPaisesConCromos === 0) {
-                const vacioMensaje = document.createElement('p');
-                vacioMensaje.style.textAlign = 'center';
-                vacioMensaje.style.color = '#999';
-                vacioMensaje.style.fontSize = '12px';
-                vacioMensaje.innerText = 'No tienes ningún cromo marcado como pendiente todavía.';
-                columnasContenedor.appendChild(vacioMensaje);
-            }
-
-            const opciones = {
-                margin:       [5, 8, 5, 8], 
-                filename:     'CromosPendientesLaLiga.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            printArea.style.display = 'block';
-            
-            html2pdf().set(opciones).from(printArea).save().then(() => {
-                printArea.style.display = 'none';
-            }).catch(err => {
-                console.error(err);
-                printArea.style.display = 'none';
-            });
+                })),
+                new Promise(res => setTimeout(res, timeoutMs || 2000))
+            ]);
         }
 
-        function generarPdfListaCompleta() {
-            const printArea = document.getElementById('printAreaCompleto');
-            printArea.innerHTML = ''; 
+        function opcionesPdf(nombreArchivo) {
+            return {
+                margin:       [10, 10, 10, 10],
+                filename:     nombreArchivo,
+                image:        { type: 'jpeg', quality: 0.95 },
+                html2canvas:  {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    scrollX: 0,
+                    scrollY: -window.scrollY,
+                    windowWidth: document.documentElement.offsetWidth,
+                    windowHeight: document.documentElement.offsetHeight
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+        }
 
-            const titulo = document.createElement('h1');
-            titulo.className = 'pdf-titulo';
-            titulo.innerText = 'Lista Completa Colección LaLiga 2026-27';
-            printArea.appendChild(titulo);
+        // Escudo simplificado para PDF (evita fallos por base64 enormes)
+        function crearEscudoPdf(sec) {
+            const box = document.createElement('div');
+            box.className = 'pdf-bandera-contenedor';
+            box.style.cssText = 'width:22px;height:22px;min-width:22px;margin-right:6px;border-radius:3px;background:#1e3a8a;color:#fff;font-size:7px;font-weight:bold;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+            box.innerText = (sec.id || '?').substring(0, 3);
+            return box;
+        }
 
-            const columnasContenedor = document.createElement('div');
-            columnasContenedor.className = 'pdf-columnas-contenedor';
-            printArea.appendChild(columnasContenedor);
 
-            listadoSecciones.forEach(sec => {
-                const fila = document.createElement('div');
-                fila.className = 'pdf-fila';
 
-                // Escudo
-                const banderaContenedor = document.createElement('div');
-                banderaContenedor.className = 'pdf-bandera-contenedor';
-                
-                const img = document.createElement('img');
-                img.src = sec.logo;
-                img.onerror = function() {
-                    this.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABRQAAAUWCAMAAADU8M/RAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAJcEhZcwAACxMAAAsTAQCanBgAAADSUExURf/////7+/9PSP9NRv/u7f9mYf/Myv9LRP////+fm/9YUv/4+P/x8P/W1P9RSv/19P/k4v/R0P+Ig/9VTv+UkP9jXf9cVf/n5v/9/f/f3f9/ev9TTP+rqP+5tv/Ixf+8uf9xbP9nYf+1s/9dVv90bv/q6f+Piv/t7P/Bv/9sZ/9gWv/Z2P/Lyf9rZf96dP+emv+Df/94c//d2/91cP99eP/39v+Yk/+/vP+vq/+lov+xr/+Mh/+opP+koP+RjP+bl/+inv/Ewf9uaP+qpv/Pzf9lXyKC0pAAAAABdFJOU2ANVLk+AAA1SUlEQVR42uzd0VqTVxCGUQOokQQIIoqIiNiKFRWxolYq0ur9X1PPehRO2/3NrHUJ5slr/s0/s29NAfjXLf8EAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogiAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIgCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAiCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAoggg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igCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogiAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIgCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAiCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCCCKAKIIIIoAogggigCiCIAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAKIIoAoAogigCgCiCKAKAIgigCiCCCKAKIIIIoAogggigCiCCCKAKIIkH8UAfj2AUbecQU+nBM5AAAAAElFTkSuQmCC";
-                };
-                banderaContenedor.appendChild(img);
-                fila.appendChild(banderaContenedor);
+        function getJsPdf() {
+            if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+            if (window.jsPDF) return window.jsPDF;
+            return null;
+        }
 
-                // Nombre Equipo
-                const teamName = document.createElement('div');
-                teamName.className = 'pdf-team-name';
-                teamName.innerText = sec.nombre;
-                fila.appendChild(teamName);
-
-                // Grid de cromos
-                const gridContenedor = document.createElement('div');
-                gridContenedor.className = 'pdf-cromos-grid-fijo';
-
-                sec.stickers.forEach(stk => {
-                    const clave = `${sec.id}-${stk.num}`;
-                    const cromoTag = document.createElement('div');
-                    cromoTag.className = 'pdf-cromo-tag';
-                    cromoTag.innerText = `${stk.num}`;
-
-                    const dataPdf2 = coleccion[clave] || { pendiente: true, repes: 0 };
-                    if (dataPdf2.pendiente === true) {
-                        cromoTag.classList.add('tengo-pdf'); 
-                    } else {
-                        cromoTag.classList.add('falta-pdf');
+        // Convierte cualquier data URI (webp/png/jpeg) a PNG para jsPDF
+        function logoToPngDataUrl(dataUri, size) {
+            size = size || 48;
+            return new Promise(function(resolve) {
+                if (!dataUri) { resolve(null); return; }
+                // Si ya es PNG/JPEG, jsPDF lo acepta; aun así unificamos a PNG pequeño
+                var img = new Image();
+                img.onload = function() {
+                    try {
+                        var c = document.createElement('canvas');
+                        c.width = size;
+                        c.height = size;
+                        var ctx = c.getContext('2d');
+                        ctx.clearRect(0, 0, size, size);
+                        // centrar manteniendo aspect ratio
+                        var r = Math.min(size / img.width, size / img.height);
+                        var w = img.width * r;
+                        var h = img.height * r;
+                        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+                        resolve(c.toDataURL('image/png'));
+                    } catch (e) {
+                        resolve(null);
                     }
-                    gridContenedor.appendChild(cromoTag);
-                });
-
-                fila.appendChild(gridContenedor);
-                columnasContenedor.appendChild(fila);
-            });
-
-            const totales = obtenerTotales();
-            const contadorFinal = document.createElement('div');
-            contadorFinal.className = 'pdf-contador-final';
-            contadorFinal.innerHTML = `Pendientes (Oscuros): <span>${totales.pendientes}</span> | Tengo (Gris Claro): <span>${totales.tengo}</span> | Repes: <span>${totales.totalRepes}</span>`;
-            printArea.appendChild(contadorFinal);
-
-            const opciones = {
-                margin:       [3, 5, 3, 5], 
-                filename:     'ListaCompletaLaLiga.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            printArea.style.display = 'block';
-            
-            html2pdf().set(opciones).from(printArea).save().then(() => {
-                printArea.style.display = 'none';
-            }).catch(err => {
-                console.error(err);
-                printArea.style.display = 'none';
+                };
+                img.onerror = function() { resolve(null); };
+                img.src = dataUri;
             });
         }
 
+        async function prepararEscudosPdf(size) {
+            var mapa = {};
+            var promesas = listadoSecciones.map(function(sec) {
+                return logoToPngDataUrl(sec.logo, size || 48).then(function(png) {
+                    mapa[sec.id] = png;
+                });
+            });
+            await Promise.all(promesas);
+            return mapa;
+        }
+
+        async function generarPdfDeLosQueTengo() {
+            var JsPDF = getJsPdf();
+            if (!JsPDF) {
+                alert('No se pudo cargar la librería PDF. Comprueba la conexión a internet e inténtalo de nuevo.');
+                return;
+            }
+
+            mostrarOverlayPdf('Preparando escudos…');
+            var escudos;
+            try {
+                escudos = await prepararEscudosPdf(56);
+            } catch (e) {
+                escudos = {};
+            }
+
+            mostrarOverlayPdf('Generando PDF…');
+
+            try {
+                var doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                var pageW = 210;
+                var marginL = 10;
+                var marginR = 10;
+                var marginT = 12;
+                var maxW = pageW - marginL - marginR;
+                var y = marginT;
+                var iconSize = 5.5; // mm
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(13);
+                doc.setTextColor(30, 58, 138);
+                doc.text('Cromos Pendientes - Colección LaLiga 2026-27', pageW / 2, y, { align: 'center' });
+                y += 4;
+                doc.setDrawColor(30, 58, 138);
+                doc.setLineWidth(0.4);
+                doc.line(marginL, y, pageW - marginR, y);
+                y += 6;
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(40, 40, 40);
+
+                var totalPendientes = 0;
+                var equiposConPendientes = 0;
+
+                for (var si = 0; si < listadoSecciones.length; si++) {
+                    var sec = listadoSecciones[si];
+                    var pendientes = [];
+                    for (var j = 0; j < sec.stickers.length; j++) {
+                        var stk = sec.stickers[j];
+                        var clave = sec.id + '-' + stk.num;
+                        var data = coleccion[clave] || { pendiente: true, repes: 0 };
+                        if (data.pendiente === true) {
+                            pendientes.push(String(stk.num));
+                        }
+                    }
+                    if (pendientes.length === 0) continue;
+
+                    equiposConPendientes++;
+                    totalPendientes += pendientes.length;
+
+                    if (y > 275) {
+                        doc.addPage();
+                        y = marginT;
+                    }
+
+                    var textX = marginL;
+                    // Escudo
+                    var png = escudos[sec.id];
+                    if (png) {
+                        try {
+                            doc.addImage(png, 'PNG', marginL, y - 4, iconSize, iconSize);
+                            textX = marginL + iconSize + 2;
+                        } catch (eImg) {
+                            textX = marginL;
+                        }
+                    }
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8);
+                    doc.setTextColor(30, 58, 138);
+                    var label = sec.id + '  ';
+                    doc.text(label, textX, y);
+
+                    var labelW = doc.getTextWidth(label);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(40, 40, 40);
+
+                    var texto = pendientes.join(', ');
+                    var lines = doc.splitTextToSize(texto, pageW - marginR - textX - labelW - 1);
+                    doc.text(lines, textX + labelW, y);
+                    y += Math.max(iconSize + 1.5, lines.length * 4 + 1.5);
+                }
+
+                if (equiposConPendientes === 0) {
+                    doc.setFontSize(10);
+                    doc.setTextColor(120, 120, 120);
+                    doc.text('No hay cromos pendientes marcados.', pageW / 2, y + 10, { align: 'center' });
+                } else {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = marginT;
+                    }
+                    y += 4;
+                    doc.setDrawColor(30, 58, 138);
+                    doc.line(marginL, y, pageW - marginR, y);
+                    y += 5;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(40, 40, 40);
+                    doc.text('Total pendientes: ' + totalPendientes + '  |  Equipos: ' + equiposConPendientes, pageW / 2, y, { align: 'center' });
+                }
+
+                doc.save('CromosPendientesLaLiga.pdf');
+            } catch (err) {
+                console.error(err);
+                alert('Error al generar el PDF: ' + (err.message || err));
+            } finally {
+                ocultarOverlayPdf();
+            }
+        }
+
+        async function generarPdfListaCompleta() {
+            var JsPDF = getJsPdf();
+            if (!JsPDF) {
+                alert('No se pudo cargar la librería PDF. Comprueba la conexión a internet e inténtalo de nuevo.');
+                return;
+            }
+
+            mostrarOverlayPdf('Preparando escudos…');
+            var escudos;
+            try {
+                escudos = await prepararEscudosPdf(48);
+            } catch (e) {
+                escudos = {};
+            }
+
+            mostrarOverlayPdf('Generando lista completa…');
+
+            try {
+                var doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                var pageW = 210;
+                var marginL = 8;
+                var marginR = 8;
+                var marginT = 10;
+                var y = marginT;
+                var iconSize = 4.5;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(30, 58, 138);
+                doc.text('Lista Completa Colección LaLiga 2026-27', pageW / 2, y, { align: 'center' });
+                y += 3.5;
+                doc.setDrawColor(30, 58, 138);
+                doc.setLineWidth(0.4);
+                doc.line(marginL, y, pageW - marginR, y);
+                y += 5;
+
+                var totales = obtenerTotales();
+
+                for (var si = 0; si < listadoSecciones.length; si++) {
+                    var sec = listadoSecciones[si];
+                    if (y > 280) {
+                        doc.addPage();
+                        y = marginT;
+                    }
+
+                    var textX = marginL;
+                    var png = escudos[sec.id];
+                    if (png) {
+                        try {
+                            doc.addImage(png, 'PNG', marginL, y - 3.2, iconSize, iconSize);
+                            textX = marginL + iconSize + 1.5;
+                        } catch (eImg) {}
+                    }
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    doc.setTextColor(30, 58, 138);
+                    doc.text(sec.id + ' · ' + sec.nombre, textX, y);
+                    y += 3.8;
+
+                    var partes = [];
+                    for (var j = 0; j < sec.stickers.length; j++) {
+                        var stk = sec.stickers[j];
+                        var clave = sec.id + '-' + stk.num;
+                        var data = coleccion[clave] || { pendiente: true, repes: 0 };
+                        var tag = String(stk.num) + (data.repes > 0 ? 'x' + data.repes : '');
+                        partes.push({ t: tag, pendiente: !!data.pendiente });
+                    }
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(6.5);
+                    var x = marginL;
+                    var lineH = 3.8;
+                    var gap = 1.2;
+
+                    for (var k = 0; k < partes.length; k++) {
+                        var p = partes[k];
+                        var tw = doc.getTextWidth(p.t) + 1.5;
+                        if (x + tw > pageW - marginR) {
+                            x = marginL;
+                            y += lineH;
+                            if (y > 285) {
+                                doc.addPage();
+                                y = marginT;
+                            }
+                        }
+                        if (p.pendiente) {
+                            doc.setTextColor(20, 20, 20);
+                        } else {
+                            doc.setTextColor(170, 170, 170);
+                        }
+                        doc.text(p.t, x, y);
+                        x += tw + gap;
+                    }
+                    y += lineH + 1.5;
+                }
+
+                if (y > 275) {
+                    doc.addPage();
+                    y = marginT;
+                }
+                y += 2;
+                doc.setDrawColor(30, 58, 138);
+                doc.line(marginL, y, pageW - marginR, y);
+                y += 5;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(40, 40, 40);
+                doc.text(
+                    'Pendientes: ' + totales.pendientes + '  |  Tengo: ' + totales.tengo + '  |  Repes: ' + totales.totalRepes,
+                    pageW / 2, y, { align: 'center' }
+                );
+
+                doc.save('ListaCompletaLaLiga.pdf');
+            } catch (err) {
+                console.error(err);
+                alert('Error al generar el PDF: ' + (err.message || err));
+            } finally {
+                ocultarOverlayPdf();
+            }
+        }
 
         function obtenerListaCromos(esPendiente) {
             // esPendiente = true  → cromos marcados como pendientes
