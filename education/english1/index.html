@@ -45,13 +45,83 @@
             animation: shakeError 0.25s ease-in-out;
         }
 
-        /* Estilos personalizados para scrollbar horizontal en pestañas móviles */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        /* Estilos auténticos de pestañas de navegador adaptables al 100% del contenedor */
+        .browser-tab-bar {
+            display: flex;
+            width: 100%;
+            background-color: #dde4f3;
+            padding: 8px 8px 0 8px;
+            gap: 4px;
+            border-bottom: 1px solid #cbd5e1;
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        .browser-tab {
+            flex: 1 1 0;
+            min-width: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px 9px 4px;
+            border-radius: 10px 10px 0 0;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background-color: rgba(255, 255, 255, 0.45);
+            color: #475569;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            user-select: none;
+        }
+
+        .browser-tab:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.78);
+            color: #1e293b;
+        }
+
+        /* Separador vertical sutil entre pestañas inactivas */
+        .browser-tab:not(.active):not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 24%;
+            height: 52%;
+            width: 1px;
+            background-color: #94a3b8;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Pestaña activa fundida con el panel principal blanco */
+        .browser-tab.active {
+            background-color: #ffffff;
+            color: #312e81;
+            border-color: #cbd5e1;
+            margin-bottom: -1px;
+            padding-bottom: 10px;
+            z-index: 2;
+            box-shadow: 0 -2px 6px rgba(15, 23, 42, 0.04);
+        }
+
+        .browser-tab.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10px;
+            right: 10px;
+            height: 3px;
+            background-color: #4f46e5;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .browser-tab-label {
+            font-size: clamp(0.68rem, 1.3vw, 0.85rem);
+            line-height: 1.15;
+            width: 100%;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -102,18 +172,18 @@
             </div>
         </header>
 
-        <!-- Navegación por Pestañas (Temas) -->
-        <nav aria-label="Temas de vocabulario" class="mb-6">
-            <div id="tabs-container" class="flex overflow-x-auto no-scrollbar gap-2 pb-1">
-                <!-- Las pestañas se generan dinámicamente con JS -->
-            </div>
-        </nav>
-
-        <!-- Panel del Tema Activo -->
-        <main class="bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden">
+        <!-- Panel Principal estilo Ventana de Navegador con Pestañas Integradas -->
+        <main class="bg-white rounded-2xl shadow-md border border-slate-300/90 overflow-hidden">
             
+            <!-- Barra Superior de Pestañas de Navegador (las 6 caben en una sola fila) -->
+            <nav aria-label="Temas de vocabulario">
+                <div id="tabs-container" class="browser-tab-bar" role="tablist">
+                    <!-- Las pestañas se generan dinámicamente con JS -->
+                </div>
+            </nav>
+
             <!-- Barra Superior del Tema -->
-            <div class="bg-slate-50/80 border-b border-slate-200/80 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="bg-white border-b border-slate-200/80 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <span id="topic-icon" class="text-2xl bg-white p-2 rounded-xl shadow-sm border border-slate-100">🎨</span>
                     <div>
@@ -196,6 +266,7 @@
             {
                 id: 'colores',
                 title: 'Colores',
+                shortTitle: 'Colores',
                 icon: '🎨',
                 items: [
                     { es: 'rosa', en: ['pink'] },
@@ -213,6 +284,7 @@
             {
                 id: 'dias',
                 title: 'Días de la semana',
+                shortTitle: 'Días',
                 icon: '📅',
                 items: [
                     { es: 'lunes', en: ['monday'] },
@@ -227,6 +299,7 @@
             {
                 id: 'meses',
                 title: 'Meses del año',
+                shortTitle: 'Meses',
                 icon: '🗓️',
                 items: [
                     { es: 'Enero', en: ['january'] },
@@ -246,6 +319,7 @@
             {
                 id: 'familia',
                 title: 'Familia',
+                shortTitle: 'Familia',
                 icon: '👨‍👩‍👧‍👦',
                 items: [
                     { es: 'Padre', en: ['father', 'dad'] },
@@ -264,6 +338,7 @@
             {
                 id: 'actividades',
                 title: 'Actividades',
+                shortTitle: 'Actividades',
                 icon: '⚽',
                 items: [
                     { es: 'hacer tareas de jardinería', en: ['do gardening', 'gardening', 'do the gardening'] },
@@ -281,6 +356,7 @@
             {
                 id: 'tobe',
                 title: 'Verbo to be',
+                shortTitle: 'Verbo to be',
                 icon: '🗣️',
                 items: [
                     { es: 'yo soy', en: ['i am', "i'm"] },
@@ -423,10 +499,13 @@
                 const tabBadge = document.getElementById(`tab-badge-${tIdx}`);
                 if (tabBadge) {
                     tabBadge.textContent = `${topicCorrect}/${topic.items.length}`;
+                    const isActive = tIdx === currentTopicIndex;
                     if (topicCorrect === topic.items.length) {
-                        tabBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+                        tabBadge.className = 'mt-1 text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 leading-none';
+                    } else if (isActive) {
+                        tabBadge.className = 'mt-1 text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 leading-none';
                     } else {
-                        tabBadge.className = 'text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600';
+                        tabBadge.className = 'mt-1 text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full bg-slate-200/80 text-slate-600 leading-none';
                     }
                 }
 
@@ -455,7 +534,7 @@
         }
 
         /**
-         * Renderiza las pestañas superiores de navegación
+         * Renderiza las pestañas superiores de navegación estilo navegador web
          */
         function renderTabs() {
             const container = document.getElementById('tabs-container');
@@ -465,17 +544,19 @@
                 const isActive = idx === currentTopicIndex;
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = `shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer border ${
-                    isActive
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50/70 hover:text-indigo-700 hover:border-indigo-200'
-                }`;
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                btn.title = topic.title;
+                btn.className = `browser-tab ${isActive ? 'active font-bold' : 'font-semibold'}`;
 
                 btn.innerHTML = `
-                    <span>${topic.icon}</span>
-                    <span>${topic.title}</span>
-                    <span id="tab-badge-${idx}" class="text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        isActive ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600'
+                    <div class="flex items-center justify-center gap-1 w-full px-0.5">
+                        <span class="text-xs sm:text-sm shrink-0">${topic.icon}</span>
+                        <span class="browser-tab-label hidden md:inline">${topic.title}</span>
+                        <span class="browser-tab-label md:hidden">${topic.shortTitle}</span>
+                    </div>
+                    <span id="tab-badge-${idx}" class="mt-1 text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full leading-none ${
+                        isActive ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200/80 text-slate-600'
                     }">0/${topic.items.length}</span>
                 `;
 
