@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende Inglés - Vocabulario Interactivo</title>
+    <!-- Tailwind CSS para diseño limpio y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Google Fonts: Inter y Nunito para un toque educativo amigable -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js para efectos de sonido sutiles al acertar -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5edff 100%);
+            min-height: 100vh;
+        }
+
+        h1, h2, .font-display {
+            font-family: 'Nunito', sans-serif;
+        }
+
+        /* Animaciones suaves para feedback */
+        @keyframes popSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shakeError {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .animate-pop {
+            animation: popSuccess 0.25s ease-out;
+        }
+
+        .animate-shake {
+            animation: shakeError 0.25s ease-in-out;
+        }
+
+        /* Estilos personalizados para scrollbar horizontal en pestañas móviles */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-indigo-200 selection:text-indigo-900 pb-12">
+
+    <!-- Contenedor Principal -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10">
+        
+        <!-- Cabecera y Marcador Global -->
+        <header class="bg-white rounded-2xl shadow-sm border border-indigo-100 p-5 sm:p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-3xl" role="img" aria-label="Bandera">🇬🇧</span>
+                        <h1 class="text-2xl sm:text-3xl font-extrabold text-indigo-950 tracking-tight">
+                            Práctica de Inglés
+                        </h1>
+                    </div>
+                    <p class="text-slate-500 text-sm sm:text-base mt-1">
+                        Escribe la traducción en inglés de cada palabra o frase. ¡Se comprobará automáticamente!
+                    </p>
+                </div>
+
+                <!-- Tarjeta de Progreso Global y Control de Sonido -->
+                <div class="flex items-center gap-3 self-start md:self-center">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center gap-3">
+                        <div>
+                            <div class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Total Global</div>
+                            <div class="text-lg sm:text-xl font-extrabold text-indigo-950">
+                                <span id="global-score">0</span> <span class="text-slate-400 font-normal">/</span> <span id="global-total">0</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-sm" id="global-percent">
+                            0%
+                        </div>
+                    </div>
+
+                    <button id="toggle-sound-btn" type="button" title="Activar/Desactivar sonido"
+                        class="p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition shadow-sm active:scale-95">
+                        <span id="sound-icon" class="text-lg">🔊</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Barra de Progreso Global -->
+            <div class="w-full bg-slate-100 h-2 rounded-full mt-5 overflow-hidden">
+                <div id="global-progress-bar" class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </header>
+
+        <!-- Navegación por Pestañas (Temas) -->
+        <nav aria-label="Temas de vocabulario" class="mb-6">
+            <div id="tabs-container" class="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+                <!-- Las pestañas se generan dinámicamente con JS -->
+            </div>
+        </nav>
+
+        <!-- Panel del Tema Activo -->
+        <main class="bg-white rounded-2xl shadow-md border border-slate-200/80 overflow-hidden">
+            
+            <!-- Barra Superior del Tema -->
+            <div class="bg-slate-50/80 border-b border-slate-200/80 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span id="topic-icon" class="text-2xl bg-white p-2 rounded-xl shadow-sm border border-slate-100">🎨</span>
+                    <div>
+                        <h2 id="topic-title" class="text-xl font-bold text-slate-800">Colores</h2>
+                        <p class="text-sm text-slate-500">
+                            Aciertos en este tema: 
+                            <span id="topic-score" class="font-bold text-emerald-600">0</span> de <span id="topic-total" class="font-semibold">10</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción del Tema -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-check-all" type="button"
+                        class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                        <span>✓</span> Comprobar
+                    </button>
+
+                    <button id="btn-toggle-hints" type="button"
+                        class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition active:scale-95 flex items-center gap-1.5">
+                        <span>💡</span> <span id="hints-btn-text">Mostrar pistas</span>
+                    </button>
+
+                    <button id="btn-reset-topic" type="button"
+                        class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition active:scale-95 flex items-center gap-1.5">
+                        <span>↻</span> Reiniciar tema
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner de Felicitación al completar el tema -->
+            <div id="topic-complete-banner" class="hidden bg-emerald-50 border-b border-emerald-200 px-5 py-3.5 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 text-emerald-800">
+                    <span class="text-xl">🎉</span>
+                    <span class="font-semibold text-sm sm:text-base">¡Excelente trabajo! Has completado correctamente todas las palabras de este tema.</span>
+                </div>
+                <button id="btn-next-topic" type="button" class="text-xs sm:text-sm font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition shrink-0">
+                    Siguiente tema →
+                </button>
+            </div>
+
+            <!-- Lista de Palabras / Ejercicios -->
+            <div id="words-list" class="divide-y divide-slate-100 p-2 sm:p-4">
+                <!-- Las filas de palabras se renderizan dinámicamente aquí -->
+            </div>
+
+        </main>
+
+        <!-- Modal de Confirmación Personalizado (sin usar window.confirm) -->
+        <div id="confirm-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100 transform transition-all">
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-xl">
+                        ↻
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">¿Reiniciar este tema?</h3>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Se borrarán tus respuestas actuales de <strong id="modal-topic-name" class="text-slate-700">este tema</strong> para que puedas volver a practicarlo.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-6">
+                    <button id="modal-cancel-btn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                        Cancelar
+                    </button>
+                    <button id="modal-confirm-btn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm">
+                        Sí, reiniciar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /**
+         * BASE DE DATOS DEL VOCABULARIO POR TEMAS
+         * Incluye la palabra exacta en español y el arreglo de traducciones válidas en inglés.
+         */
+        const TOPICS_DATA = [
+            {
+                id: 'colores',
+                title: 'Colores',
+                icon: '🎨',
+                items: [
+                    { es: 'rosa', en: ['pink'] },
+                    { es: 'rojo', en: ['red'] },
+                    { es: 'naranja', en: ['orange'] },
+                    { es: 'amarillo', en: ['yellow'] },
+                    { es: 'verde', en: ['green'] },
+                    { es: 'azul', en: ['blue'] },
+                    { es: 'violeta', en: ['violet', 'purple'] },
+                    { es: 'marrón', en: ['brown'] },
+                    { es: 'blanco', en: ['white'] },
+                    { es: 'negro', en: ['black'] }
+                ]
+            },
+            {
+                id: 'dias',
+                title: 'Días de la semana',
+                icon: '📅',
+                items: [
+                    { es: 'lunes', en: ['monday'] },
+                    { es: 'martes', en: ['tuesday'] },
+                    { es: 'miércoles', en: ['wednesday'] },
+                    { es: 'jueves', en: ['thursday'] },
+                    { es: 'viernes', en: ['friday'] },
+                    { es: 'sábado', en: ['saturday'] },
+                    { es: 'domingo', en: ['sunday'] }
+                ]
+            },
+            {
+                id: 'meses',
+                title: 'Meses del año',
+                icon: '🗓️',
+                items: [
+                    { es: 'Enero', en: ['january'] },
+                    { es: 'febrero', en: ['february'] },
+                    { es: 'marzo', en: ['march'] },
+                    { es: 'abril', en: ['april'] },
+                    { es: 'mayo', en: ['may'] },
+                    { es: 'junio', en: ['june'] },
+                    { es: 'julio', en: ['july'] },
+                    { es: 'agosto', en: ['august'] },
+                    { es: 'septiembre', en: ['september'] },
+                    { es: 'octubre', en: ['october'] },
+                    { es: 'noviembre', en: ['november'] },
+                    { es: 'diciembre', en: ['december'] }
+                ]
+            },
+            {
+                id: 'familia',
+                title: 'Familia',
+                icon: '👨‍👩‍👧‍👦',
+                items: [
+                    { es: 'Padre', en: ['father', 'dad'] },
+                    { es: 'madre', en: ['mother', 'mom', 'mum'] },
+                    { es: 'abuelo', en: ['grandfather', 'grandpa'] },
+                    { es: 'abuela', en: ['grandmother', 'grandma'] },
+                    { es: 'hermana', en: ['sister'] },
+                    { es: 'hermano', en: ['brother'] },
+                    { es: 'hija', en: ['daughter'] },
+                    { es: 'hijo', en: ['son'] },
+                    { es: 'primo', en: ['cousin'] },
+                    { es: 'tía', en: ['aunt'] },
+                    { es: 'tío', en: ['uncle'] }
+                ]
+            },
+            {
+                id: 'actividades',
+                title: 'Actividades',
+                icon: '⚽',
+                items: [
+                    { es: 'hacer tareas de jardinería', en: ['do gardening', 'gardening', 'do the gardening'] },
+                    { es: 'leer libros', en: ['read books', 'reading books'] },
+                    { es: 'dibujar cuadros', en: ['draw pictures', 'drawing pictures', 'paint pictures'] },
+                    { es: 'jugar baloncesto', en: ['play basketball', 'playing basketball'] },
+                    { es: 'escuchar música', en: ['listen to music', 'listening to music'] },
+                    { es: 'tocar la guitarra', en: ['play the guitar', 'playing the guitar', 'play guitar'] },
+                    { es: 'hacer fotos', en: ['take photos', 'taking photos', 'take pictures', 'taking pictures'] },
+                    { es: 'ir de acampada', en: ['go camping', 'going camping'] },
+                    { es: 'cocinar', en: ['cook', 'cooking'] },
+                    { es: 'ir a nadar', en: ['go swimming', 'going swimming', 'swim'] }
+                ]
+            },
+            {
+                id: 'tobe',
+                title: 'Verbo to be',
+                icon: '🗣️',
+                items: [
+                    { es: 'yo soy', en: ['i am', "i'm"] },
+                    { es: 'él es', en: ['he is', "he's"] },
+                    { es: 'nosotros somos', en: ['we are', "we're"] },
+                    { es: 'vosotros sois', en: ['you are', "you're"] },
+                    { es: 'ella está', en: ['she is', "she's"] },
+                    { es: 'ellos están', en: ['they are', "they're"] },
+                    { es: 'ella es', en: ['she is', "she's"] },
+                    { es: 'ella era', en: ['she was'] },
+                    { es: 'ellos estaban', en: ['they were'] },
+                    { es: 'nosotros no estábamos', en: ['we were not', "we weren't"] },
+                    { es: 'estaba ella...?', en: ['was she', 'was she?', 'was she...?'] },
+                    { es: 'somos nosotros?', en: ['are we', 'are we?'] }
+                ]
+            }
+        ];
+
+        // Estado de la aplicación
+        let currentTopicIndex = 0;
+        let showHints = false;
+        let soundEnabled = true;
+
+        // Guardamos las respuestas del usuario en memoria (y localStorage para persistencia)
+        // Estructura: { [topicId]: { [itemIndex]: { value: string, status: 'neutral' | 'correct' | 'incorrect' } } }
+        let userAnswers = {};
+
+        // Inicializar estructura de respuestas
+        function initAnswersState() {
+            try {
+                const saved = localStorage.getItem('english_vocab_game_v1');
+                if (saved) {
+                    userAnswers = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.warn('No se pudo cargar progreso previo:', e);
+            }
+
+            TOPICS_DATA.forEach(topic => {
+                if (!userAnswers[topic.id]) {
+                    userAnswers[topic.id] = {};
+                }
+                topic.items.forEach((_, idx) => {
+                    if (!userAnswers[topic.id][idx]) {
+                        userAnswers[topic.id][idx] = { value: '', status: 'neutral' };
+                    }
+                });
+            });
+        }
+
+        function saveAnswersState() {
+            try {
+                localStorage.setItem('english_vocab_game_v1', JSON.stringify(userAnswers));
+            } catch (e) {
+                // Ignorar si localStorage está restringido
+            }
+        }
+
+        /**
+         * Normaliza el texto para comparación flexible:
+         * - Convierte a minúsculas
+         * - Elimina espacios extra al inicio, final y múltiples espacios intermedios
+         * - Normaliza apóstrofos tipográficos (’ -> ')
+         * - Elimina signos de interrogación/puntos suspensivos opcionales al inicio/final
+         */
+        function normalizeText(str) {
+            if (!str) return '';
+            return str
+                .toLowerCase()
+                .replace(/[’‘`]/g, "'")
+                .replace(/^[¿?.\s]+|[?.\s]+$/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        /**
+         * Comprueba si la entrada del usuario coincide con alguna de las opciones aceptadas
+         */
+        function checkAnswer(userInput, validOptions) {
+            const cleanedInput = normalizeText(userInput);
+            if (!cleanedInput) return 'neutral';
+
+            const isMatch = validOptions.some(option => normalizeText(option) === cleanedInput);
+            return isMatch ? 'correct' : 'incorrect';
+        }
+
+        /**
+         * Genera una pista amigable a partir de la respuesta principal
+         * Ej: "play basketball" -> "p _ _ _   b _ _ _ _ _ _ _ _ _"
+         */
+        function generateHint(validOptions) {
+            const primary = validOptions[0];
+            return primary.split(' ').map(word => {
+                if (word.length <= 1) return word;
+                return word[0] + ' ' + '_ '.repeat(word.length - 1).trim();
+            }).join('   ');
+        }
+
+        /**
+         * Reproducir efecto de sonido suave con Tone.js al acertar
+         */
+        function playSuccessSound() {
+            if (!soundEnabled || typeof Tone === 'undefined') return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const synth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0.1 }
+                }).toDestination();
+                synth.volume.value = -12;
+                synth.triggerAttackRelease('C5', '16n');
+                setTimeout(() => {
+                    synth.triggerAttackRelease('E5', '16n');
+                }, 75);
+            } catch (e) {
+                // Silenciar errores de audio si el navegador bloquea autoplay
+            }
+        }
+
+        /**
+         * Actualiza los contadores de puntuación por tema y global
+         */
+        function updateScores() {
+            let globalCorrect = 0;
+            let globalTotal = 0;
+
+            TOPICS_DATA.forEach((topic, tIdx) => {
+                let topicCorrect = 0;
+                topic.items.forEach((_, iIdx) => {
+                    globalTotal++;
+                    if (userAnswers[topic.id][iIdx]?.status === 'correct') {
+                        topicCorrect++;
+                        globalCorrect++;
+                    }
+                });
+
+                // Actualizar badge en la pestaña
+                const tabBadge = document.getElementById(`tab-badge-${tIdx}`);
+                if (tabBadge) {
+                    tabBadge.textContent = `${topicCorrect}/${topic.items.length}`;
+                    if (topicCorrect === topic.items.length) {
+                        tabBadge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+                    } else {
+                        tabBadge.className = 'text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600';
+                    }
+                }
+
+                // Si es el tema activo, actualizar encabezado del panel
+                if (tIdx === currentTopicIndex) {
+                    document.getElementById('topic-score').textContent = topicCorrect;
+                    document.getElementById('topic-total').textContent = topic.items.length;
+
+                    const banner = document.getElementById('topic-complete-banner');
+                    if (topicCorrect === topic.items.length) {
+                        banner.classList.remove('hidden');
+                        banner.classList.add('flex');
+                    } else {
+                        banner.classList.add('hidden');
+                        banner.classList.remove('flex');
+                    }
+                }
+            });
+
+            // Actualizar cabecera global
+            document.getElementById('global-score').textContent = globalCorrect;
+            document.getElementById('global-total').textContent = globalTotal;
+            const percent = globalTotal > 0 ? Math.round((globalCorrect / globalTotal) * 100) : 0;
+            document.getElementById('global-percent').textContent = `${percent}%`;
+            document.getElementById('global-progress-bar').style.width = `${percent}%`;
+        }
+
+        /**
+         * Renderiza las pestañas superiores de navegación
+         */
+        function renderTabs() {
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = '';
+
+            TOPICS_DATA.forEach((topic, idx) => {
+                const isActive = idx === currentTopicIndex;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer border ${
+                    isActive
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50/70 hover:text-indigo-700 hover:border-indigo-200'
+                }`;
+
+                btn.innerHTML = `
+                    <span>${topic.icon}</span>
+                    <span>${topic.title}</span>
+                    <span id="tab-badge-${idx}" class="text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        isActive ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600'
+                    }">0/${topic.items.length}</span>
+                `;
+
+                btn.addEventListener('click', () => {
+                    currentTopicIndex = idx;
+                    renderTabs();
+                    renderTopicContent();
+                });
+
+                container.appendChild(btn);
+            });
+        }
+
+        /**
+         * Aplica estilos visuales a una fila según su estado ('neutral', 'correct', 'incorrect')
+         */
+        function applyRowVisualState(rowEl, badgeEl, inputEl, status, animate = false) {
+            // Limpiar clases previas
+            rowEl.classList.remove('bg-emerald-50/60', 'bg-rose-50/60', 'hover:bg-slate-50/80');
+            inputEl.classList.remove(
+                'border-slate-300', 'focus:border-indigo-500', 'focus:ring-indigo-200', 'bg-white',
+                'border-emerald-500', 'bg-emerald-50/80', 'text-emerald-900', 'focus:ring-emerald-200',
+                'border-rose-500', 'bg-rose-50/80', 'text-rose-900', 'focus:ring-rose-200',
+                'animate-pop', 'animate-shake'
+            );
+
+            if (status === 'correct') {
+                rowEl.classList.add('bg-emerald-50/60');
+                badgeEl.className = 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white font-bold text-sm shadow-xs transition-all shrink-0';
+                badgeEl.innerHTML = '✓';
+                badgeEl.title = '¡Correcto!';
+
+                inputEl.classList.add('border-emerald-500', 'bg-emerald-50/80', 'text-emerald-900', 'focus:ring-emerald-200');
+                if (animate) {
+                    void inputEl.offsetWidth; // Reiniciar animación
+                    inputEl.classList.add('animate-pop');
+                }
+            } else if (status === 'incorrect') {
+                rowEl.classList.add('bg-rose-50/60');
+                badgeEl.className = 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white font-bold text-sm shadow-xs transition-all shrink-0';
+                badgeEl.innerHTML = '✗';
+                badgeEl.title = 'Incorrecto, revisa la ortografía';
+
+                inputEl.classList.add('border-rose-500', 'bg-rose-50/80', 'text-rose-900', 'focus:ring-rose-200');
+                if (animate) {
+                    void inputEl.offsetWidth;
+                    inputEl.classList.add('animate-shake');
+                }
+            } else {
+                rowEl.classList.add('hover:bg-slate-50/80');
+                badgeEl.className = 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-400 font-bold text-sm transition-all shrink-0';
+                badgeEl.innerHTML = '•';
+                badgeEl.title = 'Pendiente de responder';
+
+                inputEl.classList.add('border-slate-300', 'bg-white', 'focus:border-indigo-500', 'focus:ring-indigo-200');
+            }
+        }
+
+        /**
+         * Renderiza las filas de palabras del tema actualmente seleccionado
+         */
+        function renderTopicContent() {
+            const topic = TOPICS_DATA[currentTopicIndex];
+            document.getElementById('topic-icon').textContent = topic.icon;
+            document.getElementById('topic-title').textContent = topic.title;
+
+            const listContainer = document.getElementById('words-list');
+            listContainer.innerHTML = '';
+
+            topic.items.forEach((item, idx) => {
+                const savedState = userAnswers[topic.id][idx] || { value: '', status: 'neutral' };
+
+                const row = document.createElement('div');
+                row.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 p-3 sm:px-4 sm:py-3.5 rounded-xl transition-colors duration-200';
+
+                // Columna Izquierda: Indicador de estado + Palabra en español + Pista opcional
+                const leftCol = document.createElement('div');
+                leftCol.className = 'flex items-center gap-3 sm:w-1/2';
+
+                const statusBadge = document.createElement('span');
+                
+                const wordWrapper = document.createElement('div');
+                wordWrapper.className = 'flex flex-col';
+
+                const spanishLabel = document.createElement('label');
+                spanishLabel.htmlFor = `input-${topic.id}-${idx}`;
+                spanishLabel.className = 'font-semibold text-slate-800 text-base sm:text-lg cursor-pointer select-none';
+                spanishLabel.textContent = item.es;
+
+                wordWrapper.appendChild(spanishLabel);
+
+                // Si las pistas están activadas, mostrar pista debajo de la palabra en español
+                if (showHints) {
+                    const hintEl = document.createElement('div');
+                    hintEl.className = 'text-xs font-mono text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md mt-1 inline-block w-fit';
+                    hintEl.innerHTML = `<span class="font-sans font-semibold">Pista:</span> ${generateHint(item.en)} <span class="text-amber-600/80 font-sans">(${item.en[0]})</span>`;
+                    wordWrapper.appendChild(hintEl);
+                }
+
+                leftCol.appendChild(statusBadge);
+                leftCol.appendChild(wordWrapper);
+
+                // Columna Derecha: Campo de texto en inglés + icono de estado rápido
+                const rightCol = document.createElement('div');
+                rightCol.className = 'flex items-center gap-2.5 sm:w-1/2';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = `input-${topic.id}-${idx}`;
+                input.value = savedState.value;
+                input.placeholder = 'Escribe en inglés...';
+                input.autocomplete = 'off';
+                input.autocapitalize = 'none';
+                input.spellcheck = false;
+                input.className = 'w-full px-3.5 py-2.5 rounded-xl border-2 text-base font-medium outline-none focus:ring-4 transition-all';
+
+                // Validación en tiempo real al escribir
+                input.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    const previousStatus = userAnswers[topic.id][idx].status;
+                    const newStatus = checkAnswer(val, item.en);
+
+                    userAnswers[topic.id][idx] = { value: val, status: newStatus };
+                    saveAnswersState();
+
+                    // Animar solo si acaba de acertar
+                    const justSucceeded = previousStatus !== 'correct' && newStatus === 'correct';
+                    if (justSucceeded) {
+                        playSuccessSound();
+                    }
+
+                    applyRowVisualState(row, statusBadge, input, newStatus, justSucceeded);
+                    updateScores();
+                });
+
+                // Al pulsar Enter, pasar al siguiente campo vacío o validar con animación
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const currentStatus = checkAnswer(input.value, item.en);
+                        applyRowVisualState(row, statusBadge, input, currentStatus, true);
+
+                        // Buscar el siguiente input en la lista
+                        const nextInput = document.getElementById(`input-${topic.id}-${idx + 1}`);
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }
+                });
+
+                rightCol.appendChild(input);
+                row.appendChild(leftCol);
+                row.appendChild(rightCol);
+                listContainer.appendChild(row);
+
+                // Aplicar estado visual inicial
+                applyRowVisualState(row, statusBadge, input, savedState.status, false);
+            });
+
+            updateScores();
+        }
+
+        /**
+         * Configuración de botones de control superiores
+         */
+        function setupControls() {
+            // Botón "Comprobar" (revalida todos los campos visibles con retroalimentación visual)
+            document.getElementById('btn-check-all').addEventListener('click', () => {
+                const topic = TOPICS_DATA[currentTopicIndex];
+                topic.items.forEach((item, idx) => {
+                    const inputEl = document.getElementById(`input-${topic.id}-${idx}`);
+                    if (inputEl) {
+                        const status = checkAnswer(inputEl.value, item.en);
+                        userAnswers[topic.id][idx] = { value: inputEl.value, status };
+                    }
+                });
+                saveAnswersState();
+                renderTopicContent();
+            });
+
+            // Botón "Mostrar / Ocultar pistas"
+            document.getElementById('btn-toggle-hints').addEventListener('click', () => {
+                showHints = !showHints;
+                const btnText = document.getElementById('hints-btn-text');
+                btnText.textContent = showHints ? 'Ocultar pistas' : 'Mostrar pistas';
+                renderTopicContent();
+            });
+
+            // Botón "Reiniciar tema" -> Abre modal personalizado
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('btn-reset-topic').addEventListener('click', () => {
+                const topic = TOPICS_DATA[currentTopicIndex];
+                document.getElementById('modal-topic-name').textContent = topic.title;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+
+            document.getElementById('modal-cancel-btn').addEventListener('click', () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+
+            document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+                const topic = TOPICS_DATA[currentTopicIndex];
+                topic.items.forEach((_, idx) => {
+                    userAnswers[topic.id][idx] = { value: '', status: 'neutral' };
+                });
+                saveAnswersState();
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                renderTopicContent();
+            });
+
+            // Botón "Siguiente tema" en el banner de felicitación
+            document.getElementById('btn-next-topic').addEventListener('click', () => {
+                currentTopicIndex = (currentTopicIndex + 1) % TOPICS_DATA.length;
+                renderTabs();
+                renderTopicContent();
+            });
+
+            // Botón de sonido
+            document.getElementById('toggle-sound-btn').addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                document.getElementById('sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
+            });
+        }
+
+        // Inicializar aplicación al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            initAnswersState();
+            setupControls();
+            renderTabs();
+            renderTopicContent();
+        });
+    </script>
+</body>
+</html>
