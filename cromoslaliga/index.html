@@ -324,9 +324,10 @@
 
         /* Cabecera fija: botón de menú + título + escudos siempre visibles al hacer scroll */
         .cabecera-fija {
+		border-radius: 0px 0px 20px 20px;
             position: sticky;
             top: 0;
-            z-index: 950;
+            z-index: 949;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -334,7 +335,7 @@
            /* width: calc(100% + 20px);*/
 		max-width: 610px;
             margin: -10px -10px 0 -10px;   /* compensa el padding de 10px del body */
-            padding: 10px 10px 12px 10px;
+            padding: 11px 11px 11px 11px;
             background-color: var(--bg-color);
             /*box-shadow: 0 2px 6px rgba(0,0,0,0.08);*/
         }
@@ -351,13 +352,13 @@
 
         .btn-menu-app {
             position: fixed;
-            top: -3px;
+            top: -13px;
             left: 10px;
             width: 36px;
             height: 36px;
             padding: 0;
             border: none;
-            border-radius: 4px;
+            border-radius: 0px 0px 20px 20px;
             background-color: var(--primary-color);
             color: #fff;
             font-size: 1.3rem;
@@ -370,11 +371,35 @@
             transition: background-color 0.2s;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+	box-shadow: inset 5px 5px 10px 2px #b6a7db, 3px 0px 6px 0px #a5a5a5;
         }
 
         .btn-menu-app:hover,
         .btn-menu-app[aria-expanded="true"] {
             background-color: #1e1b4b;
+        }
+
+        /* Fondo oscuro con efecto blur para el menú */
+        .menu-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 950;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease, visibility 0.18s;
+        }
+
+        .menu-backdrop.abierto {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .menu-app-panel {
@@ -678,6 +703,9 @@
 <body>
 
     <input type="file" id="inputImportarJson" accept=".json,application/json" style="display: none;">
+
+    <!-- Fondo oscuro para el menú -->
+    <div class="menu-backdrop" id="menuBackdrop"></div>
 
     <!-- Botón de menú y menú emergente -->
     <button class="btn-menu-app" id="btnMenuApp" aria-label="Abrir menú" aria-haspopup="true" aria-expanded="false" aria-controls="menuApp">☰</button>
@@ -2497,19 +2525,25 @@
         // ========== Menú emergente ==========
         const btnMenuApp = document.getElementById('btnMenuApp');
         const menuApp = document.getElementById('menuApp');
+        const menuBackdrop = document.getElementById('menuBackdrop');
 
         function abrirMenu() {
             menuApp.classList.add('abierto');
+            if (menuBackdrop) menuBackdrop.classList.add('abierto');
             btnMenuApp.setAttribute('aria-expanded', 'true');
         }
         function cerrarMenu() {
             menuApp.classList.remove('abierto');
+            if (menuBackdrop) menuBackdrop.classList.remove('abierto');
             btnMenuApp.setAttribute('aria-expanded', 'false');
         }
         btnMenuApp.addEventListener('click', function(e) {
             e.stopPropagation();
             menuApp.classList.contains('abierto') ? cerrarMenu() : abrirMenu();
         });
+        if (menuBackdrop) {
+            menuBackdrop.addEventListener('click', cerrarMenu);
+        }
         // Al pulsar una opción se cierra el menú (la acción de cada botón se ejecuta antes)
         menuApp.addEventListener('click', function(e) {
             if (e.target.closest('button')) cerrarMenu();
