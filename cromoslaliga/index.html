@@ -28,7 +28,7 @@
 
         h1 {
             font-size: 1.2rem;
-            margin: 5px 0 10px 0;
+            margin: -6px 0 16px 0;
             text-align: center;
             color: var(--primary-color);
             display: flex;
@@ -42,14 +42,14 @@
         .menu-paises {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 0px;
             justify-content: center;
             max-width: 600px;
             background: var(--card-bg);
-            padding: 10px;
+            padding: 4px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
+            margin: 15px;
         }
 
         .btn-pais {
@@ -319,6 +319,129 @@
         .modal-btn-cancel { background: #ccc; color: #333; }
 
 
+        /* ========== Menú emergente (botón ☰ esquina superior izquierda) ========== */
+        h1 { padding: 0 48px; box-sizing: border-box; }
+
+        /* Cabecera fija: botón de menú + título + escudos siempre visibles al hacer scroll */
+        .cabecera-fija {
+            position: sticky;
+            top: 0;
+            z-index: 950;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+           /* width: calc(100% + 20px);*/
+		max-width: 610px;
+            margin: -10px -10px 0 -10px;   /* compensa el padding de 10px del body */
+            padding: 10px 10px 12px 10px;
+            background-color: var(--bg-color);
+            /*box-shadow: 0 2px 6px rgba(0,0,0,0.08);*/
+        }
+
+        .cabecera-fija .menu-paises {
+            margin-bottom: 0;
+		margin: -11px;
+        }
+
+        /* Los contenidos que se desplazan dejan algo de aire bajo la cabecera */
+        .cabecera-fija + .contenedor-cromos {
+            margin-top: 12px;
+        }
+
+        .btn-menu-app {
+            position: fixed;
+            top: -3px;
+            left: 10px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: #fff;
+            font-size: 1.3rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 951;
+            transition: background-color 0.2s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-menu-app:hover,
+        .btn-menu-app[aria-expanded="true"] {
+            background-color: #1e1b4b;
+        }
+
+        .menu-app-panel {
+            position: fixed;
+            top: 50px;
+            left: 10px;
+            width: 290px;
+            max-width: calc(100vw - 20px);
+            max-height: calc(100vh - 64px);
+            overflow-y: auto;
+            box-sizing: border-box;
+            padding: 12px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 951;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+        }
+
+        .menu-app-panel.abierto {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .menu-app-grupo {
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary-color);
+            margin: 12px 2px 6px 2px;
+        }
+
+        .menu-app-grupo:first-child {
+            margin-top: 0;
+        }
+
+        .menu-app-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            margin: 0 0 6px 0;
+            padding: 9px 12px;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            transition: filter 0.15s;
+        }
+
+        .menu-app-item:hover { filter: brightness(1.08); }
+        .menu-app-item:active { filter: brightness(0.9); }
+        .menu-app-item:last-child { margin-bottom: 0; }
+
+
         /* ========== Estilos PDF / captura (html2pdf) ========== */
         #printArea, #printAreaCompleto {
             position: absolute;
@@ -554,9 +677,41 @@
 </head>
 <body>
 
-    <h1>Cromos LaLiga 2026-27</h1> 
+    <input type="file" id="inputImportarJson" accept=".json,application/json" style="display: none;">
+
+    <!-- Botón de menú y menú emergente -->
+    <button class="btn-menu-app" id="btnMenuApp" aria-label="Abrir menú" aria-haspopup="true" aria-expanded="false" aria-controls="menuApp">☰</button>
+    <div class="menu-app-panel" id="menuApp" role="menu">
+
+        <div class="menu-app-grupo">Imprimir</div>
+        <button class="menu-app-item" id="btnPdf" role="menuitem" style="background-color: #607d8b;">📄 Imprimir pendientes</button>
+        <button class="menu-app-item" id="btnPdfCompleto" role="menuitem" style="background-color: #607d8b;">📄 Imprimir Lista Completa</button>
+
+        <div class="menu-app-grupo">Compartir</div>
+        <button class="menu-app-item" id="btnQrPendientes" role="menuitem" style="background-color: #607d8b;">
+            <span style="font-size: x-large; color: #000; background-color: #fff; display: inline-block; width: 18px; height: 18px; text-align: center; line-height: 19px; ">⚄</span> QR Pendientes
+        </button>
+        <button class="menu-app-item" id="btnQrRepes" role="menuitem" style="background-color: #607d8b;">
+             <span style="font-size: x-large; color: #000; background-color: #fff; display: inline-block; width: 18px; height: 18px; text-align: center; line-height: 19px; ">⚄</span>QR Repetidos
+        </button>
+
+        <div class="menu-app-grupo">Copia de seguridad</div>
+        <button class="menu-app-item" id="btnExportarJson" role="menuitem" style="background-color: #607d8b; color: #fff;">💾 Exportar datos (JSON)</button>
+        <button class="menu-app-item" id="btnImportarJson" role="menuitem" style="background-color: #607d8b; color: #fff;">📂 Importar datos (JSON)</button>
+        
+        <div class="menu-app-grupo">Equipo seleccionado</div>
+        <button class="menu-app-item" id="btnReset" role="menuitem" style="background-color: #ff887a;">Marcar todos</button>
+        <button class="menu-app-item" id="btnReset2" role="menuitem" style="background-color: #ff887a;">Desmarcar todos</button>
+    </div>
+
+
+    <header class="cabecera-fija" id="cabeceraFija">
+
+
+    <h1>Cromos LaLiga 2026-27</h1>
 
     <div class="menu-paises" id="menuPaises"></div>
+    </header>
 
     <div class="contenedor-cromos">
         <div class="titulo-seccion" id="paisActual">
@@ -574,27 +729,6 @@
         Pendientes: <span id="totalTengo" style="color: var(--tengo-color);">0</span> | 
         Tengo: <span id="totalFaltan" style="color: #27ae60;">0</span> | 
         Repetidos: <span id="totalRepes" style="color: #d35400;">0</span> &nbsp;&nbsp;&nbsp; 
-        
-        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
-            <button id="btnReset" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                Reset en blanco
-            </button> 
-            <button id="btnReset2" style="background-color: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                Reset en oscuro
-            </button>
-            <button id="btnPdf" style="background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                📄 Imprimir PDF de los pendientes
-            </button>
-            <button id="btnPdfCompleto" style="background-color: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                📄 Imprimir Lista Completa
-            </button>
-            <button id="btnQrPendientes" style="background-color: #8e44ad; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                📱 QR Pendientes
-            </button>
-            <button id="btnQrRepes" style="background-color: #d35400; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                📱 QR Repetidos
-            </button>
-        </div>
     </div>
 
     <!-- Modal para Confirmación Personalizado -->
@@ -1489,6 +1623,8 @@
             const cancelBtn = document.getElementById('modalCancelBtn');
 
             msgEl.innerText = mensaje;
+            cancelBtn.style.display = '';
+            confirmBtn.style.background = '';
             modal.classList.add('active');
 
             const cleanup = () => {
@@ -2357,6 +2493,158 @@
                 if (e.target === this) cerrarQrModal();
             });
         }
+
+        // ========== Menú emergente ==========
+        const btnMenuApp = document.getElementById('btnMenuApp');
+        const menuApp = document.getElementById('menuApp');
+
+        function abrirMenu() {
+            menuApp.classList.add('abierto');
+            btnMenuApp.setAttribute('aria-expanded', 'true');
+        }
+        function cerrarMenu() {
+            menuApp.classList.remove('abierto');
+            btnMenuApp.setAttribute('aria-expanded', 'false');
+        }
+        btnMenuApp.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menuApp.classList.contains('abierto') ? cerrarMenu() : abrirMenu();
+        });
+        // Al pulsar una opción se cierra el menú (la acción de cada botón se ejecuta antes)
+        menuApp.addEventListener('click', function(e) {
+            if (e.target.closest('button')) cerrarMenu();
+        });
+        // Cerrar al pulsar fuera o con Escape
+        document.addEventListener('click', function(e) {
+            if (!menuApp.contains(e.target) && e.target !== btnMenuApp) cerrarMenu();
+        });
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') cerrarMenu();
+        });
+
+        // ========== Aviso simple (solo botón Aceptar) ==========
+        function mostrarAviso(mensaje) {
+            const modal = document.getElementById('customModal');
+            const msgEl = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            msgEl.innerText = mensaje;
+            cancelBtn.style.display = 'none';
+            confirmBtn.style.background = 'var(--primary-color)';
+            modal.classList.add('active');
+            confirmBtn.onclick = () => {
+                modal.classList.remove('active');
+                confirmBtn.onclick = null;
+                cancelBtn.style.display = '';
+                confirmBtn.style.background = '';
+            };
+        }
+
+        // ========== Exportar / Importar copia de seguridad (JSON) ==========
+        function exportarDatosJson() {
+            const datos = {};
+            let tengo = 0, pendientes = 0, repetidos = 0;
+            listadoSecciones.forEach(sec => {
+                sec.stickers.forEach(stk => {
+                    const clave = `${sec.id}-${stk.num}`;
+                    const d = coleccion[clave] || { pendiente: true, repes: 0 };
+                    datos[clave] = { pendiente: d.pendiente !== false, repes: d.repes || 0 };
+                    if (datos[clave].pendiente) pendientes++; else tengo++;
+                    repetidos += datos[clave].repes;
+                });
+            });
+
+            const ahora = new Date();
+            const fechaArchivo = ahora.getFullYear() + '-' +
+                String(ahora.getMonth() + 1).padStart(2, '0') + '-' +
+                String(ahora.getDate()).padStart(2, '0');
+
+            const contenido = {
+                app: 'cromos-laliga-2026-27',
+                formato: 1,
+                exportado: ahora.toISOString(),
+                resumen: { tengo: tengo, pendientes: pendientes, repetidos: repetidos },
+                coleccion: datos
+            };
+
+            const nombreArchivo = `cromos-laliga-2026-27_${fechaArchivo}.json`;
+            const blob = new Blob([JSON.stringify(contenido, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nombreArchivo;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+
+            mostrarAviso(`Copia de seguridad generada:\n${nombreArchivo}\n\nTengo: ${tengo} · Pendientes: ${pendientes} · Repetidos: ${repetidos}`);
+        }
+
+        function importarDatosDesdeTexto(texto) {
+            let datos;
+            try {
+                datos = JSON.parse(texto);
+            } catch (e) {
+                mostrarAviso('El archivo no es un JSON válido.');
+                return;
+            }
+
+            const origen = (datos && typeof datos === 'object' && datos.coleccion && typeof datos.coleccion === 'object')
+                ? datos.coleccion : datos;
+            if (!origen || typeof origen !== 'object' || Array.isArray(origen)) {
+                mostrarAviso('El archivo no tiene el formato de una copia de seguridad de la colección.');
+                return;
+            }
+
+            const nueva = {};
+            let reconocidos = 0, tengo = 0, pendientes = 0, repetidos = 0;
+            listadoSecciones.forEach(sec => {
+                sec.stickers.forEach(stk => {
+                    const clave = `${sec.id}-${stk.num}`;
+                    const v = origen[clave];
+                    if (v && typeof v === 'object' && typeof v.pendiente === 'boolean') {
+                        let r = parseInt(v.repes, 10);
+                        if (isNaN(r) || r < 0) r = 0;
+                        if (r > 99) r = 99;
+                        nueva[clave] = { pendiente: v.pendiente, repes: r };
+                        reconocidos++;
+                    } else {
+                        nueva[clave] = { pendiente: true, repes: 0 };
+                    }
+                    if (nueva[clave].pendiente) pendientes++; else tengo++;
+                    repetidos += nueva[clave].repes;
+                });
+            });
+
+            if (reconocidos === 0) {
+                mostrarAviso('No se ha encontrado ningún cromo de esta colección en el archivo.');
+                return;
+            }
+
+            mostrarModal(
+                `Se han reconocido ${reconocidos} cromos en el archivo.\nTengo: ${tengo} · Pendientes: ${pendientes} · Repetidos: ${repetidos}\n\nEsto sustituirá tu colección actual. ¿Continuar?`,
+                () => {
+                    coleccion = nueva;
+                    guardarEnStorage();
+                    renderizarCromos();
+                    actualizarContadores();
+                    mostrarAviso('Datos importados correctamente.');
+                }
+            );
+        }
+
+        const inputImportarJson = document.getElementById('inputImportarJson');
+        document.getElementById('btnExportarJson').onclick = exportarDatosJson;
+        document.getElementById('btnImportarJson').onclick = function() { inputImportarJson.click(); };
+        inputImportarJson.addEventListener('change', function() {
+            const archivo = this.files && this.files[0];
+            if (!archivo) return;
+            const lector = new FileReader();
+            lector.onload = () => importarDatosDesdeTexto(String(lector.result));
+            lector.onerror = () => mostrarAviso('No se ha podido leer el archivo.');
+            lector.readAsText(archivo);
+            this.value = '';   // permite volver a elegir el mismo archivo
+        });
     </script>
 </body>
 </html>
