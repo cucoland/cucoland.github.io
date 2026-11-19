@@ -652,7 +652,7 @@
                 if (showHints) {
                     const hintEl = document.createElement('div');
                     hintEl.className = 'text-xs font-mono text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md mt-1 inline-block w-fit';
-                    hintEl.innerHTML = `<span class="font-sans font-semibold">Pista:</span> ${generateHint(item.en)} <span class="text-amber-600/80 font-sans">(${item.en[0]})</span>`;
+                    hintEl.innerHTML = `<span class="font-sans font-semibold">Pista:</span> ${generateHint(item.en)} `;
                     wordWrapper.appendChild(hintEl);
                 }
 
