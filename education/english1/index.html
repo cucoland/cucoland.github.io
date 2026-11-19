@@ -23,6 +23,44 @@
         h1, h2, .font-display {
             font-family: 'Nunito', sans-serif;
         }
+        
+/* ==========================================
+   PERSONALIZACIÓN DE LOS DATOS DE TOPICS_DATA
+   ========================================== */
+
+/* 1. Contenedor general de la lista de palabras */
+#words-list {
+    background-color: #f8fafc; /* Fondo del contenedor principal */
+    border-radius: 1rem;
+    padding: 0.5rem;
+}
+
+/* 2. Contenedor de cada fila individual (cada palabra del tema) */
+#words-list > div {
+    background-color: #ffffff; /* Fondo de cada fila de datos */
+    border: 1px solid #e2e8f0; /* Borde alrededor de cada fila */
+    border-radius: 0.85rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.55rem;
+    margin-bottom: 0.1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* 3. Tamaño de letra y color del texto en español (etiqueta) */
+#words-list label {
+    font-size: 1.0rem;       /* Tamaño de la letra (ej. 1.125rem o 18px) */
+    color: #1e293b;            /* Color del texto */
+    font-weight: 600;          /* Grosor de la fuente */
+}
+
+/* 4. Fondo, tamaño de letra y color del campo de texto (inputs) */
+#words-list input[type="text"] {
+    background-color: #f1f5f9; /* Color de fondo del input */
+    color: #4f4f4f;            /* Color del texto que escribe el usuario */
+    font-size: 1.0rem;           /* Tamaño de letra del input */
+    padding: 5px;
+}
+
+
 
         /* Animaciones suaves para feedback */
         @keyframes popSuccess {
@@ -741,7 +779,7 @@
             document.getElementById('btn-toggle-hints').addEventListener('click', () => {
                 showHints = !showHints;
                 const btnText = document.getElementById('hints-btn-text');
-                btnText.textContent = showHints ? 'Hide hints' : 'Show hints';
+                btnText.textContent = showHints ? 'Ocultar pistas' : 'Mostrar pistas';
                 renderTopicContent();
             });
 
