@@ -140,7 +140,7 @@
                             English practise
                         </h1>
                     </div>
-                    <p class="text-slate-500 text-sm sm:text-base mt-1">
+                    <p  class="text-slate-500 text-sm sm:text-base mt-1">
                         Write de correct answer in english. It will be checked automatically!
                     </p>
                 </div>
@@ -187,7 +187,7 @@
                 <div class="flex items-center gap-3">
                     <span id="topic-icon" class="text-2xl bg-white p-2 rounded-xl shadow-sm border border-slate-100">🎨</span>
                     <div>
-                        <h2 id="topic-title" class="text-xl font-bold text-slate-800">Colores</h2>
+                        <h2 id="topic-title" class="text-xl font-bold text-slate-800">Colours</h2>
                         <p class="text-sm text-slate-500">
                             Aciertos en este tema: 
                             <span id="topic-score" class="font-bold text-emerald-600">0</span> de <span id="topic-total" class="font-semibold">10</span>
@@ -197,17 +197,17 @@
 
                 <!-- Botones de Acción del Tema -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <button id="btn-check-all" type="button"
+                    <button id="btn-check-all" type="button" title="Comprobar"
                         class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm active:scale-95 flex items-center gap-1.5">
                         <span>✓</span> Verify
                     </button>
 
                     <button id="btn-toggle-hints" type="button"
-                        class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition active:scale-95 flex items-center gap-1.5">
+                        class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition active:scale-95 flex items-center gap-1.5" title="Mostrar pistas">
                         <span>💡</span> <span id="hints-btn-text">Show hints</span>
                     </button>
 
-                    <button id="btn-reset-topic" type="button"
+                    <button id="btn-reset-topic" type="button" title="Reiniciar tema"
                         class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition active:scale-95 flex items-center gap-1.5">
                         <span>↻</span> Restart topic
                     </button>
@@ -220,7 +220,7 @@
                     <span class="text-xl">🎉</span>
                     <span class="font-semibold text-sm sm:text-base">¡Excelente trabajo! Has completado correctamente todas las palabras de este tema.</span>
                 </div>
-                <button id="btn-next-topic" type="button" class="text-xs sm:text-sm font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition shrink-0">
+                <button id="btn-next-topic" title="Siguiente tema" type="button" class="text-xs sm:text-sm font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition shrink-0">
                     Next topic →
                 </button>
             </div>
@@ -245,10 +245,10 @@
                     </p>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mt-6">
-                    <button id="modal-cancel-btn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                    <button id="modal-cancel-btn" title="Cancelar" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
                         Cancel
                     </button>
-                    <button id="modal-confirm-btn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm">
+                    <button id="modal-confirm-btn" title="Si, reiniciar" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm">
                         Yes, restart
                     </button>
                 </div>
@@ -355,8 +355,8 @@
             },
             {
                 id: 'tobe',
-                title: 'Verbo to be',
-                shortTitle: 'Verbo to be',
+                title: 'Verb to be',
+                shortTitle: 'Verb to be',
                 icon: '🗣️',
                 items: [
                     { es: 'yo soy', en: ['i am', "i'm"] },
