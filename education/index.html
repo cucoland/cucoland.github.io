@@ -34,12 +34,12 @@
                     --ink-hover: #34a27d;
                     --border: #354964;
                     --border-hover: #adffd9;
-                --fade: linear-gradient(
+                    --fade: linear-gradient(
             to left,
             #60a475,
             #585865
             );
-                --cubos:rgba(35, 199, 115, 0.5);
+                    --cubos:rgba(35, 199, 115, 0.5);
                 }
             }
             *, *::before, *::after {
@@ -68,17 +68,13 @@
                 display: block;
                 text-decoration: none;
             }
-
-
-	.btn {
-            	animation: flotar 3s ease-in-out infinite;
-	}
-        .btn2 {
-            	animation: flotar 3s ease-in-out infinite;
-            animation-delay: 1.5s; 
-        }
-
-
+            .btn {
+                animation: flotar 3s ease-in-out infinite;
+            }
+            .btn2 {
+                animation: flotar 3s ease-in-out infinite;
+                animation-delay: 1.5s;
+            }
             .btn, .btn2 {
                 width: var(--size);
                 height: var(--size);
@@ -96,18 +92,14 @@
                 font-family: inherit;
                 text-decoration: none;
                 transition: background .15s, color .15s, transform .15s;
-
             }
-
-
-
-
-            .btn:hover, .btn2:hover{
+            .btn:hover, .btn2:hover {
                 background: var(--btn-hover);
                 color: var(--ink-hover);
                 border-color: var(--border-hover);
-            	transform: scale(1.05);
-            	box-shadow: 0px 10px 30px #00fabb;;
+                transform: scale(1.05);
+                box-shadow: 0px 10px 30px #00fabb;
+                ;
             }
             .btn:active, .btn2:active {
                 transform: scale(.96);
@@ -139,15 +131,10 @@
                 line-clamp: 2;
                 overflow-wrap: anywhere;
             }
-
             .btn:hover, .name:hover {
                 font-weight: 500;
             }
-/* botones con efecto delay
-
-
-
-
+            /* botones con efecto delay
             /* Fondo animado */
             body {
                 position: relative;
@@ -254,22 +241,19 @@
                     border-radius: 100%;
                 }
             }
-
-
- /* Definición de la animación de arriba a abajo */
-        @keyframes flotar {
-            0% {
-                transform: translateY(0px);
+            /* Definición de la animación de arriba a abajo */
+            @keyframes flotar {
+                0% {
+                    transform: translateY(0px);
+                }
+                50% {
+                    transform: translateY(-2px);
+                    /* Sube 20 píxeles */
+                }
+                100% {
+                    transform: translateY(0px);
+                }
             }
-            50% {
-                transform: translateY(-2px); /* Sube 20 píxeles */
-            }
-            100% {
-                transform: translateY(0px);
-            }
-        }
-
-
             /* Mantiene los botones por delante del fondo */
             .grid {
                 position: relative;
@@ -302,17 +286,19 @@
                 </li>
             </ul>
         </div>
-      <span>Juego de parejas</span>
+        <span>
+            Juego de parejas
+        </span>
         <main class="grid">
             <a href="https://cucoland.github.io/education/respiratorio/">
                 <button class="btn" title="Aparato Respiratorio">
-        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-            <path d="M28 22 C20 19 10 27 8 42 C7 52 10 59 18 59 C25 59 28 55 28 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M36 22 C44 19 54 27 56 42 C57 52 54 59 46 59 C39 59 36 55 36 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M12 44 C18 47 23 46 28 42 M52 44 C46 47 41 46 36 42" fill="none" stroke="#c0392b" stroke-width="1.4" opacity=".5" stroke-linecap="round"/>
-            <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#1b4f72" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#2e86c1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+                    <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+                        <path d="M28 22 C20 19 10 27 8 42 C7 52 10 59 18 59 C25 59 28 55 28 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M36 22 C44 19 54 27 56 42 C57 52 54 59 46 59 C39 59 36 55 36 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M12 44 C18 47 23 46 28 42 M52 44 C46 47 41 46 36 42" fill="none" stroke="#c0392b" stroke-width="1.4" opacity=".5" stroke-linecap="round"/>
+                        <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#1b4f72" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#2e86c1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                     <span class="name">
                         Aparato respiratorio
                     </span>
@@ -320,39 +306,39 @@
             </a>
             <a href="https://cucoland.github.io/education/digestivo/">
                 <button class="btn2" title="Aparato digestivo">
-        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-            <!-- Esófago (entrada en el cardias) -->
-            <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="7"/>
-            <path d="M22 2 V18" fill="none" stroke="#e8845f" stroke-width="5"/>
-            <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="5" stroke-dasharray=".7 3" opacity=".6"/>
-            <!-- Duodeno / intestino delgado (salida del píloro) -->
-            <path d="M17 45 H9 V59" fill="none" stroke="#c9674c" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M17 45 H9 V59" fill="none" stroke="#f5b7a3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Estómago -->
-            <path d="M21 17 C22 9 44 6 51 20 C57 32 55 48 42 53 C32 56 22 54 16 49 L16 41 C24 44 34 40 34 32 C34 26 24 24 21 17 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M30 21 C38 21 46 27 47 37" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
-            <path d="M27 30 C32 36 40 43 47 44" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
-            <path d="M22 46 C28 49 35 50 41 47" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
-            <!-- Píloro (esfínter) -->
-            <path d="M16 41.5 V48.5" stroke="#922b21" stroke-width="3.5" stroke-linecap="round"/>
-        </svg>
+                    <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+                        <!-- Esófago (entrada en el cardias) -->
+                        <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="7"/>
+                        <path d="M22 2 V18" fill="none" stroke="#e8845f" stroke-width="5"/>
+                        <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="5" stroke-dasharray=".7 3" opacity=".6"/>
+                        <!-- Duodeno / intestino delgado (salida del píloro) -->
+                        <path d="M17 45 H9 V59" fill="none" stroke="#c9674c" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 45 H9 V59" fill="none" stroke="#f5b7a3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Estómago -->
+                        <path d="M21 17 C22 9 44 6 51 20 C57 32 55 48 42 53 C32 56 22 54 16 49 L16 41 C24 44 34 40 34 32 C34 26 24 24 21 17 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M30 21 C38 21 46 27 47 37" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
+                        <path d="M27 30 C32 36 40 43 47 44" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
+                        <path d="M22 46 C28 49 35 50 41 47" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
+                        <!-- Píloro (esfínter) -->
+                        <path d="M16 41.5 V48.5" stroke="#922b21" stroke-width="3.5" stroke-linecap="round"/>
+                    </svg>
                     <span class="name">
                         Aparato digestivo
                     </span>
                 </button>
             </a>
-			            <a href="https://cucoland.github.io/education/respiratorio/respiratoriotest.html">
+            <a href="https://cucoland.github.io/education/respiratorio/respiratoriotest.html">
                 <button class="btn" title="Aparato Respiratorio">
-        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-            <path d="M28 22 C20 19 10 27 8 42 C7 52 10 59 18 59 C25 59 28 55 28 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M36 22 C44 19 54 27 56 42 C57 52 54 59 46 59 C39 59 36 55 36 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M12 44 C18 47 23 46 28 42 M52 44 C46 47 41 46 36 42" fill="none" stroke="#c0392b" stroke-width="1.4" opacity=".5" stroke-linecap="round"/>
-            <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#1b4f72" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#2e86c1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-			             <svg viewBox="0 0 24 24" >
-                        <rect x="15" y="15" width="8" height="8" rx="1" fill="#b0c785" stroke="#92a079"/>
+                    <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+                        <path d="M28 22 C20 19 10 27 8 42 C7 52 10 59 18 59 C25 59 28 55 28 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M36 22 C44 19 54 27 56 42 C57 52 54 59 46 59 C39 59 36 55 36 48 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M12 44 C18 47 23 46 28 42 M52 44 C46 47 41 46 36 42" fill="none" stroke="#c0392b" stroke-width="1.4" opacity=".5" stroke-linecap="round"/>
+                        <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#1b4f72" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M32 4 V24 M32 24 L22 37 M32 24 L42 37" fill="none" stroke="#2e86c1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        <svg viewBox="0 0 24 24" >
+                            <rect x="15" y="15" width="8" height="8" rx="1" fill="#b0c785" stroke="#92a079"/>
+                        </svg>
                     </svg>
-        </svg>
                     <span class="name">
                         Aparato respiratorio Test
                     </span>
@@ -360,165 +346,169 @@
             </a>
             <a href="https://cucoland.github.io/education/digestivo/digestivotest.html">
                 <button class="btn2" title="Aparato digestivo">
-        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-            <!-- Esófago (entrada en el cardias) -->
-            <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="7"/>
-            <path d="M22 2 V18" fill="none" stroke="#e8845f" stroke-width="5"/>
-            <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="5" stroke-dasharray=".7 3" opacity=".6"/>
-            <!-- Duodeno / intestino delgado (salida del píloro) -->
-            <path d="M17 45 H9 V59" fill="none" stroke="#c9674c" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M17 45 H9 V59" fill="none" stroke="#f5b7a3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Estómago -->
-            <path d="M21 17 C22 9 44 6 51 20 C57 32 55 48 42 53 C32 56 22 54 16 49 L16 41 C24 44 34 40 34 32 C34 26 24 24 21 17 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M30 21 C38 21 46 27 47 37" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
-            <path d="M27 30 C32 36 40 43 47 44" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
-            <path d="M22 46 C28 49 35 50 41 47" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
-            <!-- Píloro (esfínter) -->
-            <path d="M16 41.5 V48.5" stroke="#922b21" stroke-width="3.5" stroke-linecap="round"/>
-			             <svg viewBox="0 0 24 24" >
-                        <rect x="15" y="15" width="8" height="8" rx="1" fill="#b0c785" stroke="#92a079"/>
+                    <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+                        <!-- Esófago (entrada en el cardias) -->
+                        <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="7"/>
+                        <path d="M22 2 V18" fill="none" stroke="#e8845f" stroke-width="5"/>
+                        <path d="M22 2 V18" fill="none" stroke="#b9573a" stroke-width="5" stroke-dasharray=".7 3" opacity=".6"/>
+                        <!-- Duodeno / intestino delgado (salida del píloro) -->
+                        <path d="M17 45 H9 V59" fill="none" stroke="#c9674c" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 45 H9 V59" fill="none" stroke="#f5b7a3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Estómago -->
+                        <path d="M21 17 C22 9 44 6 51 20 C57 32 55 48 42 53 C32 56 22 54 16 49 L16 41 C24 44 34 40 34 32 C34 26 24 24 21 17 Z" fill="#f1948a" stroke="#c0392b" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M30 21 C38 21 46 27 47 37" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
+                        <path d="M27 30 C32 36 40 43 47 44" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
+                        <path d="M22 46 C28 49 35 50 41 47" fill="none" stroke="#c0392b" stroke-width="1.6" opacity=".55" stroke-linecap="round"/>
+                        <!-- Píloro (esfínter) -->
+                        <path d="M16 41.5 V48.5" stroke="#922b21" stroke-width="3.5" stroke-linecap="round"/>
+                        <svg viewBox="0 0 24 24" >
+                            <rect x="15" y="15" width="8" height="8" rx="1" fill="#b0c785" stroke="#92a079"/>
+                        </svg>
                     </svg>
-        </svg>
                     <span class="name">
                         Aparato digestivo Test
                     </span>
                 </button>
             </a>
-
-<a href="https://cucoland.github.io/education/sinonimos/">
-    <button class="btn" title="Sinónimos y Antónimos">
-        <!-- Contenedor flex para alinear los tres iconos en una sola línea -->
-        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 40px;">
-            
-            <!-- Sol -->
-            <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
-                <g stroke="#e67e22" stroke-width="3.2" stroke-linecap="round">
-                    <line x1="50" y1="32" x2="59" y2="32"/>
-                    <line x1="44.7" y1="44.7" x2="51.1" y2="51.1"/>
-                    <line x1="32" y1="50" x2="32" y2="59"/>
-                    <line x1="19.3" y1="44.7" x2="12.9" y2="51.1"/>
-                    <line x1="14" y1="32" x2="5" y2="32"/>
-                    <line x1="19.3" y1="19.3" x2="12.9" y2="12.9"/>
-                    <line x1="32" y1="14" x2="32" y2="5"/>
-                    <line x1="44.7" y1="19.3" x2="51.1" y2="12.9"/>
-                </g>
-                <circle cx="32" cy="32" r="13" fill="#f9d56e" stroke="#e67e22" stroke-width="2.4"/>
-                <path d="M25 29 C27 25 31 24 35 25" fill="none" stroke="#fff6d5" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            </svg>
-
-            <!-- Igual -->
-            <svg viewBox="0 0 40 50" style="width: 14px; height: 20px; flex-shrink: 0;" role="img" aria-hidden="true">
-                <rect x="5" y="12" width="30" height="8" rx="3.5" fill="#34495e"/>
-                <rect x="5" y="30" width="30" height="8" rx="3.5" fill="#34495e"/>
-            </svg>
-
-            <!-- Luna -->
-            <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
-                <path d="M32.93 8.18 A24 24 0 1 0 50.81 43.96 A20 20 0 0 1 32.93 8.18 Z" fill="#fcf3cf" stroke="#d4ac0d" stroke-width="2.4" stroke-linejoin="round"/>
-                <circle cx="14" cy="33" r="2.4" fill="#f4d03f" opacity=".7"/>
-                <circle cx="19" cy="45" r="1.8" fill="#f4d03f" opacity=".7"/>
-                <circle cx="18" cy="20" r="1.6" fill="#f4d03f" opacity=".7"/>
-            </svg>
-
-        </div>
-        <span class="name">
-            Sinónimos y Antónimos
-        </span>
-    </button>
-</a>  
-			<a href="https://cucoland.github.io/education/universo/">
-    <button class="btn" title="Universo">
-        <!-- Contenedor flex para alinear los tres iconos en una sola línea -->
-        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 40px;">
-            
-            <!-- Sol -->
-            <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
-                <g stroke="#e67e22" stroke-width="3.2" stroke-linecap="round">
-                    <line x1="50" y1="32" x2="59" y2="32"/>
-                    <line x1="44.7" y1="44.7" x2="51.1" y2="51.1"/>
-                    <line x1="32" y1="50" x2="32" y2="59"/>
-                    <line x1="19.3" y1="44.7" x2="12.9" y2="51.1"/>
-                    <line x1="14" y1="32" x2="5" y2="32"/>
-                    <line x1="19.3" y1="19.3" x2="12.9" y2="12.9"/>
-                    <line x1="32" y1="14" x2="32" y2="5"/>
-                    <line x1="44.7" y1="19.3" x2="51.1" y2="12.9"/>
-                </g>
-                <circle cx="32" cy="32" r="13" fill="#f9d56e" stroke="#e67e22" stroke-width="2.4"/>
-                <path d="M25 29 C27 25 31 24 35 25" fill="none" stroke="#fff6d5" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            </svg>
-
-                  <!-- Luna -->
-            <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
-                <path d="M32.93 8.18 A24 24 0 1 0 50.81 43.96 A20 20 0 0 1 32.93 8.18 Z" fill="#fcf3cf" stroke="#d4ac0d" stroke-width="2.4" stroke-linejoin="round"/>
-                <circle cx="14" cy="33" r="2.4" fill="#f4d03f" opacity=".7"/>
-                <circle cx="19" cy="45" r="1.8" fill="#f4d03f" opacity=".7"/>
-                <circle cx="18" cy="20" r="1.6" fill="#f4d03f" opacity=".7"/>
-            </svg>
-
-        </div>
-        <span class="name">
-            Universo
-        </span>
-    </button>
-</a>
-			<a href="https://cucoland.github.io/education/celulas/">
-    <button class="btn" title="Células">
-
-        <div style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 40px;">
-            
-            <!-- Celula -->
-            <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
-                <g stroke="#e67e22" stroke-width="3.2" stroke-linecap="round">
-                    <line x1="50" y1="32" x2="59" y2="32"/>
-                    <line x1="44.7" y1="44.7" x2="51.1" y2="51.1"/>
-                    <line x1="32" y1="50" x2="32" y2="59"/>
-                    <line x1="19.3" y1="44.7" x2="12.9" y2="51.1"/>
-                    <line x1="14" y1="32" x2="5" y2="32"/>
-                    <line x1="19.3" y1="19.3" x2="12.9" y2="12.9"/>
-                    <line x1="32" y1="14" x2="32" y2="5"/>
-                    <line x1="44.7" y1="19.3" x2="51.1" y2="12.9"/>
-                </g>
-    <circle cx="14" cy="33" r="2.4" fill="#f4d03f" opacity=".7"/>
-                <circle cx="19" cy="45" r="1.8" fill="#f4d03f" opacity=".7"/>
-                <circle cx="18" cy="20" r="1.6" fill="#f4d03f" opacity=".7"/>
-                <circle cx="32" cy="32" r="13" fill="#f9d56e" stroke="#e67e22" stroke-width="2.4"/>
-                <path d="M25 29 C27 25 31 24 35 25" fill="none" stroke="#fff6d5" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            </svg>
-			
-        </div>
-        <span class="name">
-            Somos células
-        </span>
-    </button>
-</a>
-
-			            <a href="https://cucoland.github.io/education/english1/">
+            <a href="https://cucoland.github.io/education/sinonimos/">
+                <button class="btn" title="Sinónimos y Antónimos">
+                    <!-- Contenedor flex para alinear los tres iconos en una sola línea -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 40px;">
+                        <!-- Sol -->
+                        <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
+                            <g stroke="#e67e22" stroke-width="3.2" stroke-linecap="round">
+                                <line x1="50" y1="32" x2="59" y2="32"/>
+                                <line x1="44.7" y1="44.7" x2="51.1" y2="51.1"/>
+                                <line x1="32" y1="50" x2="32" y2="59"/>
+                                <line x1="19.3" y1="44.7" x2="12.9" y2="51.1"/>
+                                <line x1="14" y1="32" x2="5" y2="32"/>
+                                <line x1="19.3" y1="19.3" x2="12.9" y2="12.9"/>
+                                <line x1="32" y1="14" x2="32" y2="5"/>
+                                <line x1="44.7" y1="19.3" x2="51.1" y2="12.9"/>
+                            </g>
+                            <circle cx="32" cy="32" r="13" fill="#f9d56e" stroke="#e67e22" stroke-width="2.4"/>
+                            <path d="M25 29 C27 25 31 24 35 25" fill="none" stroke="#fff6d5" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+                        </svg>
+                        <!-- Igual -->
+                        <svg viewBox="0 0 40 50" style="width: 14px; height: 20px; flex-shrink: 0;" role="img" aria-hidden="true">
+                            <rect x="5" y="12" width="30" height="8" rx="3.5" fill="#34495e"/>
+                            <rect x="5" y="30" width="30" height="8" rx="3.5" fill="#34495e"/>
+                        </svg>
+                        <!-- Luna -->
+                        <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
+                            <path d="M32.93 8.18 A24 24 0 1 0 50.81 43.96 A20 20 0 0 1 32.93 8.18 Z" fill="#fcf3cf" stroke="#d4ac0d" stroke-width="2.4" stroke-linejoin="round"/>
+                            <circle cx="14" cy="33" r="2.4" fill="#f4d03f" opacity=".7"/>
+                            <circle cx="19" cy="45" r="1.8" fill="#f4d03f" opacity=".7"/>
+                            <circle cx="18" cy="20" r="1.6" fill="#f4d03f" opacity=".7"/>
+                        </svg>
+                    </div>
+                    <span class="name">
+                        Sinónimos y Antónimos
+                    </span>
+                </button>
+            </a>
+            <a href="https://cucoland.github.io/education/universo/">
+                <button class="btn" title="Universo">
+                    <!-- Contenedor flex para alinear los tres iconos en una sola línea -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 40px;">
+                        <!-- Sol -->
+                        <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
+                            <g stroke="#e67e22" stroke-width="3.2" stroke-linecap="round">
+                                <line x1="50" y1="32" x2="59" y2="32"/>
+                                <line x1="44.7" y1="44.7" x2="51.1" y2="51.1"/>
+                                <line x1="32" y1="50" x2="32" y2="59"/>
+                                <line x1="19.3" y1="44.7" x2="12.9" y2="51.1"/>
+                                <line x1="14" y1="32" x2="5" y2="32"/>
+                                <line x1="19.3" y1="19.3" x2="12.9" y2="12.9"/>
+                                <line x1="32" y1="14" x2="32" y2="5"/>
+                                <line x1="44.7" y1="19.3" x2="51.1" y2="12.9"/>
+                            </g>
+                            <circle cx="32" cy="32" r="13" fill="#f9d56e" stroke="#e67e22" stroke-width="2.4"/>
+                            <path d="M25 29 C27 25 31 24 35 25" fill="none" stroke="#fff6d5" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+                        </svg>
+                        <!-- Luna -->
+                        <svg viewBox="0 0 64 64" style="width: 26px; height: 26px; flex-shrink: 0;" role="img" aria-hidden="true">
+                            <path d="M32.93 8.18 A24 24 0 1 0 50.81 43.96 A20 20 0 0 1 32.93 8.18 Z" fill="#fcf3cf" stroke="#d4ac0d" stroke-width="2.4" stroke-linejoin="round"/>
+                            <circle cx="14" cy="33" r="2.4" fill="#f4d03f" opacity=".7"/>
+                            <circle cx="19" cy="45" r="1.8" fill="#f4d03f" opacity=".7"/>
+                            <circle cx="18" cy="20" r="1.6" fill="#f4d03f" opacity=".7"/>
+                        </svg>
+                    </div>
+                    <span class="name">
+                        Universo
+                    </span>
+                </button>
+            </a>
+            <a href="https://cucoland.github.io/education/celulas/">
+                <button class="btn" title="Células">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; height: 40px;">
+                        <!-- Celula -->
+                        <svg xmlns="http://w3.org" viewBox="10 0 500 400" width="500" height="400" role="img" aria-label="Diagrama de una célula vegetal">
+                            <!-- Pared celular (polígono rígido) -->
+                            <polygon points="150,55 360,40 445,145 425,335 275,375 110,315 95,155"
+fill="#65a30d" stroke="#3f6212" stroke-width="10" stroke-linejoin="round" />
+                            <!-- Membrana plasmática / Citoplasma -->
+                            <polygon points="156,65 353,51 433,149 415,326 273,364 120,307 106,159"
+fill="#bef264" stroke="#4d7c0f" stroke-width="3" stroke-linejoin="round" />
+                            <!-- Vacuola central -->
+                            <ellipse cx="290" cy="235" rx="95" ry="75"
+fill="#bae6fd" stroke="#0284c7" stroke-width="3" opacity="0.9" />
+                            <!-- Núcleo -->
+                            <circle cx="185" cy="155" r="42" fill="#c084fc" stroke="#6b21a8" stroke-width="3" />
+                            <!-- Nucléolo -->
+                            <circle cx="192" cy="148" r="14" fill="#7e22ce" />
+                            <!-- Cloroplastos -->
+                            <g transform="translate(165, 255) rotate(-20)">
+                                <ellipse cx="0" cy="0" rx="26" ry="13" fill="#15803d" stroke="#052e16" stroke-width="2" />
+                                <line x1="-12" y1="-5" x2="-12" y2="5" stroke="#86efac" stroke-width="2" />
+                                <line x1="0" y1="-6" x2="0" y2="6" stroke="#86efac" stroke-width="2" />
+                                <line x1="12" y1="-5" x2="12" y2="5" stroke="#86efac" stroke-width="2" />
+                            </g>
+                            <g transform="translate(355, 115) rotate(25)">
+                                <ellipse cx="0" cy="0" rx="26" ry="13" fill="#15803d" stroke="#052e16" stroke-width="2" />
+                                <line x1="-12" y1="-5" x2="-12" y2="5" stroke="#86efac" stroke-width="2" />
+                                <line x1="0" y1="-6" x2="0" y2="6" stroke="#86efac" stroke-width="2" />
+                                <line x1="12" y1="-5" x2="12" y2="5" stroke="#86efac" stroke-width="2" />
+                            </g>
+                            <!-- Mitocondria -->
+                            <g transform="translate(230, 318) rotate(10)">
+                                <ellipse cx="0" cy="0" rx="25" ry="12" fill="#fb923c" stroke="#9a3412" stroke-width="2" />
+                                <path d="M -16,0 Q -10,-7 -4,0 T 8,0 T 17,0" fill="none" stroke="#fff7ed" stroke-width="2" />
+                            </g>
+                        </svg>
+                    </div>
+                    <span class="name">
+                        Somos células
+                    </span>
+                </button>
+            </a>
+            <a href="https://cucoland.github.io/education/english1/">
                 <button class="btn" title="Inglés 1">
-<svg xmlns="http://w3.org" viewBox="0 0 60 36" width="600" height="360">
-  <rect width="60" height="36" fill="#012169"/>
-  <path d="M0,0 L60,36 M60,0 L0,36" stroke="#FFFFFF" stroke-width="6"/>
-  <path d="M0,0 L60,36 M60,0 L0,36" stroke="#C8102E" stroke-width="2"/>
-  <path d="M30,0 V36 M0,18 H60" stroke="#FFFFFF" stroke-width="10"/>
-  <path d="M30,0 V36 M0,18 H60" stroke="#C8102E" stroke-width="6"/>
-</svg>
+                    <svg xmlns="http://w3.org" viewBox="0 0 60 36" width="600" height="360">
+                        <rect width="60" height="36" fill="#012169"/>
+                        <path d="M0,0 L60,36 M60,0 L0,36" stroke="#FFFFFF" stroke-width="6"/>
+                        <path d="M0,0 L60,36 M60,0 L0,36" stroke="#C8102E" stroke-width="2"/>
+                        <path d="M30,0 V36 M0,18 H60" stroke="#FFFFFF" stroke-width="10"/>
+                        <path d="M30,0 V36 M0,18 H60" stroke="#C8102E" stroke-width="6"/>
+                    </svg>
                     <span class="name">
                         English 1
                     </span>
                 </button>
             </a>
-			            <a href="https://cucoland.github.io/education/laliga/">
+            <a href="https://cucoland.github.io/education/laliga/">
                 <button class="btn" title="Cromos Laliga">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <rect fill="none" stroke="#b9573a" x="4" y="3" width="13" height="17" rx="1.5"/>
-                        <rect fill="none" stroke="#573ab9"x="7" y="5.5" width="13" height="16" rx="1.5"/>
-                        <circle cx="13.5" cy="10" r="2.2"/>
-                        <path d="M9.5 17c.7-2 2-3 4-3s3.3 1 4 3"/>
+                        <rect fill="#f3c686" stroke="#decfba" x="4" y="3" width="13" height="17" rx="1.5"/>
+                        <rect fill="#f0fffc" stroke="#df86be"x="7" y="5.5" width="13" height="16" rx="1.5"/>
+                        <circle fill="#f3c686" stroke="#c0ac2a" cx="13.5" cy="10" r="2.2"/>
+                        <path fill="#2e79b2" stroke="#adc9ff" d="M9.5 17c.7-2 2-3 4-3s3.3 1 4 3"/>
                     </svg>
                     <span class="name">
                         Cromos LaLiga
                     </span>
                 </button>
             </a>
-		</main>
+        </main>
     </body>
 </html>
