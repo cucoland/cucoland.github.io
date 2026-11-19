@@ -137,11 +137,11 @@
                     <div class="flex items-center gap-2.5">
                         <span class="text-3xl" role="img" aria-label="Bandera">🇬🇧</span>
                         <h1 class="text-2xl sm:text-3xl font-extrabold text-indigo-950 tracking-tight">
-                            Práctica de Inglés
+                            English practise
                         </h1>
                     </div>
                     <p class="text-slate-500 text-sm sm:text-base mt-1">
-                        Escribe la traducción en inglés de cada palabra o frase. ¡Se comprobará automáticamente!
+                        Write de correct answer in english. It will be checked automatically!
                     </p>
                 </div>
 
@@ -199,17 +199,17 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <button id="btn-check-all" type="button"
                         class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition shadow-sm active:scale-95 flex items-center gap-1.5">
-                        <span>✓</span> Comprobar
+                        <span>✓</span> Verify
                     </button>
 
                     <button id="btn-toggle-hints" type="button"
                         class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition active:scale-95 flex items-center gap-1.5">
-                        <span>💡</span> <span id="hints-btn-text">Mostrar pistas</span>
+                        <span>💡</span> <span id="hints-btn-text">Show hints</span>
                     </button>
 
                     <button id="btn-reset-topic" type="button"
                         class="px-3.5 py-2 rounded-xl text-sm font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition active:scale-95 flex items-center gap-1.5">
-                        <span>↻</span> Reiniciar tema
+                        <span>↻</span> Restart topic
                     </button>
                 </div>
             </div>
@@ -221,7 +221,7 @@
                     <span class="font-semibold text-sm sm:text-base">¡Excelente trabajo! Has completado correctamente todas las palabras de este tema.</span>
                 </div>
                 <button id="btn-next-topic" type="button" class="text-xs sm:text-sm font-bold bg-emerald-600 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition shrink-0">
-                    Siguiente tema →
+                    Next topic →
                 </button>
             </div>
 
@@ -246,10 +246,10 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3 mt-6">
                     <button id="modal-cancel-btn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
-                        Cancelar
+                        Cancel
                     </button>
                     <button id="modal-confirm-btn" type="button" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm">
-                        Sí, reiniciar
+                        Yes, restart
                     </button>
                 </div>
             </div>
@@ -265,8 +265,8 @@
         const TOPICS_DATA = [
             {
                 id: 'colores',
-                title: 'Colores',
-                shortTitle: 'Colores',
+                title: 'Colours',
+                shortTitle: 'Colours',
                 icon: '🎨',
                 items: [
                     { es: 'rosa', en: ['pink'] },
@@ -283,8 +283,8 @@
             },
             {
                 id: 'dias',
-                title: 'Días de la semana',
-                shortTitle: 'Días',
+                title: 'Week days',
+                shortTitle: 'Days',
                 icon: '📅',
                 items: [
                     { es: 'lunes', en: ['monday'] },
@@ -298,8 +298,8 @@
             },
             {
                 id: 'meses',
-                title: 'Meses del año',
-                shortTitle: 'Meses',
+                title: 'Months',
+                shortTitle: 'Months',
                 icon: '🗓️',
                 items: [
                     { es: 'Enero', en: ['january'] },
@@ -318,8 +318,8 @@
             },
             {
                 id: 'familia',
-                title: 'Familia',
-                shortTitle: 'Familia',
+                title: 'Family',
+                shortTitle: 'Family',
                 icon: '👨‍👩‍👧‍👦',
                 items: [
                     { es: 'Padre', en: ['father', 'dad'] },
@@ -337,8 +337,8 @@
             },
             {
                 id: 'actividades',
-                title: 'Actividades',
-                shortTitle: 'Actividades',
+                title: 'Free time activities',
+                shortTitle: 'Activities',
                 icon: '⚽',
                 items: [
                     { es: 'hacer tareas de jardinería', en: ['do gardening', 'gardening', 'do the gardening'] },
@@ -587,7 +587,7 @@
                 rowEl.classList.add('bg-emerald-50/60');
                 badgeEl.className = 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white font-bold text-sm shadow-xs transition-all shrink-0';
                 badgeEl.innerHTML = '✓';
-                badgeEl.title = '¡Correcto!';
+                badgeEl.title = '¡Correct!';
 
                 inputEl.classList.add('border-emerald-500', 'bg-emerald-50/80', 'text-emerald-900', 'focus:ring-emerald-200');
                 if (animate) {
@@ -598,7 +598,7 @@
                 rowEl.classList.add('bg-rose-50/60');
                 badgeEl.className = 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-rose-500 text-white font-bold text-sm shadow-xs transition-all shrink-0';
                 badgeEl.innerHTML = '✗';
-                badgeEl.title = 'Incorrecto, revisa la ortografía';
+                badgeEl.title = 'Incorrect, check the spelling';
 
                 inputEl.classList.add('border-rose-500', 'bg-rose-50/80', 'text-rose-900', 'focus:ring-rose-200');
                 if (animate) {
@@ -667,7 +667,7 @@
                 input.type = 'text';
                 input.id = `input-${topic.id}-${idx}`;
                 input.value = savedState.value;
-                input.placeholder = 'Escribe en inglés...';
+                input.placeholder = 'Write in english...';
                 input.autocomplete = 'off';
                 input.autocapitalize = 'none';
                 input.spellcheck = false;
