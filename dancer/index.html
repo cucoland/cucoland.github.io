@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar 3D Bailarín - Estilo Mario Bros</title>
+    <!-- Tailwind CSS para una interfaz moderna y responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Inter para legibilidad -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Three.js r128 y OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background-color: #0b0e17;
+            user-select: none;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            position: relative;
+        }
+        /* Estilo personalizado para los controles deslizantes */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.15);
+            height: 6px;
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ef4444;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+            transition: transform 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <!-- Contenedor principal del lienzo 3D -->
+    <div id="canvas-container"></div>
+
+    <!-- Panel superior: Título e Indicador de Intensidad de Graves -->
+    <header class="fixed top-4 left-4 right-4 z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pointer-events-none">
+        <div class="glass-panel px-5 py-3 rounded-2xl shadow-2xl pointer-events-auto flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center font-extrabold text-xl shadow-lg border border-red-400/40">
+                M
+            </div>
+            <div>
+                <h1 class="text-base sm:text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-red-100 to-amber-200 bg-clip-text text-transparent">
+                    Super Dance Stage 3D
+                </h1>
+                <p id="track-status" class="text-xs text-slate-300 truncate max-w-[220px] sm:max-w-xs">
+                    Carga un MP3 o activa el Ritmo Demo
+                </p>
+            </div>
+        </div>
+
+        <!-- Medidor visual de energía de graves (Bass Beat Meter) -->
+        <div class="glass-panel px-4 py-2.5 rounded-2xl shadow-xl pointer-events-auto flex items-center gap-3 self-end sm:self-auto">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Impacto Beat</span>
+            <div class="w-28 sm:w-36 h-3 bg-slate-800 rounded-full overflow-hidden p-0.5 border border-white/10">
+                <div id="bass-meter-bar" class="h-full w-0 bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 rounded-full transition-all duration-75"></div>
+            </div>
+            <span id="bass-percent" class="text-xs font-bold w-9 text-right text-amber-300">0%</span>
+        </div>
+    </header>
+
+    <!-- Notificación flotante no intrusiva (reemplaza alert) -->
+    <div id="toast-message" class="fixed top-24 left-1/2 -translate-x-1/2 z-30 glass-panel px-5 py-2.5 rounded-full text-sm font-medium text-amber-200 border-amber-400/30 shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300">
+        Mensaje del sistema
+    </div>
+
+    <!-- Panel inferior de controles de audio y baile -->
+    <footer class="fixed bottom-4 left-4 right-4 z-10 flex justify-center pointer-events-none">
+        <div class="glass-panel p-3 sm:p-4 rounded-3xl shadow-2xl pointer-events-auto w-full max-w-3xl flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Botón de carga de MP3 -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <label for="mp3-input" class="cursor-pointer bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 active:scale-95 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-lg shadow-red-600/30 transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    <span>Cargar MP3</span>
+                </label>
+                <input type="file" id="mp3-input" accept="audio/mp3,audio/*" class="hidden">
+
+                <!-- Botón Modo Demo Sintetizado -->
+                <button id="demo-btn" class="bg-indigo-600/80 hover:bg-indigo-500 active:scale-95 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-2xl border border-indigo-400/30 shadow-lg transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span id="demo-btn-text">Modo Demo</span>
+                </button>
+            </div>
+
+            <!-- Controles de Reproducción (Play/Pausa) y Volumen -->
+            <div class="flex items-center gap-3 sm:gap-4 ml-auto sm:ml-0">
+                <button id="play-pause-btn" disabled class="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition active:scale-95 border border-white/10" title="Reproducir / Pausar">
+                    <!-- Icono Play -->
+                    <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white ml-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                    </svg>
+                    <!-- Icono Pausa -->
+                    <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white hidden" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <!-- Control de Volumen -->
+                <div class="flex items-center gap-2 bg-slate-900/60 px-3 py-2 rounded-2xl border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    </svg>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" class="w-16 sm:w-24">
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Elemento de audio oculto para archivos MP3 cargados por el usuario -->
+    <audio id="audio-player" crossorigin="anonymous"></audio>
+
+    <script>
+        /**
+         * ============================================================================
+         * CONFIGURACIÓN DE ESCENA 3D, AVATAR ARTICULADO Y ANÁLISIS DE AUDIO EN TIEMPO REAL
+         * ============================================================================
+         */
+
+        // Variables globales de Three.js
+        let scene, camera, renderer, controls;
+        let clock = new THREE.Clock();
+
+        // Grupos y articulaciones del Avatar para animación jerárquica y física secundaria
+        const avatar = {
+            root: null,
+            pelvis: null,
+            torso: null,
+            neck: null,
+            head: null,
+            capGroup: null,
+            capVisor: null,
+            capCrown: null,
+            mustacheLeft: null,
+            mustacheRight: null,
+            eyebrowLeft: null,
+            eyebrowRight: null,
+            // Extremidades superiores (Hombro -> Codo -> Mano)
+            leftShoulder: null,
+            leftElbow: null,
+            leftHand: null,
+            rightShoulder: null,
+            rightElbow: null,
+            rightHand: null,
+            // Extremidades inferiores (Cadera -> Rodilla -> Pie)
+            leftHip: null,
+            leftKnee: null,
+            leftFoot: null,
+            rightHip: null,
+            rightKnee: null,
+            rightFoot: null,
+            // Faldones de ropa con física de resorte (spring physics)
+            clothSkirts: []
+        };
+
+        // Elementos del escenario y visualizador
+        let stageLights = [];
+        let neonRingMat, innerRingMat;
+        let spectrumBars = [];
+        let floatingParticles;
+
+        // Estado de física secundaria (inercia para ropa y gorra)
+        const secondaryPhysics = {
+            capVelY: 0,
+            capOffsetY: 0,
+            capRotX: 0,
+            clothVelZ: 0,
+            clothAngleZ: 0,
+            clothVelX: 0,
+            clothAngleX: 0,
+            prevBodyY: 0,
+            prevBodyRotZ: 0
+        };
+
+        // Variables de Web Audio API
+        let audioCtx = null;
+        let analyser = null;
+        let dataArray = null;
+        let sourceNode = null;
+        let masterGain = null;
+        let isDemoPlaying = false;
+        let demoInterval = null;
+        let currentMode = 'none'; // 'mp3' | 'demo' | 'none'
+
+        // Métricas suavizadas de frecuencia de audio
+        const audioMetrics = {
+            bass: 0,        // Graves profundos (20Hz - 140Hz) -> Saltos y golpes bruscos
+            lowMid: 0,      // Graves-medios (140Hz - 400Hz) -> Balanceo de torso y caderas
+            mid: 0,         // Medios (400Hz - 2500Hz) -> Movimiento de brazos y codos
+            high: 0,        // Agudos (2500Hz+) -> Cabeza, cejas y brillos de luz
+            beatImpact: 0,  // Detección de transitorios (picos súbitos de golpe)
+            prevBass: 0
+        };
+
+        // Referencias DOM
+        const audioPlayer = document.getElementById('audio-player');
+        const mp3Input = document.getElementById('mp3-input');
+        const demoBtn = document.getElementById('demo-btn');
+        const demoBtnText = document.getElementById('demo-btn-text');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const iconPlay = document.getElementById('icon-play');
+        const iconPause = document.getElementById('icon-pause');
+        const volumeSlider = document.getElementById('volume-slider');
+        const trackStatus = document.getElementById('track-status');
+        const bassMeterBar = document.getElementById('bass-meter-bar');
+        const bassPercent = document.getElementById('bass-percent');
+        const toastEl = document.getElementById('toast-message');
+
+        /**
+         * Muestra notificaciones elegantes sin usar alert()
+         */
+        let toastTimeout;
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.remove('opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastEl.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        /**
+         * ============================================================================
+         * INICIALIZACIÓN DE LA ESCENA 3D (THREE.JS)
+         * ============================================================================
+         */
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+
+            // 1. Escena con niebla atmosférica profunda
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x090d16);
+            scene.fog = new THREE.FogExp2(0x090d16, 0.045);
+
+            // 2. Cámara con perspectiva cinematográfica
+            camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 2.5, 6.2);
+
+            // 3. Renderizador WebGL con sombras suaves y mapeo de tonos
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.15;
+            container.appendChild(renderer.domElement);
+
+            // 4. Controles orbitales suaves para inspeccionar el baile en 360 grados
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.target.set(0, 1.55, 0);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.06;
+            controls.minDistance = 2.8;
+            controls.maxDistance = 11;
+            controls.maxPolarAngle = Math.PI / 2 - 0.03; // Evita atravesar el suelo
+
+            // Construir iluminación, escenario y personaje
+            setupLights();
+            buildStageAndPedestal();
+            buildMarioStyleAvatar();
+            buildAmbientParticles();
+
+            // Eventos de redimensionamiento y controles UI
+            window.addEventListener('resize', onWindowResize);
+            setupAudioUIEvents();
+        }
+
+        /**
+         * Configuración de luces dinámicas de escenario
+         */
+        function setupLights() {
+            // Luz ambiental suave
+            const hemiLight = new THREE.HemisphereLight(0xdbeafe, 0x1e1b4b, 0.75);
+            scene.add(hemiLight);
+
+            // Luz principal frontal-superior con sombras
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.25);
+            keyLight.position.set(3.5, 7, 4.5);
+            keyLight.castShadow = true;
+            keyLight.shadow.mapSize.width = 1024;
+            keyLight.shadow.mapSize.height = 1024;
+            keyLight.shadow.camera.near = 1;
+            keyLight.shadow.camera.far = 20;
+            const d = 3.5;
+            keyLight.shadow.camera.left = -d;
+            keyLight.shadow.camera.right = d;
+            keyLight.shadow.camera.top = d;
+            keyLight.shadow.camera.bottom = -d;
+            keyLight.shadow.bias = -0.001;
+            scene.add(keyLight);
+
+            // Luces puntuales reactivas al ritmo (Spot/Point lights de colores)
+            const redSpot = new THREE.PointLight(0xff2a55, 1.5, 12);
+            redSpot.position.set(-3, 3.2, 2);
+            scene.add(redSpot);
+
+            const blueSpot = new THREE.PointLight(0x00d2ff, 1.5, 12);
+            blueSpot.position.set(3, 3.2, 2);
+            scene.add(blueSpot);
+
+            const goldBackSpot = new THREE.PointLight(0xffbe0b, 1.8, 10);
+            goldBackSpot.position.set(0, 3.5, -3);
+            scene.add(goldBackSpot);
+
+            stageLights = [redSpot, blueSpot, goldBackSpot];
+        }
+
+        /**
+         * Construye el pedestal cilíndrico iluminado y el visualizador de espectro 3D
+         */
+        function buildStageAndPedestal() {
+            // Suelo reflectante oscuro del escenario
+            const floorGeo = new THREE.CircleGeometry(18, 64);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x0b101d,
+                roughness: 0.25,
+                metalness: 0.7
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Grupo del Pedestal
+            const pedestalGroup = new THREE.Group();
+            scene.add(pedestalGroup);
+
+            // Base inferior ancha
+            const baseGeo = new THREE.CylinderGeometry(1.75, 1.95, 0.16, 48);
+            const darkMetalMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 0.35,
+                metalness: 0.8
+            });
+            const baseMesh = new THREE.Mesh(baseGeo, darkMetalMat);
+            baseMesh.position.y = 0.08;
+            baseMesh.receiveShadow = true;
+            baseMesh.castShadow = true;
+            pedestalGroup.add(baseMesh);
+
+            // Cuerpo principal del pedestal cilíndrico
+            const bodyGeo = new THREE.CylinderGeometry(1.45, 1.55, 0.28, 48);
+            const bodyMat = new THREE.MeshStandardMaterial({
+                color: 0x0f172a,
+                roughness: 0.2,
+                metalness: 0.85
+            });
+            const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+            bodyMesh.position.y = 0.28;
+            bodyMesh.receiveShadow = true;
+            pedestalGroup.add(bodyMesh);
+
+            // Plataforma superior donde pisa el avatar (Y = 0.44)
+            const topGeo = new THREE.CylinderGeometry(1.38, 1.42, 0.06, 48);
+            const topMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 0.3,
+                metalness: 0.6
+            });
+            const topMesh = new THREE.Mesh(topGeo, topMat);
+            topMesh.position.y = 0.43;
+            topMesh.receiveShadow = true;
+            pedestalGroup.add(topMesh);
+
+            // Aro de luz neón principal alrededor del borde superior del pedestal
+            const ringGeo = new THREE.TorusGeometry(1.43, 0.032, 16, 64);
+            neonRingMat = new THREE.MeshStandardMaterial({
+                color: 0x38bdf8,
+                emissive: 0x0284c7,
+                emissiveIntensity: 2.2,
+                roughness: 0.1
+            });
+            const neonRing = new THREE.Mesh(ringGeo, neonRingMat);
+            neonRing.rotation.x = Math.PI / 2;
+            neonRing.position.y = 0.43;
+            pedestalGroup.add(neonRing);
+
+            // Segundo aro luminoso dorado/rojo en la base
+            const innerRingGeo = new THREE.TorusGeometry(1.76, 0.025, 16, 64);
+            innerRingMat = new THREE.MeshStandardMaterial({
+                color: 0xf43f5e,
+                emissive: 0xe11d48,
+                emissiveIntensity: 1.8,
+                roughness: 0.1
+            });
+            const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+            innerRing.rotation.x = Math.PI / 2;
+            innerRing.position.y = 0.16;
+            pedestalGroup.add(innerRing);
+
+            // Visualizador de espectro circular de 36 barras alrededor del pedestal
+            const barCount = 36;
+            const radius = 1.62;
+            const barGeo = new THREE.BoxGeometry(0.06, 1, 0.06);
+            // Desplazar pivote hacia la base de la barra para escalar hacia arriba
+            barGeo.translate(0, 0.5, 0);
+
+            for (let i = 0; i < barCount; i++) {
+                const angle = (i / barCount) * Math.PI * 2;
+                const hue = (i / barCount);
+                const color = new THREE.Color().setHSL(hue, 0.85, 0.55);
+
+                const barMat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 1.4,
+                    roughness: 0.2
+                });
+
+                const bar = new THREE.Mesh(barGeo, barMat);
+                bar.position.set(Math.cos(angle) * radius, 0.16, Math.sin(angle) * radius);
+                bar.rotation.y = -angle;
+                bar.scale.y = 0.06;
+                pedestalGroup.add(bar);
+                spectrumBars.push(bar);
+            }
+        }
+
+        /**
+         * Construye el avatar 3D caricaturesco estilo Mario Bros con jerarquía articulada completa
+         */
+        function buildMarioStyleAvatar() {
+            // Paleta de materiales estilizados y vibrantes
+            const matRed = new THREE.MeshStandardMaterial({ color: 0xe61919, roughness: 0.42, metalness: 0.05 });
+            const matBlue = new THREE.MeshStandardMaterial({ color: 0x1554d1, roughness: 0.55, metalness: 0.05 });
+            const matSkin = new THREE.MeshStandardMaterial({ color: 0xffcca3, roughness: 0.48, metalness: 0.02 });
+            const matHair = new THREE.MeshStandardMaterial({ color: 0x3b1e0e, roughness: 0.7 });
+            const matGlove = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
+            const matShoe = new THREE.MeshStandardMaterial({ color: 0x5c2c12, roughness: 0.38, metalness: 0.1 });
+            const matGold = new THREE.MeshStandardMaterial({ color: 0xffd000, roughness: 0.25, metalness: 0.6 });
+            const matWhite = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+            const matEyeBlue = new THREE.MeshStandardMaterial({ color: 0x1d8cf8, roughness: 0.15 });
+            const matBlack = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+
+            // Grupo raíz ubicado exactamente sobre la superficie del pedestal (Y = 0.46)
+            avatar.root = new THREE.Group();
+            avatar.root.position.y = 0.46;
+            scene.add(avatar.root);
+
+            // 1. PELVIS / CADERA (Centro de gravedad del personaje)
+            avatar.pelvis = new THREE.Group();
+            avatar.pelvis.position.y = 0.86;
+            avatar.root.add(avatar.pelvis);
+
+            // Base redondeada del peto/pantalón
+            const pelvisMesh = new THREE.Mesh(new THREE.SphereGeometry(0.36, 28, 24), matBlue);
+            pelvisMesh.scale.set(1.05, 0.85, 0.95);
+            pelvisMesh.castShadow = true;
+            avatar.pelvis.add(pelvisMesh);
+
+            // Faldones inferiores del peto con física de vuelo/oscilación (ropa fluida)
+            const skirtCount = 8;
+            for (let i = 0; i < skirtCount; i++) {
+                const angle = (i / skirtCount) * Math.PI * 2;
+                const flapPivot = new THREE.Group();
+                flapPivot.position.set(Math.cos(angle) * 0.33, -0.05, Math.sin(angle) * 0.30);
+                flapPivot.rotation.y = -angle;
+
+                const flapGeo = new THREE.BoxGeometry(0.06, 0.18, 0.24);
+                flapGeo.translate(0, -0.08, 0);
+                const flapMesh = new THREE.Mesh(flapGeo, matBlue);
+                flapMesh.castShadow = true;
+                flapPivot.add(flapMesh);
+
+                avatar.pelvis.add(flapPivot);
+                avatar.clothSkirts.push({ pivot: flapPivot, baseAngle: angle });
+            }
+
+            // 2. TORSO (Barriguita caricaturesca + camisa roja + peto azul + botones dorados)
+            avatar.torso = new THREE.Group();
+            avatar.torso.position.y = 0.12;
+            avatar.pelvis.add(avatar.torso);
+
+            // Barriga/pecho inferior en azul (parte frontal del overol)
+            const bellyOveralls = new THREE.Mesh(new THREE.SphereGeometry(0.41, 32, 28), matBlue);
+            bellyOveralls.position.set(0, 0.24, 0.03);
+            bellyOveralls.scale.set(1.02, 1.05, 1.04);
+            bellyOveralls.castShadow = true;
+            avatar.torso.add(bellyOveralls);
+
+            // Pecho superior / hombros en rojo (camisa)
+            const upperChest = new THREE.Mesh(new THREE.SphereGeometry(0.37, 28, 24), matRed);
+            upperChest.position.set(0, 0.44, -0.01);
+            upperChest.scale.set(1.08, 0.85, 0.96);
+            upperChest.castShadow = true;
+            avatar.torso.add(upperChest);
+
+            // Pechera frontal del peto azul
+            const bibGeo = new THREE.BoxGeometry(0.42, 0.34, 0.14);
+            const bibMesh = new THREE.Mesh(bibGeo, matBlue);
+            bibMesh.position.set(0, 0.40, 0.31);
+            bibMesh.rotation.x = -0.15;
+            bibMesh.castShadow = true;
+            avatar.torso.add(bibMesh);
+
+            // Tirantes del peto (izquierdo y derecho)
+            [-0.16, 0.16].forEach(xPos => {
+                const strapGeo = new THREE.TorusGeometry(0.24, 0.042, 12, 24, Math.PI * 1.15);
+                const strap = new THREE.Mesh(strapGeo, matBlue);
+                strap.position.set(xPos, 0.48, 0.02);
+                strap.rotation.y = Math.PI / 2;
+                strap.rotation.z = -0.2;
+                strap.castShadow = true;
+                avatar.torso.add(strap);
+
+                // Botones amarillos brillantes en la pechera
+                const btnGeo = new THREE.CylinderGeometry(0.048, 0.048, 0.025, 20);
+                btnGeo.rotateX(Math.PI / 2);
+                const button = new THREE.Mesh(btnGeo, matGold);
+                button.position.set(xPos, 0.46, 0.38);
+                avatar.torso.add(button);
+            });
+
+            // 3. CUELLO Y CABEZA DETALLADA
+            avatar.neck = new THREE.Group();
+            avatar.neck.position.set(0, 0.68, 0);
+            avatar.torso.add(avatar.neck);
+
+            const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.14, 20), matSkin);
+            avatar.neck.add(neckMesh);
+
+            avatar.head = new THREE.Group();
+            avatar.head.position.set(0, 0.34, 0.02);
+            avatar.neck.add(avatar.head);
+
+            // Cráneo / Rostro base redondeado con mejillas
+            const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.36, 32, 32), matSkin);
+            headMesh.scale.set(1.02, 1.04, 1.05);
+            headMesh.castShadow = true;
+            avatar.head.add(headMesh);
+
+            // Mejillas sutiles
+            [-0.17, 0.17].forEach(x => {
+                const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), matSkin);
+                cheek.position.set(x, -0.05, 0.28);
+                avatar.head.add(cheek);
+            });
+
+            // Nariz grande caricaturesca
+            const noseMesh = new THREE.Mesh(new THREE.SphereGeometry(0.125, 24, 24), matSkin);
+            noseMesh.position.set(0, -0.02, 0.39);
+            noseMesh.scale.set(1.12, 0.92, 1.05);
+            noseMesh.castShadow = true;
+            avatar.head.add(noseMesh);
+
+            // Bigote icónico ondulado (dividido en lóbulos para darle volumen y expresividad)
+            const mustacheGroup = new THREE.Group();
+            mustacheGroup.position.set(0, -0.11, 0.34);
+            avatar.head.add(mustacheGroup);
+
+            avatar.mustacheLeft = new THREE.Group();
+            avatar.mustacheRight = new THREE.Group();
+            mustacheGroup.add(avatar.mustacheLeft, avatar.mustacheRight);
+
+            for (let i = 0; i < 3; i++) {
+                const radius = 0.058 - i * 0.008;
+                const xOffset = 0.055 + i * 0.065;
+                const yOffset = -i * 0.012;
+                const zOffset = -i * 0.025;
+
+                const lobeL = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16), matHair);
+                lobeL.position.set(-xOffset, yOffset, zOffset);
+                lobeL.scale.set(1.1, 0.85, 0.8);
+                avatar.mustacheLeft.add(lobeL);
+
+                const lobeR = new THREE.Mesh(new THREE.SphereGeometry(radius, 16, 16), matHair);
+                lobeR.position.set(xOffset, yOffset, zOffset);
+                lobeR.scale.set(1.1, 0.85, 0.8);
+                avatar.mustacheRight.add(lobeR);
+            }
+
+            // Ojos expresivos (Esclerótica blanca, iris azul, pupila negra y brillo)
+            [-0.115, 0.115].forEach((x, idx) => {
+                const eyeGroup = new THREE.Group();
+                eyeGroup.position.set(x, 0.08, 0.31);
+                eyeGroup.rotation.y = x > 0 ? 0.18 : -0.18;
+
+                const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), matWhite);
+                sclera.scale.set(0.75, 1.25, 0.45);
+                eyeGroup.add(sclera);
+
+                const iris = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 16), matEyeBlue);
+                iris.position.set(x > 0 ? -0.01 : 0.01, 0, 0.025);
+                iris.scale.set(0.75, 1.2, 0.45);
+                eyeGroup.add(iris);
+
+                const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.025, 16, 16), matBlack);
+                pupil.position.set(x > 0 ? -0.01 : 0.01, 0, 0.036);
+                pupil.scale.set(0.75, 1.2, 0.45);
+                eyeGroup.add(pupil);
+
+                const glint = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 8), matWhite);
+                glint.position.set(x > 0 ? 0.005 : 0.015, 0.022, 0.045);
+                eyeGroup.add(glint);
+
+                avatar.head.add(eyeGroup);
+
+                // Cejas gruesas y animables
+                const browGeo = new THREE.BoxGeometry(0.11, 0.032, 0.035);
+                const brow = new THREE.Mesh(browGeo, matHair);
+                brow.position.set(x * 1.05, 0.19, 0.32);
+                brow.rotation.z = x > 0 ? -0.15 : 0.15;
+                avatar.head.add(brow);
+
+                if (idx === 0) avatar.eyebrowLeft = brow;
+                else avatar.eyebrowRight = brow;
+            });
+
+            // Orejas y patillas
+            [-0.35, 0.35].forEach(x => {
+                const ear = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 16), matSkin);
+                ear.position.set(x, 0.01, -0.02);
+                ear.scale.set(0.55, 1.15, 0.85);
+                ear.castShadow = true;
+                avatar.head.add(ear);
+
+                // Patillas
+                const sideburn = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.07), matHair);
+                sideburn.position.set(x * 0.94, 0.06, 0.09);
+                avatar.head.add(sideburn);
+            });
+
+            // Cabello posterior
+            const backHair = new THREE.Mesh(new THREE.SphereGeometry(0.355, 24, 24), matHair);
+            backHair.position.set(0, 0.02, -0.05);
+            avatar.head.add(backHair);
+
+            // 4. GORRA ROJA CON VISERA Y EMBLEMA (Con grupo propio para rebote físico)
+            avatar.capGroup = new THREE.Group();
+            avatar.capGroup.position.set(0, 0.18, 0);
+            avatar.head.add(avatar.capGroup);
+
+            // Copa abombada de la gorra
+            avatar.capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.39, 32, 24), matRed);
+            avatar.capCrown.position.set(0, 0.07, -0.02);
+            avatar.capCrown.scale.set(1.06, 0.85, 1.12);
+            avatar.capCrown.castShadow = true;
+            avatar.capGroup.add(avatar.capCrown);
+
+            // Visera frontal curva
+            const visorGeo = new THREE.CylinderGeometry(0.36, 0.38, 0.035, 28, 1, false, -Math.PI * 0.42, Math.PI * 0.84);
+            avatar.capVisor = new THREE.Mesh(visorGeo, matRed);
+            avatar.capVisor.position.set(0, -0.01, 0.14);
+            avatar.capVisor.rotation.x = 0.12;
+            avatar.capVisor.castShadow = true;
+            avatar.capGroup.add(avatar.capVisor);
+
+            // Círculo blanco frontal de la gorra con letra 'M' roja
+            const badgeCanvas = document.createElement('canvas');
+            badgeCanvas.width = 128;
+            badgeCanvas.height = 128;
+            const bCtx = badgeCanvas.getContext('2d');
+            bCtx.fillStyle = '#ffffff';
+            bCtx.beginPath();
+            bCtx.arc(64, 64, 60, 0, Math.PI * 2);
+            bCtx.fill();
+            bCtx.fillStyle = '#e61919';
+            bCtx.font = '900 76px Inter, sans-serif';
+            bCtx.textAlign = 'center';
+            bCtx.textBaseline = 'middle';
+            bCtx.fillText('M', 64, 68);
+
+            const badgeTex = new THREE.CanvasTexture(badgeCanvas);
+            const badgeMat = new THREE.MeshStandardMaterial({ map: badgeTex, roughness: 0.3 });
+            const badgeMesh = new THREE.Mesh(new THREE.CircleGeometry(0.11, 24), badgeMat);
+            badgeMesh.position.set(0, 0.13, 0.38);
+            badgeMesh.rotation.x = -0.22;
+            avatar.capGroup.add(badgeMesh);
+
+            // 5. EXTREMIDADES SUPERIORES ARTICULADAS (Hombro -> Brazo -> Codo -> Antebrazo -> Guante)
+            function createArm(isLeft) {
+                const sign = isLeft ? -1 : 1;
+                const shoulder = new THREE.Group();
+                shoulder.position.set(sign * 0.41, 0.50, 0);
+                avatar.torso.add(shoulder);
+
+                // Articulación del hombro
+                const shoulderJoint = new THREE.Mesh(new THREE.SphereGeometry(0.105, 16, 16), matRed);
+                shoulderJoint.castShadow = true;
+                shoulder.add(shoulderJoint);
+
+                // Brazo superior
+                const upperArmGeo = new THREE.CylinderGeometry(0.085, 0.075, 0.30, 16);
+                upperArmGeo.translate(0, -0.15, 0);
+                const upperArm = new THREE.Mesh(upperArmGeo, matRed);
+                upperArm.castShadow = true;
+                shoulder.add(upperArm);
+
+                // Codo
+                const elbow = new THREE.Group();
+                elbow.position.set(0, -0.30, 0);
+                shoulder.add(elbow);
+
+                const elbowJoint = new THREE.Mesh(new THREE.SphereGeometry(0.078, 16, 16), matRed);
+                elbow.add(elbowJoint);
+
+                // Antebrazo
+                const forearmGeo = new THREE.CylinderGeometry(0.075, 0.082, 0.26, 16);
+                forearmGeo.translate(0, -0.13, 0);
+                const forearm = new THREE.Mesh(forearmGeo, matRed);
+                forearm.castShadow = true;
+                elbow.add(forearm);
+
+                // Mano con guante blanco caricaturesco
+                const hand = new THREE.Group();
+                hand.position.set(0, -0.28, 0);
+                elbow.add(hand);
+
+                // Puño del guante
+                const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.088, 0.026, 12, 20), matGlove);
+                cuff.rotation.x = Math.PI / 2;
+                cuff.position.y = 0.02;
+                hand.add(cuff);
+
+                // Palma gruesa
+                const palm = new THREE.Mesh(new THREE.SphereGeometry(0.125, 20, 20), matGlove);
+                palm.position.y = -0.08;
+                palm.scale.set(1.05, 1.15, 0.9);
+                palm.castShadow = true;
+                hand.add(palm);
+
+                // Pulgar
+                const thumb = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 12), matGlove);
+                thumb.position.set(-sign * 0.09, -0.06, 0.07);
+                thumb.scale.set(0.9, 1.3, 0.9);
+                hand.add(thumb);
+
+                return { shoulder, elbow, hand };
+            }
+
+            const leftArm = createArm(true);
+            avatar.leftShoulder = leftArm.shoulder;
+            avatar.leftElbow = leftArm.elbow;
+            avatar.leftHand = leftArm.hand;
+
+            const rightArm = createArm(false);
+            avatar.rightShoulder = rightArm.shoulder;
+            avatar.rightElbow = rightArm.elbow;
+            avatar.rightHand = rightArm.hand;
+
+            // 6. EXTREMIDADES INFERIORES ARTICULADAS (Cadera -> Muslo -> Rodilla -> Pantorrilla -> Zapato)
+            function createLeg(isLeft) {
+                const sign = isLeft ? -1 : 1;
+                const hip = new THREE.Group();
+                hip.position.set(sign * 0.19, -0.12, 0);
+                avatar.pelvis.add(hip);
+
+                // Muslo (Overol azul)
+                const thighGeo = new THREE.CylinderGeometry(0.135, 0.115, 0.34, 20);
+                thighGeo.translate(0, -0.17, 0);
+                const thigh = new THREE.Mesh(thighGeo, matBlue);
+                thigh.castShadow = true;
+                hip.add(thigh);
+
+                // Rodilla articulada
+                const knee = new THREE.Group();
+                knee.position.set(0, -0.34, 0);
+                hip.add(knee);
+
+                const kneeJoint = new THREE.Mesh(new THREE.SphereGeometry(0.115, 18, 18), matBlue);
+                knee.add(kneeJoint);
+
+                // Pantorrilla + dobladillo del pantalón
+                const calfGeo = new THREE.CylinderGeometry(0.112, 0.118, 0.28, 20);
+                calfGeo.translate(0, -0.14, 0);
+                const calf = new THREE.Mesh(calfGeo, matBlue);
+                calf.castShadow = true;
+                knee.add(calf);
+
+                // Pie / Zapato marrón robusto
+                const foot = new THREE.Group();
+                foot.position.set(0, -0.30, 0);
+                knee.add(foot);
+
+                // Talón / Tobillo del zapato
+                const heel = new THREE.Mesh(new THREE.CylinderGeometry(0.115, 0.125, 0.12, 20), matShoe);
+                heel.position.set(0, -0.04, 0);
+                heel.castShadow = true;
+                foot.add(heel);
+
+                // Puntera redondeada del zapato
+                const toe = new THREE.Mesh(new THREE.SphereGeometry(0.135, 22, 18), matShoe);
+                toe.position.set(0, -0.04, 0.11);
+                toe.scale.set(1.0, 0.78, 1.35);
+                toe.castShadow = true;
+                foot.add(toe);
+
+                // Suela ligeramente más clara
+                const sole = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.03, 0.38), matHair);
+                sole.position.set(0, -0.095, 0.07);
+                foot.add(sole);
+
+                return { hip, knee, foot };
+            }
+
+            const leftLeg = createLeg(true);
+            avatar.leftHip = leftLeg.hip;
+            avatar.leftKnee = leftLeg.knee;
+            avatar.leftFoot = leftLeg.foot;
+
+            const rightLeg = createLeg(false);
+            avatar.rightHip = rightLeg.hip;
+            avatar.rightKnee = rightLeg.knee;
+            avatar.rightFoot = rightLeg.foot;
+        }
+
+        /**
+         * Partículas luminosas ambientales flotando alrededor del escenario
+         */
+        function buildAmbientParticles() {
+            const count = 140;
+            const geo = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 2.2 + Math.random() * 6.5;
+                positions[i * 3] = Math.cos(angle) * radius;
+                positions[i * 3 + 1] = 0.3 + Math.random() * 5.5;
+                positions[i * 3 + 2] = Math.sin(angle) * radius;
+
+                const color = new THREE.Color().setHSL(Math.random(), 0.85, 0.6);
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+            }
+
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const mat = new THREE.PointsMaterial({
+                size: 0.07,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.75
+            });
+
+            floatingParticles = new THREE.Points(geo, mat);
+            scene.add(floatingParticles);
+        }
+
+        /**
+         * ============================================================================
+         * SISTEMA DE AUDIO WEB AUDIO API (MP3 + SINTETIZADOR DE DEMO INTEGRADO)
+         * ============================================================================
+         */
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 512; // 256 bins de frecuencia para baja latencia
+                analyser.smoothingTimeConstant = 0.72;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = parseFloat(volumeSlider.value);
+
+                // Conectar analizador a la salida principal
+                analyser.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
+
+                // Conectar elemento <audio> para MP3 externos
+                sourceNode = audioCtx.createMediaElementSource(audioPlayer);
+                sourceNode.connect(analyser);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        /**
+         * Detiene el sintetizador de demostración si estaba activo
+         */
+        function stopDemoSynth() {
+            isDemoPlaying = false;
+            if (demoInterval) {
+                clearInterval(demoInterval);
+                demoInterval = null;
+            }
+            demoBtnText.textContent = "Modo Demo";
+            demoBtn.classList.remove('ring-2', 'ring-amber-400');
+        }
+
+        /**
+         * Inicia un bucle rítmico estilo música electrónica/retro con Web Audio API
+         * para probar los movimientos inmediatamente sin necesidad de subir un MP3.
+         */
+        function startDemoSynth() {
+            initAudioContext();
+            audioPlayer.pause();
+            stopDemoSynth();
+
+            currentMode = 'demo';
+            isDemoPlaying = true;
+            playPauseBtn.disabled = false;
+            updatePlayPauseIcon(true);
+            trackStatus.textContent = "Ritmo Demo Sintetizado (128 BPM)";
+            demoBtnText.textContent = "Reiniciar Demo";
+            demoBtn.classList.add('ring-2', 'ring-amber-400');
+            showToast("Modo Demo activado: ¡A bailar!");
+
+            let step = 0;
+            const tempoMs = (60 / 128 / 2) * 1000; // Corcheas a 128 BPM
+
+            const triggerStep = () => {
+                if (!isDemoPlaying) return;
+                const now = audioCtx.currentTime;
+
+                // Bombo (Kick) potente en tiempos 0, 2, 4, 6 (genera graves fuertes)
+                if (step % 2 === 0) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(145, now);
+                    osc.frequency.exponentialRampToValueAtTime(36, now + 0.14);
+
+                    // Cada 4 tiempos un golpe extra fuerte (accent beat)
+                    const punch = (step % 8 === 0) ? 1.15 : 0.85;
+                    gain.gain.setValueAtTime(punch, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+                    osc.connect(gain);
+                    gain.connect(analyser);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+
+                // Caja / Palmada (Snare) en tiempos 2 y 6
+                if (step % 4 === 2) {
+                    const bufferSize = audioCtx.sampleRate * 0.14;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                    const noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.value = 900;
+
+                    const gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.45, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+
+                    noise.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(analyser);
+                    noise.start(now);
+                }
+
+                // Melodía estilo Chiptune alegre (arpegio)
+                const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25, 587.33, 880.00];
+                const freq = notes[step % notes.length];
+                const leadOsc = audioCtx.createOscillator();
+                const leadGain = audioCtx.createGain();
+                leadOsc.type = 'triangle';
+                leadOsc.frequency.setValueAtTime(freq, now);
+
+                leadGain.gain.setValueAtTime(0.18, now);
+                leadGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+                leadOsc.connect(leadGain);
+                leadGain.connect(analyser);
+                leadOsc.start(now);
+                leadOsc.stop(now + 0.16);
+
+                step = (step + 1) % 16;
+            };
+
+            triggerStep();
+            demoInterval = setInterval(triggerStep, tempoMs);
+        }
+
+        /**
+         * Vincula eventos de carga de archivo MP3, Play/Pausa y Volumen
+         */
+        function setupAudioUIEvents() {
+            // Carga de archivo MP3 desde el dispositivo
+            mp3Input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                initAudioContext();
+                stopDemoSynth();
+
+                const fileURL = URL.createObjectURL(file);
+                audioPlayer.src = fileURL;
+                currentMode = 'mp3';
+
+                audioPlayer.play().then(() => {
+                    playPauseBtn.disabled = false;
+                    updatePlayPauseIcon(true);
+                    trackStatus.textContent = `Sonando: ${file.name}`;
+                    showToast(`Cargado: ${file.name}`);
+                }).catch(err => {
+                    console.error("Error al reproducir MP3:", err);
+                    showToast("Pulsa Play para iniciar la reproducción");
+                    playPauseBtn.disabled = false;
+                    updatePlayPauseIcon(false);
+                });
+            });
+
+            // Botón Modo Demo
+            demoBtn.addEventListener('click', () => {
+                startDemoSynth();
+            });
+
+            // Botón Play / Pausa unificado
+            playPauseBtn.addEventListener('click', () => {
+                if (currentMode === 'mp3') {
+                    if (audioPlayer.paused) {
+                        audioCtx.resume();
+                        audioPlayer.play();
+                        updatePlayPauseIcon(true);
+                    } else {
+                        audioPlayer.pause();
+                        updatePlayPauseIcon(false);
+                    }
+                } else if (currentMode === 'demo') {
+                    if (isDemoPlaying) {
+                        stopDemoSynth();
+                        updatePlayPauseIcon(false);
+                        trackStatus.textContent = "Ritmo Demo en pausa";
+                    } else {
+                        startDemoSynth();
+                    }
+                }
+            });
+
+            // Control de volumen
+            volumeSlider.addEventListener('input', (e) => {
+                if (masterGain) {
+                    masterGain.gain.value = parseFloat(e.target.value);
+                }
+            });
+
+            // Al terminar la canción MP3
+            audioPlayer.addEventListener('ended', () => {
+                updatePlayPauseIcon(false);
+                trackStatus.textContent = "Canción finalizada";
+            });
+        }
+
+        function updatePlayPauseIcon(isPlaying) {
+            if (isPlaying) {
+                iconPlay.classList.add('hidden');
+                iconPause.classList.remove('hidden');
+            } else {
+                iconPlay.classList.remove('hidden');
+                iconPause.classList.add('hidden');
+            }
+        }
+
+        /**
+         * ============================================================================
+         * ANÁLISIS DE FRECUENCIAS Y MOTOR DE BAILE REACTIVO AL BEAT
+         * ============================================================================
+         */
+        function analyzeAudio() {
+            if (!analyser || !dataArray) return;
+
+            analyser.getByteFrequencyData(dataArray);
+
+            // Cálculo de bandas de frecuencia (bins de ~86Hz cada uno con sampleRate 44100 y fftSize 512)
+            // Bins 0-2: Sub-graves y graves profundos (Bombo / Bass)
+            const rawBass = (dataArray[0] * 1.15 + dataArray[1] * 1.1 + dataArray[2]) / (3.25 * 255);
+            // Bins 3-7: Graves-medios (Bajo eléctrico / Groove)
+            let sumLowMid = 0;
+            for (let i = 3; i <= 7; i++) sumLowMid += dataArray[i];
+            const rawLowMid = sumLowMid / (5 * 255);
+
+            // Bins 8-28: Frecuencias medias (Voces, sintetizadores, guitarras)
+            let sumMid = 0;
+            for (let i = 8; i <= 28; i++) sumMid += dataArray[i];
+            const rawMid = sumMid / (21 * 255);
+
+            // Bins 29-80: Agudos (Platillos, brillo)
+            let sumHigh = 0;
+            for (let i = 29; i <= 80; i++) sumHigh += dataArray[i];
+            const rawHigh = sumHigh / (52 * 255);
+
+            // Suavizado rápido en ataque, gradual en caída para movimientos reactivos pero orgánicos
+            audioMetrics.bass = THREE.MathUtils.lerp(audioMetrics.bass, Math.min(rawBass, 1), rawBass > audioMetrics.bass ? 0.65 : 0.22);
+            audioMetrics.lowMid = THREE.MathUtils.lerp(audioMetrics.lowMid, rawLowMid, 0.35);
+            audioMetrics.mid = THREE.MathUtils.lerp(audioMetrics.mid, rawMid, 0.3);
+            audioMetrics.high = THREE.MathUtils.lerp(audioMetrics.high, rawHigh, 0.35);
+
+            // Detección de golpe brusco (Transiente / Punch): diferencia repentina en los graves
+            const deltaBass = Math.max(0, audioMetrics.bass - audioMetrics.prevBass);
+            if (deltaBass > 0.045 && audioMetrics.bass > 0.35) {
+                audioMetrics.beatImpact = Math.min(1.5, audioMetrics.beatImpact + deltaBass * 4.5);
+            } else {
+                audioMetrics.beatImpact = THREE.MathUtils.lerp(audioMetrics.beatImpact, 0, 0.16);
+            }
+            audioMetrics.prevBass = audioMetrics.bass;
+
+            // Actualizar barra UI de impacto de graves
+            const intensityPct = Math.min(100, Math.round((audioMetrics.bass * 0.7 + audioMetrics.beatImpact * 0.45) * 100));
+            bassMeterBar.style.width = `${intensityPct}%`;
+            bassPercent.textContent = `${intensityPct}%`;
+        }
+
+        /**
+         * Aplica la coreografía procedural y física fluida sobre el avatar
+         */
+        function animateAvatarAndStage(elapsedTime, delta) {
+            const bass = audioMetrics.bass;
+            const punch = audioMetrics.beatImpact; // Pico repentino del golpe
+            const mid = audioMetrics.mid;
+            const high = audioMetrics.high;
+
+            // Factor de energía total: combina volumen de graves + brusquedad del golpe
+            const energy = Math.min(1.6, Math.pow(bass, 1.35) * 1.15 + punch * 0.65);
+            const isActive = energy > 0.04 || mid > 0.05;
+
+            if (isActive) {
+                // Velocidad rítmica modulada por la intensidad
+                const groovePhase = elapsedTime * 7.5;
+                const fastPhase = elapsedTime * 15.0;
+
+                // 1. SALTO Y REBOTE VERTICAL DE LA PELVIS
+                // Cuando el beat es muy fuerte (energy > 0.75), el avatar despega del pedestal con un salto energético
+                const jumpHeight = energy > 0.65 ? Math.pow((energy - 0.65) * 1.6, 1.4) * 0.55 : 0;
+                const bounceSquash = Math.abs(Math.sin(groovePhase)) * energy * 0.16;
+                const targetPelvisY = 0.86 - bounceSquash + jumpHeight;
+
+                avatar.pelvis.position.y = THREE.MathUtils.lerp(avatar.pelvis.position.y, targetPelvisY, 0.38);
+
+                // Balanceo lateral y rotación de caderas al ritmo de los graves-medios
+                avatar.pelvis.position.x = Math.sin(groovePhase * 0.5) * (0.08 + energy * 0.16);
+                avatar.pelvis.rotation.z = Math.sin(groovePhase * 0.5) * (0.06 + energy * 0.18);
+                avatar.pelvis.rotation.y = Math.cos(groovePhase * 0.5) * (0.12 + energy * 0.25);
+
+                // 2. FLEXIÓN DE PIERNAS Y RODILLAS (Rebote realista y patadas en saltos fuertes)
+                const kneeBend = bounceSquash * 3.8;
+                const kickAlternation = Math.sin(groovePhase * 0.5);
+
+                // Pierna Izquierda
+                avatar.leftHip.rotation.x = -kneeBend * 0.65 - Math.max(0, kickAlternation) * energy * 0.55;
+                avatar.leftHip.rotation.z = -0.06 - energy * 0.08;
+                avatar.leftKnee.rotation.x = kneeBend * 1.25 + Math.max(0, kickAlternation) * energy * 0.65;
+                // Mantener pie plano cuando toca el suelo o inclinarlo en el aire
+                avatar.leftFoot.rotation.x = jumpHeight > 0.05 ? 0.35 : -avatar.leftHip.rotation.x - avatar.leftKnee.rotation.x;
+
+                // Pierna Derecha
+                avatar.rightHip.rotation.x = -kneeBend * 0.65 - Math.max(0, -kickAlternation) * energy * 0.55;
+                avatar.rightHip.rotation.z = 0.06 + energy * 0.08;
+                avatar.rightKnee.rotation.x = kneeBend * 1.25 + Math.max(0, -kickAlternation) * energy * 0.65;
+                avatar.rightFoot.rotation.x = jumpHeight > 0.05 ? 0.35 : -avatar.rightHip.rotation.x - avatar.rightKnee.rotation.x;
+
+                // 3. TORSO DINÁMICO (Inclinación hacia adelante/atrás con cada golpe de bombo)
+                avatar.torso.rotation.x = 0.08 + punch * 0.35 + Math.sin(fastPhase) * energy * 0.12;
+                avatar.torso.rotation.z = -Math.sin(groovePhase * 0.5) * (0.10 + energy * 0.24);
+                avatar.torso.rotation.y = -Math.cos(groovePhase * 0.5) * (0.14 + mid * 0.32);
+
+                // Efecto "Squash & Stretch" caricaturesco sutil en el torso según el impacto
+                const stretch = 1 + jumpHeight * 0.18 - bounceSquash * 0.35;
+                avatar.torso.scale.set(1 / Math.sqrt(stretch), stretch, 1 / Math.sqrt(stretch));
+
+                // 4. BRAZOS Y CODOS FLEXIBLES (Movimientos amplios y enérgicos cuanto más fuerte es el beat)
+                const armPumpL = Math.sin(groovePhase);
+                const armPumpR = Math.cos(groovePhase);
+
+                // Hombro izquierdo: se alza hacia arriba en beats intensos
+                avatar.leftShoulder.rotation.z = -0.35 - energy * 1.15 - armPumpL * (0.25 + mid * 0.45);
+                avatar.leftShoulder.rotation.x = -0.3 - armPumpR * (0.35 + energy * 0.65);
+                avatar.leftElbow.rotation.x = -0.45 - Math.abs(armPumpL) * (0.4 + mid * 0.7);
+                avatar.leftElbow.rotation.z = -0.2 - punch * 0.4;
+
+                // Hombro derecho: alterna estilo "puño al aire" en golpes fuertes
+                avatar.rightShoulder.rotation.z = 0.35 + energy * 1.25 + armPumpR * (0.25 + mid * 0.45);
+                avatar.rightShoulder.rotation.x = -0.3 - armPumpL * (0.35 + energy * 0.65);
+                avatar.rightElbow.rotation.x = -0.45 - Math.abs(armPumpR) * (0.4 + mid * 0.7);
+                avatar.rightElbow.rotation.z = 0.2 + punch * 0.4;
+
+                // 5. CABEZA Y EXPRESIÓN FACIAL (Headbanging al ritmo y reacción en cejas/bigote)
+                avatar.head.rotation.x = 0.05 + Math.sin(fastPhase) * (0.08 + energy * 0.28) + punch * 0.22;
+                avatar.head.rotation.y = Math.sin(groovePhase * 0.5) * (0.15 + mid * 0.25);
+                avatar.head.rotation.z = Math.cos(groovePhase * 0.5) * (0.06 + energy * 0.14);
+
+                // Cejas y bigote reaccionan a los agudos y golpes
+                avatar.eyebrowLeft.position.y = 0.19 + high * 0.035 + punch * 0.02;
+                avatar.eyebrowRight.position.y = 0.19 + high * 0.035 + punch * 0.02;
+                avatar.mustacheLeft.rotation.z = Math.sin(fastPhase) * energy * 0.12;
+                avatar.mustacheRight.rotation.z = -Math.sin(fastPhase) * energy * 0.12;
+
+            } else {
+                // Animación de reposo (Idle breathing suave cuando no hay música)
+                const idleBreath = Math.sin(elapsedTime * 2.4);
+                avatar.pelvis.position.y = THREE.MathUtils.lerp(avatar.pelvis.position.y, 0.86 + idleBreath * 0.015, 0.1);
+                avatar.pelvis.position.x = THREE.MathUtils.lerp(avatar.pelvis.position.x, 0, 0.1);
+                avatar.pelvis.rotation.set(0, Math.sin(elapsedTime * 1.1) * 0.05, 0);
+
+                avatar.torso.rotation.set(0.03 + idleBreath * 0.02, 0, 0);
+                avatar.torso.scale.set(1, 1, 1);
+
+                avatar.leftShoulder.rotation.set(0.05, 0, -0.28 + idleBreath * 0.03);
+                avatar.leftElbow.rotation.set(-0.25, 0, -0.1);
+                avatar.rightShoulder.rotation.set(0.05, 0, 0.28 - idleBreath * 0.03);
+                avatar.rightElbow.rotation.set(-0.25, 0, 0.1);
+
+                avatar.leftHip.rotation.set(0, 0, -0.05);
+                avatar.leftKnee.rotation.set(0, 0, 0);
+                avatar.leftFoot.rotation.set(0, 0, 0);
+                avatar.rightHip.rotation.set(0, 0, 0.05);
+                avatar.rightKnee.rotation.set(0, 0, 0);
+                avatar.rightFoot.rotation.set(0, 0, 0);
+
+                avatar.head.rotation.set(idleBreath * 0.03, Math.sin(elapsedTime * 0.9) * 0.08, 0);
+            }
+
+            // 6. FÍSICA SECUNDARIA DE ROPA Y GORRA (Resorte con inercia / Spring Physics)
+            const bodyVelY = (avatar.pelvis.position.y - secondaryPhysics.prevBodyY) / Math.max(delta, 0.008);
+            const bodyVelRotZ = (avatar.pelvis.rotation.z - secondaryPhysics.prevBodyRotZ) / Math.max(delta, 0.008);
+            secondaryPhysics.prevBodyY = avatar.pelvis.position.y;
+            secondaryPhysics.prevBodyRotZ = avatar.pelvis.rotation.z;
+
+            // Física de la gorra: se levanta ligeramente con inercia cuando el avatar cae tras un salto o rebota
+            const capForceY = -bodyVelY * 0.028 - secondaryPhysics.capOffsetY * 140;
+            secondaryPhysics.capVelY = (secondaryPhysics.capVelY + capForceY * delta) * 0.82;
+            secondaryPhysics.capOffsetY = THREE.MathUtils.clamp(secondaryPhysics.capOffsetY + secondaryPhysics.capVelY * delta, -0.01, 0.14);
+
+            avatar.capGroup.position.y = 0.18 + secondaryPhysics.capOffsetY;
+            avatar.capGroup.rotation.x = -secondaryPhysics.capOffsetY * 1.6 - punch * 0.12;
+            avatar.capVisor.rotation.x = 0.12 - secondaryPhysics.capOffsetY * 1.4;
+
+            // Física fluida de los faldones del overol (se abren y ondean con los saltos y giros)
+            const targetFlapOpen = Math.min(0.65, Math.abs(bodyVelY) * 0.18 + energy * 0.25);
+            secondaryPhysics.clothAngleZ = THREE.MathUtils.lerp(secondaryPhysics.clothAngleZ, targetFlapOpen, 0.22);
+
+            avatar.clothSkirts.forEach((skirt, i) => {
+                const wave = Math.sin(elapsedTime * 14 + i * 1.1) * energy * 0.14;
+                skirt.pivot.rotation.z = -0.12 - secondaryPhysics.clothAngleZ + wave;
+                skirt.pivot.rotation.x = bodyVelRotZ * 0.03;
+            });
+
+            // 7. ILUMINACIÓN DINÁMICA Y VISUALIZADOR DE ESPECTRO DEL PEDESTAL
+            // El aro neón del pedestal cambia de intensidad y color según el golpe de grave
+            neonRingMat.emissiveIntensity = 1.6 + energy * 3.5;
+            neonRingMat.emissive.setHSL(0.55 - energy * 0.45, 0.95, 0.5);
+            innerRingMat.emissiveIntensity = 1.4 + punch * 4.0;
+
+            // Las luces de escenario pulsan y orbitan sutilmente con la música
+            stageLights[0].intensity = 1.2 + bass * 3.2;
+            stageLights[1].intensity = 1.2 + mid * 2.8;
+            stageLights[2].intensity = 1.5 + punch * 4.5;
+
+            // Actualizar barras del visualizador circular alrededor del pedestal
+            if (dataArray) {
+                for (let i = 0; i < spectrumBars.length; i++) {
+                    // Mapear simétricamente las frecuencias bajas-medias alrededor del círculo
+                    const binIndex = Math.floor((i % (spectrumBars.length / 2)) * 2.2);
+                    const val = (dataArray[binIndex] || 0) / 255;
+                    const targetScale = 0.06 + Math.pow(val, 1.3) * 0.85;
+                    spectrumBars[i].scale.y = THREE.MathUtils.lerp(spectrumBars[i].scale.y, targetScale, 0.35);
+                    spectrumBars[i].material.emissiveIntensity = 1.0 + val * 2.5;
+                }
+            }
+
+            // Rotación suave de las partículas ambientales
+            if (floatingParticles) {
+                floatingParticles.rotation.y += delta * (0.12 + energy * 0.45);
+                floatingParticles.position.y = Math.sin(elapsedTime * 1.5) * 0.15;
+            }
+        }
+
+        /**
+         * Ajuste responsivo de cámara y renderizador al cambiar tamaño de pantalla
+         */
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        /**
+         * Bucle principal de renderizado a 60 FPS
+         */
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const elapsedTime = clock.getElapsedTime();
+
+            analyzeAudio();
+            animateAvatarAndStage(elapsedTime, delta);
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Arrancar aplicación una vez cargada la ventana
+        window.onload = function () {
+            initScene();
+            animate();
+        };
+    </script>
+</body>
+</html>
