@@ -120,8 +120,27 @@
       gap: 12px;
       background: rgba(30, 41, 59, 0.6);
       border: 1px solid rgba(148, 163, 184, 0.2);
-      padding: 8px 10px;
+      padding: 3px 9px;
       border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .item-satelite:hover {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+    .item-satelite:focus-visible {
+      outline: 2px solid #38bdf8;
+      outline-offset: 1px;
+    }
+    .item-satelite.activa {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #0f172a;
+    }
+    .item-satelite.activa .nombre-satelite {
+      color: #0f172a;
     }
     .item-satelite img {
       width: 34px;
@@ -131,28 +150,11 @@
       box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.7), 0 0 6px rgba(255, 255, 255, 0.15);
       flex-shrink: 0;
     }
-    .btn-nombre-satelite {
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-family: inherit;
+    .nombre-satelite {
       font-size: 13px;
       font-weight: 600;
       color: #f1f5f9;
-      cursor: pointer;
       text-align: left;
-      transition: all 0.2s ease;
-    }
-    .btn-nombre-satelite:hover {
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.12);
-      border-color: rgba(56, 189, 248, 0.35);
-    }
-    .btn-nombre-satelite.activa {
-      color: #0f172a;
-      background: #38bdf8;
-      border-color: #38bdf8;
     }
     .sin-satelites {
       font-size: 12px;
@@ -523,9 +525,9 @@
           <div class="ficha-satelites-titulo">Principales satélites (${info.satelites.length})</div>
           <div class="lista-satelites">
             ${info.satelites.map((sat, idx) => `
-              <div class="item-satelite">
+              <div class="item-satelite" role="button" tabindex="0" data-sat-idx="${idx}" aria-pressed="false">
                 <img src="${sat.imagen}" alt="${sat.nombre}">
-                <button type="button" class="btn-nombre-satelite" data-sat-idx="${idx}">${sat.nombre}</button>
+                <span class="nombre-satelite">${sat.nombre}</span>
               </div>
             `).join('')}
           </div>
@@ -540,21 +542,30 @@
       fichaCuerpo.innerHTML = `
         <p class="ficha-dato"><strong>Tipo:</strong> ${info.tipo}</p>
         <p class="ficha-dato"><strong>Distancia al Sol:</strong> ${info.distancia}</p>
-        <p class="ficha-dato"><strong>Traslación (año):</strong> ${info.tiempoOrbita}</p>
-        <p class="ficha-dato"><strong>Rotación (día):</strong> ${info.tiempoRotacion}</p>
-        <p class="ficha-dato"><strong>Tamaño:</strong> ${info.tamanoTierra}</p>
+        <p class="ficha-dato"><strong>Traslación (vuelta al Sol):</strong> ${info.tiempoOrbita}</p>
+        <p class="ficha-dato"><strong>Rotación (sobre sí mismo):</strong> ${info.tiempoRotacion}</p>
+        <p class="ficha-dato"><strong>Tamaño respecto a la Tierra:</strong> ${info.tamanoTierra}</p>
         <p class="ficha-dato"><strong>Temp. Máx:</strong> ${info.tempMax}</p>
         <p class="ficha-dato"><strong>Temp. Mín:</strong> ${info.tempMin}</p>
         ${htmlSatelites}
       `;
 
-      fichaCuerpo.querySelectorAll('.btn-nombre-satelite').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const satIdx = Number(btn.dataset.satIdx);
+      fichaCuerpo.querySelectorAll('.item-satelite').forEach((itemSat) => {
+        const alternarSatelite = () => {
+          const satIdx = Number(itemSat.dataset.satIdx);
           const sat = info.satelites[satIdx];
           if (sat && sat.registroEtiqueta) {
             sat.registroEtiqueta.seleccionado = !sat.registroEtiqueta.seleccionado;
-            btn.classList.toggle('activa', sat.registroEtiqueta.seleccionado);
+            itemSat.classList.toggle('activa', sat.registroEtiqueta.seleccionado);
+            itemSat.setAttribute('aria-pressed', String(sat.registroEtiqueta.seleccionado));
+          }
+        };
+
+        itemSat.addEventListener('click', alternarSatelite);
+        itemSat.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            alternarSatelite();
           }
         });
       });
