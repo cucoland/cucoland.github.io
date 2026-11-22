@@ -2,17 +2,27 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sistema Solar 3D Interactivo - Three.js</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      overscroll-behavior: none;
       background-color: #000000;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
     canvas {
       display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
     }
 
     /* Contenedor de botones fijos en la esquina superior derecha */
@@ -37,6 +47,7 @@
       backdrop-filter: blur(6px);
       transition: all 0.2s ease;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      touch-action: manipulation;
     }
     .btn-control:hover {
       background: rgba(30, 41, 59, 0.95);
@@ -52,6 +63,8 @@
       width: 295px;
       max-height: calc(100vh - 110px);
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
       background: rgba(10, 15, 28, 0.92);
       border: 1px solid rgba(56, 189, 248, 0.5);
       border-left: 4px solid #38bdf8;
@@ -80,12 +93,13 @@
       background: transparent;
       border: none;
       color: #94a3b8;
-      font-size: 20px;
+      font-size: 22px;
       line-height: 1;
       cursor: pointer;
-      padding: 2px 6px;
+      padding: 4px 8px;
       border-radius: 4px;
       transition: color 0.2s, background 0.2s;
+      touch-action: manipulation;
     }
     #btn-cerrar-ficha:hover {
       color: #f8fafc;
@@ -120,11 +134,12 @@
       gap: 12px;
       background: rgba(30, 41, 59, 0.6);
       border: 1px solid rgba(148, 163, 184, 0.2);
-      padding: 3px 9px;
+      padding: 5px 10px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
       user-select: none;
+      touch-action: manipulation;
     }
     .item-satelite:hover {
       background: rgba(56, 189, 248, 0.14);
@@ -214,6 +229,7 @@
       backdrop-filter: blur(3px);
       display: flex;
       align-items: center;
+      touch-action: manipulation;
     }
 
     .escala-pista {
@@ -235,6 +251,18 @@
       cursor: pointer;
       padding: 0;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    /* Área táctil ampliada invisible alrededor de cada punto de la escala */
+    .punto-escala::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 28px;
+      height: 28px;
+      transform: translate(-50%, -50%);
     }
 
     .punto-escala:hover {
@@ -290,6 +318,47 @@
       pointer-events: none;
       box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
     }
+
+    /* Adaptación responsiva para dispositivos móviles y pantallas estrechas */
+    @media (max-width: 640px) {
+      #panel-controles {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .btn-control {
+        padding: 9px 13px;
+        font-size: 13px;
+      }
+
+      #ficha-lateral {
+        top: 60px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: calc(100vh - 122px);
+        padding: 14px;
+      }
+
+      #ficha-lateral h3 {
+        font-size: 16px;
+      }
+
+      .ficha-dato {
+        font-size: 12.5px;
+        margin: 5px 0;
+      }
+
+      #barra-escala-inferior {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        padding: 0 12px 0 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -320,28 +389,56 @@
   <script>
     // 1. RENDERIZADOR Y ESCENA
     const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
-    // 2. CÁMARA Y CONTROLES DE RATÓN INTEGRADOS
+    // 2. CÁMARA Y CONTROLES DE RATÓN Y TÁCTILES INTEGRADOS
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2500);
     let camRadius = 380;
     let camTheta = -0.6;
     let camPhi = 0.85;
+    const camTarget = new THREE.Vector3(0, 0, 0);
+
     let isDragging = false;
+    let isPanning = false;
     let seArrastro = false;
     let prevMouse = { x: 0, y: 0 };
     let downMouse = { x: 0, y: 0 };
 
     function actualizarCamara() {
-      camera.position.x = camRadius * Math.sin(camPhi) * Math.sin(camTheta);
-      camera.position.y = camRadius * Math.cos(camPhi);
-      camera.position.z = camRadius * Math.sin(camPhi) * Math.cos(camTheta);
-      camera.lookAt(0, 0, 0);
+      camera.position.x = camTarget.x + camRadius * Math.sin(camPhi) * Math.sin(camTheta);
+      camera.position.y = camTarget.y + camRadius * Math.cos(camPhi);
+      camera.position.z = camTarget.z + camRadius * Math.sin(camPhi) * Math.cos(camTheta);
+      camera.lookAt(camTarget);
     }
+
+    // Desplaza el punto objetivo (paneo) en el plano paralelo a la pantalla
+    function desplazarCamTarget(deltaX, deltaY) {
+      const factorPaneo = camRadius * 0.0014;
+      const derecha = new THREE.Vector3(Math.cos(camTheta), 0, -Math.sin(camTheta));
+      const adelante = new THREE.Vector3(
+        -Math.sin(camPhi) * Math.sin(camTheta),
+        -Math.cos(camPhi),
+        -Math.sin(camPhi) * Math.cos(camTheta)
+      ).normalize();
+      const arriba = new THREE.Vector3().crossVectors(derecha, adelante).normalize();
+
+      camTarget.addScaledVector(derecha, -deltaX * factorPaneo);
+      camTarget.addScaledVector(arriba, deltaY * factorPaneo);
+
+      // Limitar el desplazamiento para no perder el Sistema Solar de vista
+      camTarget.clampScalar(-260, 260);
+    }
+
+    function centrarCamaraEnOrigen() {
+      camTarget.set(0, 0, 0);
+      actualizarCamara();
+    }
+
     actualizarCamara();
 
     // 3. GENERADOR DE TEXTURAS PROCEDURALES Y MINIATURAS DE SATÉLITES
@@ -977,7 +1074,7 @@
       escalaPista.appendChild(btnPunto);
     }
 
-    // 7. RAYCASTER Y CONTROLES DE RATÓN
+    // 7. RAYCASTER Y CONTROLES DE RATÓN + TÁCTILES
     const raycaster = new THREE.Raycaster();
     const mouseNDC = new THREE.Vector2();
 
@@ -991,15 +1088,19 @@
 
     function esElementoUI(target) {
       return Boolean(
-        target.closest('#panel-controles') ||
-        target.closest('#ficha-lateral') ||
-        target.closest('#barra-escala-inferior')
+        target && (
+          target.closest('#panel-controles') ||
+          target.closest('#ficha-lateral') ||
+          target.closest('#barra-escala-inferior')
+        )
       );
     }
 
+    // --- EVENTOS DE RATÓN (ESCRITORIO) ---
     window.addEventListener('mousedown', (e) => {
       if (esElementoUI(e.target)) return;
       isDragging = true;
+      isPanning = (e.button === 2 || e.button === 1 || e.shiftKey);
       seArrastro = false;
       downMouse = { x: e.clientX, y: e.clientY };
       prevMouse = { x: e.clientX, y: e.clientY };
@@ -1010,8 +1111,16 @@
         const dist = Math.hypot(e.clientX - downMouse.x, e.clientY - downMouse.y);
         if (dist > 4) seArrastro = true;
 
-        camTheta -= (e.clientX - prevMouse.x) * 0.005;
-        camPhi = Math.max(0.1, Math.min(Math.PI - 0.1, camPhi - (e.clientY - prevMouse.y) * 0.005));
+        const dx = e.clientX - prevMouse.x;
+        const dy = e.clientY - prevMouse.y;
+
+        if (isPanning) {
+          desplazarCamTarget(dx, dy);
+        } else {
+          camTheta -= dx * 0.005;
+          camPhi = Math.max(0.1, Math.min(Math.PI - 0.1, camPhi - dy * 0.005));
+        }
+
         prevMouse = { x: e.clientX, y: e.clientY };
         actualizarCamara();
       } else {
@@ -1025,19 +1134,157 @@
     });
 
     window.addEventListener('mouseup', (e) => {
-      if (isDragging && !seArrastro && !esElementoUI(e.target)) {
+      if (isDragging && !seArrastro && !isPanning && !esElementoUI(e.target)) {
         const planetaClicado = obtenerPlanetaBajoCursor(e.clientX, e.clientY);
         if (planetaClicado && planetaClicado.userData.infoPlaneta) {
           mostrarFichaPlaneta(planetaClicado.userData.infoPlaneta);
         }
       }
       isDragging = false;
+      isPanning = false;
+    });
+
+    window.addEventListener('contextmenu', (e) => {
+      if (!esElementoUI(e.target)) {
+        e.preventDefault();
+      }
+    });
+
+    window.addEventListener('dblclick', (e) => {
+      if (esElementoUI(e.target)) return;
+      const planetaClicado = obtenerPlanetaBajoCursor(e.clientX, e.clientY);
+      if (!planetaClicado) {
+        centrarCamaraEnOrigen();
+      }
     });
 
     window.addEventListener('wheel', (e) => {
-      if (e.target.closest('#ficha-lateral')) return;
+      if (e.target && e.target.closest('#ficha-lateral')) return;
       camRadius = Math.max(40, Math.min(800, camRadius + e.deltaY * 0.1));
       actualizarCamara();
+    }, { passive: true });
+
+    // --- EVENTOS TÁCTILES (MÓVILES Y TABLETS) ---
+    let modoTactil = 'ninguno'; // 'ninguno' | 'rotar' | 'pellizco'
+    let toqueInicio = { x: 0, y: 0, tiempo: 0 };
+    let toquePrevio = { x: 0, y: 0 };
+    let toqueSeMovio = false;
+    let distanciaPellizcoInicial = 0;
+    let radioPellizcoInicial = camRadius;
+    let centroPellizcoPrevio = { x: 0, y: 0 };
+    let ultimoTapTiempo = 0;
+    let ultimoTapPos = { x: 0, y: 0 };
+
+    function calcularDistanciaToques(t1, t2) {
+      return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+    }
+
+    function calcularCentroToques(t1, t2) {
+      return {
+        x: (t1.clientX + t2.clientX) * 0.5,
+        y: (t1.clientY + t2.clientY) * 0.5
+      };
+    }
+
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (e.cancelable) e.preventDefault();
+
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        modoTactil = 'rotar';
+        toqueSeMovio = false;
+        toqueInicio = { x: t.clientX, y: t.clientY, tiempo: performance.now() };
+        toquePrevio = { x: t.clientX, y: t.clientY };
+      } else if (e.touches.length >= 2) {
+        modoTactil = 'pellizco';
+        toqueSeMovio = true;
+        distanciaPellizcoInicial = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
+        radioPellizcoInicial = camRadius;
+        centroPellizcoPrevio = calcularCentroToques(e.touches[0], e.touches[1]);
+      }
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (e.cancelable) e.preventDefault();
+
+      if (e.touches.length === 1 && modoTactil === 'rotar') {
+        const t = e.touches[0];
+        const distTotal = Math.hypot(t.clientX - toqueInicio.x, t.clientY - toqueInicio.y);
+        if (distTotal > 6) {
+          toqueSeMovio = true;
+        }
+
+        const dx = t.clientX - toquePrevio.x;
+        const dy = t.clientY - toquePrevio.y;
+
+        // Sensibilidad ligeramente mayor para comodidad con el pulgar en pantallas móviles
+        camTheta -= dx * 0.0065;
+        camPhi = Math.max(0.1, Math.min(Math.PI - 0.1, camPhi - dy * 0.0065));
+
+        toquePrevio = { x: t.clientX, y: t.clientY };
+        actualizarCamara();
+      } else if (e.touches.length >= 2) {
+        if (modoTactil !== 'pellizco') {
+          modoTactil = 'pellizco';
+          distanciaPellizcoInicial = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
+          radioPellizcoInicial = camRadius;
+          centroPellizcoPrevio = calcularCentroToques(e.touches[0], e.touches[1]);
+          return;
+        }
+
+        const distActual = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
+        const factorEscala = distanciaPellizcoInicial / distActual;
+        camRadius = Math.max(40, Math.min(800, radioPellizcoInicial * factorEscala));
+
+        // Paneo suave simultáneo al mover ambos dedos
+        const centroActual = calcularCentroToques(e.touches[0], e.touches[1]);
+        const dxCentro = centroActual.x - centroPellizcoPrevio.x;
+        const dyCentro = centroActual.y - centroPellizcoPrevio.y;
+        desplazarCamTarget(dxCentro, dyCentro);
+        centroPellizcoPrevio = centroActual;
+
+        actualizarCamara();
+      }
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('touchend', (e) => {
+      if (e.cancelable) e.preventDefault();
+
+      // Si se levanta un dedo tras hacer pellizco y queda otro apoyado, evitar saltos bruscos de rotación
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        modoTactil = 'rotar';
+        toqueSeMovio = true;
+        toquePrevio = { x: t.clientX, y: t.clientY };
+        return;
+      }
+
+      if (e.touches.length === 0) {
+        if (modoTactil === 'rotar' && !toqueSeMovio) {
+          const ahora = performance.now();
+          const duracionToque = ahora - toqueInicio.tiempo;
+
+          if (duracionToque < 350) {
+            const planetaTocado = obtenerPlanetaBajoCursor(toqueInicio.x, toqueInicio.y);
+            if (planetaTocado && planetaTocado.userData.infoPlaneta) {
+              mostrarFichaPlaneta(planetaTocado.userData.infoPlaneta);
+            } else {
+              // Doble toque en el espacio vacío centra de nuevo la cámara en el Sol
+              const distDobleTap = Math.hypot(toqueInicio.x - ultimoTapPos.x, toqueInicio.y - ultimoTapPos.y);
+              if (ahora - ultimoTapTiempo < 320 && distDobleTap < 36) {
+                centrarCamaraEnOrigen();
+              }
+            }
+            ultimoTapTiempo = ahora;
+            ultimoTapPos = { x: toqueInicio.x, y: toqueInicio.y };
+          }
+        }
+        modoTactil = 'ninguno';
+      }
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('touchcancel', () => {
+      modoTactil = 'ninguno';
     });
 
     window.addEventListener('keydown', (e) => {
@@ -1047,6 +1294,8 @@
       } else if (e.code === 'Escape') {
         fichaLateral.style.display = 'none';
         limpiarEtiquetasSatelitesSeleccionados();
+      } else if (e.code === 'KeyR') {
+        centrarCamaraEnOrigen();
       }
     });
 
@@ -1147,6 +1396,7 @@
     window.addEventListener("resize", function() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
