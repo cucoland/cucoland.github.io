@@ -564,7 +564,81 @@
       return canvas.toDataURL();
     }
 
-    function crearTexturaAnillo(color1, color2) {
+function crearTexturaAnilloRadial(color1, color2) {
+  const size = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  const cx = size / 2;
+  const cy = size / 2;
+  // Mantenemos exactamente la misma proporción radial (30/256 y 120/256) para encajar con tus UVs
+  const rInterno = size * (30 / 256);
+  const rExterno = size * (120 / 256);
+
+  const grad = ctx.createRadialGradient(cx, cy, rInterno, cx, cy, rExterno);
+
+  // 1. Hueco interior
+  grad.addColorStop(0.00, 'rgba(136, 117, 114, 0.9)');
+
+  // 2. Anillo C (banda interior oscura y semitransparente)
+  grad.addColorStop(0.03, 'rgba(51, 63, 44, 0.50)');
+  grad.addColorStop(0.18, 'rgba(92, 81, 66, 0.50)');
+
+  // 3. Anillo B (el más ancho, luminoso y opaco, usando tu color1 como base)
+  grad.addColorStop(0.22, 'rgba(176, 161, 132, 0.85)');
+  grad.addColorStop(0.32, color1); // Tono arena/crema principal
+  grad.addColorStop(0.47, 'rgba(216, 202, 170, 0.96)');
+  grad.addColorStop(0.58, 'rgba(184, 169, 139, 0.90)');
+
+  // 4. División de Cassini (hueco oscuro muy marcado entre el Anillo B y el A)
+  grad.addColorStop(0.60, 'rgba(169, 137, 106, 0.90)');
+  grad.addColorStop(0.645, 'rgba(144, 125, 106, 0.90)');
+
+  // 5. Anillo A (exterior, gris-beige más tenue, integrando tu color2)
+  grad.addColorStop(0.665, 'rgba(156, 144, 120, 0.80)');
+  grad.addColorStop(0.84, 'rgba(90, 85, 68, 0.96)');
+
+  // 6. División de Encke (línea oscura fina cerca del borde exterior)
+  grad.addColorStop(0.88, 'rgba(108, 94, 81, 0.90)');
+  grad.addColorStop(0.895, 'rgba(65, 56, 48, 0.90)');
+
+  // 7. Borde exterior del Anillo A y corte limpio
+  grad.addColorStop(0.91, 'rgba(145, 134, 114, 0.72)');
+  grad.addColorStop(0.985, 'rgba(130, 120, 102, 0.65)');
+  grad.addColorStop(1.00, 'rgba(88, 83, 60, 0.9)');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+
+  // 8. Micro-surcos concéntricos para dar la textura granulada de la foto
+  const totalSurcos = 280;
+  for (let i = 0; i < totalSurcos; i++) {
+    const t = i / totalSurcos;
+    // No dibujar surcos dentro de la División de Cassini
+    if (t > 0.595 && t < 0.65) continue;
+
+    const r = rInterno + t * (rExterno - rInterno);
+    const onda = Math.sin(i * 1.7) * Math.cos(i * 0.43);
+    const alpha = Math.abs(onda) * 0.15;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.lineWidth = (rExterno - rInterno) / totalSurcos;
+    ctx.strokeStyle = onda > 0
+      ? `rgba(245, 235, 210, ${alpha})`
+      : `rgba(28, 23, 18, ${alpha})`;
+    ctx.stroke();
+  }
+
+  const textura = new THREE.CanvasTexture(canvas);
+  textura.anisotropy = 8; // Evita que los anillos se vean borrosos en ángulo rasante
+  return textura;
+}
+
+
+    function crearTexturaAnilloLineal(color1, color2) {
       const canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 32;
@@ -796,9 +870,10 @@
       grupoPadre.add(lineaOrbita);
     }
 
-    function crearPlaneta(radio, textura, distanciaX, inclinacionGrados, info) {
+    function crearPlaneta(radio, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info) {
       const orbitaGrupo = new THREE.Object3D();
-      orbitaGrupo.rotation.z = THREE.MathUtils.degToRad(inclinacionGrados);
+      orbitaGrupo.rotation.z = THREE.MathUtils.degToRad(inclinacionOrbitalGrados);
+      orbitaGrupo.rotation.y = anguloInicialRad;
       scene.add(orbitaGrupo);
 
       crearLineaOrbita(distanciaX, orbitaGrupo);
@@ -808,6 +883,7 @@
       const mesh = new THREE.Mesh(geo, mat);
       
       mesh.receiveShadow = true;
+      mesh.rotation.z = THREE.MathUtils.degToRad(inclinacionAxialGrados);
 
       const obj = new THREE.Object3D();
       obj.add(mesh);
@@ -867,7 +943,7 @@
       return { mesh, obj };
     }
 
-    const mercurio = crearPlaneta(0.72, crearTexturaPlaneta('#8c8c8c', '#595959', 'crateres'), 25, 7.00, {
+    const mercurio = crearPlaneta(0.72, crearTexturaPlaneta('#8c8c8c', '#595959', 'crateres'), 25, 7.00, 0.034, 1.2, {
       nombre: 'Mercurio',
       tipo: 'Rocoso',
       distancia: '57,9 millones km',
@@ -880,7 +956,7 @@
       tempMin: '-180 °C'
     });
 
-    const venus = crearPlaneta(1.785, crearTexturaPlaneta('#e3bb76', '#c48f3b', 'bandas'), 43, 3.39, {
+    const venus = crearPlaneta(1.785, crearTexturaPlaneta('#e3bb76', '#c48f3b', 'bandas'), 43, 3.39, 177.36, 2.8, {
       nombre: 'Venus',
       tipo: 'Rocoso',
       distancia: '108,2 millones km',
@@ -893,7 +969,7 @@
       tempMin: '465 °C'
     });
 
-    const terra = crearPlaneta(1.88, crearTexturaPlaneta('#1c5ba6', '#2e8b57', 'tierra', true), 58, 0.00, {
+    const terra = crearPlaneta(1.88, crearTexturaPlaneta('#1c5ba6', '#2e8b57', 'tierra', true), 58, 0.00, 23.44, 4.1, {
       nombre: 'Tierra',
       tipo: 'Rocoso (71% líquido)',
       distancia: '149,6 millones km',
@@ -908,7 +984,7 @@
 
     const luna = crearLunaPlaneta('Luna', '3.474 km', 0.5125, '#a0a0a0', '#555555', 'crateres', 3, terra);
 
-    const marte = crearPlaneta(1.0, crearTexturaPlaneta('#c1440e', '#7a2504', 'crateres'), 78, 1.85, {
+    const marte = crearPlaneta(1.0, crearTexturaPlaneta('#c1440e', '#7a2504', 'crateres'), 78, 1.85, 25.19, 0.5, {
       nombre: 'Marte',
       tipo: 'Rocoso',
       distancia: '227,9 millones km',
@@ -924,7 +1000,7 @@
     const fobos = crearLunaPlaneta('Fobos', '22,5 km', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, marte);
     const deimos = crearLunaPlaneta('Deimos', '12,4 km', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, marte);
 
-    const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'jupiter'), 130, 1.31, {
+    const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'jupiter'), 130, 1.31, 3.13, 3.5, {
       nombre: 'Júpiter',
       tipo: 'Gigante gaseoso',
       distancia: '778,5 millones km',
@@ -942,7 +1018,7 @@
     const ganimedes = crearLunaPlaneta('Ganímedes', '5.268 km', 0.7775, '#827b70', '#484238', 'crateres', 28.5, jupiter);
     const calisto = crearLunaPlaneta('Calisto', '4.821 km', 0.71, '#5c5652', '#332e2b', 'crateres', 32, jupiter);
 
-    const saturno = crearPlaneta(17.18, crearTexturaPlaneta('#ead6b8', '#b89f78', 'bandas'), 162, 2.49, {
+    const saturno = crearPlaneta(17.18, crearTexturaPlaneta('#ead6b8', '#b89f78', 'bandas'), 162, 2.49, 26.73, 1.8, {
       nombre: 'Saturno',
       tipo: 'Gigante gaseoso',
       distancia: '1.434 millones km',
@@ -961,7 +1037,7 @@
     const titan = crearLunaPlaneta('Titán', '5.149 km', 0.76, '#d4a373', '#bc6c25', 'bandas', 21.25, saturno);
     const japeto = crearLunaPlaneta('Jápeto', '1.469 km', 0.28, '#9ca3af', '#374151', 'crateres', 24.5, saturno);
 
-    const urano = crearPlaneta(7.4825, crearTexturaPlaneta('#7de3f4', '#46a8ba', 'bandas'), 189, 0.77, {
+    const urano = crearPlaneta(7.4825, crearTexturaPlaneta('#7de3f4', '#46a8ba', 'bandas'), 189, 0.77, 97.77, 5.0, {
       nombre: 'Urano',
       tipo: 'Gigante helado / gaseoso',
       distancia: '2.871 millones km',
@@ -979,7 +1055,7 @@
     const titania = crearLunaPlaneta('Titania', '1.577 km', 0.2325, '#a8dadc', '#457b9d', 'crateres', 9.5, urano);
     const oberon = crearLunaPlaneta('Oberón', '1.523 km', 0.225, '#9e9599', '#5c5357', 'crateres', 11.2, urano);
 
-    const netuno = crearPlaneta(7.265, crearTexturaPlaneta('#3f54ba', '#1d2b75', 'bandas'), 204, 1.77, {
+    const netuno = crearPlaneta(7.265, crearTexturaPlaneta('#3f54ba', '#1d2b75', 'bandas'), 204, 1.77, 28.32, 2.2, {
       nombre: 'Neptuno',
       tipo: 'Gigante helado / gaseoso',
       distancia: '4.495 millones km',
@@ -994,7 +1070,7 @@
 
     const triton = crearLunaPlaneta('Tritón', '2.707 km', 0.40, '#bde0fe', '#a2d2ff', 'crateres', 9.5, netuno);
 
-    const plutao = crearPlaneta(0.35, crearTexturaPlaneta('#bcaaa4', '#795548', 'crateres'), 216, 17.16, {
+    const plutao = crearPlaneta(0.35, crearTexturaPlaneta('#bcaaa4', '#795548', 'crateres'), 216, 17.16, 122.53, 3.9, {
       nombre: 'Plutón',
       tipo: 'Planeta enano (rocoso/helado)',
       distancia: '5.906 millones km',
@@ -1009,39 +1085,37 @@
 
     const caronte = crearLunaPlaneta('Caronte', '1.212 km', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, plutao);
 
+    // Anillos de Saturno con degradado radial
     const saturnoRingMat = new THREE.MeshBasicMaterial({
-      map: crearTexturaAnillo('rgba(210, 190, 150, 0.85)', 'rgba(150, 130, 90, 0.4)'),
+      map: crearTexturaAnilloRadial('rgba(210, 190, 150, 0.85)', 'rgba(150, 130, 90, 0.4)'),
       side: THREE.DoubleSide,
       transparent: true
     });
 
-    const ringInteriorGeo = new THREE.RingGeometry(34, 39, 64);
+    const ringInteriorGeo = new THREE.RingGeometry(22, 30, 64);
     const saturnoRingInterior = new THREE.Mesh(ringInteriorGeo, saturnoRingMat);
-    saturno.obj.add(saturnoRingInterior);
-    saturnoRingInterior.position.x = 162;
-    saturnoRingInterior.rotation.x = -0.45 * Math.PI;
+    saturno.mesh.add(saturnoRingInterior);
+    saturnoRingInterior.rotation.x = -0.5 * Math.PI;
 
-    const ringExteriorGeo = new THREE.RingGeometry(26, 33, 64);
+    const ringExteriorGeo = new THREE.RingGeometry(31, 41, 64);
     const saturnoRingExterior = new THREE.Mesh(ringExteriorGeo, saturnoRingMat);
-    saturno.obj.add(saturnoRingExterior);
-    saturnoRingExterior.position.x = 162;
-    saturnoRingExterior.rotation.x = -0.45 * Math.PI;
+    saturno.mesh.add(saturnoRingExterior);
+    saturnoRingExterior.rotation.x = -0.5 * Math.PI;
 
-    const uranoRingGeo = new THREE.RingGeometry(15.5, 16.5, 64);
+    // Anillos de Urano
     const uranoRingMat = new THREE.MeshBasicMaterial({
-      map: crearTexturaAnillo('rgba(125, 227, 244, 0.5)', 'rgba(70, 168, 186, 0.2)'),
+      map: crearTexturaAnilloLineal('rgba(125, 227, 244, 0.5)', 'rgba(70, 168, 186, 0.2)'),
       side: THREE.DoubleSide,
       transparent: true
     });
+    const uranoRingGeo = new THREE.RingGeometry(15.5, 16.5, 64);
     const uranoRing = new THREE.Mesh(uranoRingGeo, uranoRingMat);
-    urano.obj.add(uranoRing);
-    uranoRing.position.x = 189;
+    urano.mesh.add(uranoRing);
     uranoRing.rotation.x = -0.5 * Math.PI;
 
     const uranoRing2Geo = new THREE.RingGeometry(13.5, 13.8, 64);
     const uranoRing2 = new THREE.Mesh(uranoRing2Geo, uranoRingMat);
-    urano.obj.add(uranoRing2);
-    uranoRing2.position.x = 189;
+    urano.mesh.add(uranoRing2);
     uranoRing2.rotation.x = -0.5 * Math.PI;
 
     const escalaPista = document.getElementById('escala-pista');
@@ -1414,15 +1488,15 @@
 
         caronte.mesh.rotateY(0.012); caronte.obj.rotateY(0.03);
 
-        mercurio.obj.rotateY(0.04);
-        venus.obj.rotateY(0.015);
-        terra.obj.rotateY(0.01);
-        marte.obj.rotateY(0.008);
-        jupiter.obj.rotateY(0.002);
-        saturno.obj.rotateY(0.0009);
-        urano.obj.rotateY(0.0004);
-        netuno.obj.rotateY(0.0001);
-        plutao.obj.rotateY(0.00007);
+        mercurio.orbitaGrupo.rotation.y += 0.04;
+        venus.orbitaGrupo.rotation.y += 0.015;
+        terra.orbitaGrupo.rotation.y += 0.01;
+        marte.orbitaGrupo.rotation.y += 0.008;
+        jupiter.orbitaGrupo.rotation.y += 0.002;
+        saturno.orbitaGrupo.rotation.y += 0.0009;
+        urano.orbitaGrupo.rotation.y += 0.0004;
+        netuno.orbitaGrupo.rotation.y += 0.0001;
+        plutao.orbitaGrupo.rotation.y += 0.00007;
 
         tiempoPulso += 0.03;
         const escalaResplandor = 21.25 + Math.sin(tiempoPulso) * 1;
