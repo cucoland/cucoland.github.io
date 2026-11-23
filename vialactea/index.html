@@ -44,7 +44,7 @@
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(3px);
       transition: all 0.2s ease;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       touch-action: manipulation;
@@ -442,7 +442,7 @@
     actualizarCamara();
 
     // 3. GENERADOR DE TEXTURAS PROCEDURALES Y MINIATURAS DE SATÉLITES
-    function crearTexturaPlaneta(colorBase, colorSecundario, tipo) {
+   function crearTexturaPlaneta(colorBase, colorSecundario, tipo, aplicarBlur = false) {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
       canvas.height = 256;
@@ -451,11 +451,29 @@
       ctx.fillStyle = colorBase;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      if (tipo === 'bandas') {
+      // ---> APLICA EL BLUR SOLO SI SE INDICA <---
+      if (aplicarBlur) {
+        ctx.filter = 'blur(6px)';
+      }
+
+      if (tipo === 'bandas' || tipo === 'jupiter') {
         for (let i = 0; i < 18; i++) {
           ctx.fillStyle = colorSecundario;
           ctx.globalAlpha = Math.random() * 0.35 + 0.1;
           ctx.fillRect(0, Math.random() * canvas.height, canvas.width, Math.random() * 18 + 4);
+        }
+
+        if (tipo === 'jupiter') {
+          const manchaGrad = ctx.createRadialGradient(320, 175, 2, 320, 175, 28);
+          manchaGrad.addColorStop(0, 'rgba(178, 58, 34, 0.95)');
+          manchaGrad.addColorStop(0.5, 'rgba(215, 100, 60, 0.65)');
+          manchaGrad.addColorStop(1, 'rgba(178, 58, 34, 0)');
+
+          ctx.fillStyle = manchaGrad;
+          ctx.globalAlpha = 1.0;
+          ctx.beginPath();
+          ctx.ellipse(320, 175, 30, 18, 0, 0, Math.PI * 2);
+          ctx.fill();
         }
       } else if (tipo === 'crateres') {
         for (let i = 0; i < 90; i++) {
@@ -466,13 +484,12 @@
           ctx.fill();
         }
       } else if (tipo === 'tierra') {
-        // Crear un degradado radial (centro: naranja pálido #ffdab9, exterior: #2e8b57)
         const gradienteRadial = ctx.createRadialGradient(
           canvas.width / 2, canvas.height / 2, 10,
           canvas.width / 2, canvas.height / 2, canvas.width / 2
         );
-        gradienteRadial.addColorStop(0, '#ffdab9'); // Interior: naranja pálido
-        gradienteRadial.addColorStop(1, '#2e8b57'); // Exterior: #2e8b57
+        gradienteRadial.addColorStop(0, '#ffdab9');
+        gradienteRadial.addColorStop(1, '#2e8b57');
 
         ctx.fillStyle = gradienteRadial;
         for (let i = 0; i < 25; i++) {
@@ -481,20 +498,21 @@
           ctx.globalAlpha = 0.85;
           ctx.fill();
         }
-        //---> nubes <---
         ctx.fillStyle = '#ffffff';
         for (let i = 0; i < 40; i++) {
           ctx.globalAlpha = 0.25;
           ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 60 + 20, 4);
         }
 
-        // ---> polosterra <---
         ctx.fillStyle = '#ffffff';
         ctx.globalAlpha = 0.95;
-        // Polo Norte (franja superior)
         ctx.fillRect(0, 0, canvas.width, 30);
-        // Polo Sur (franja inferior)
         ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+      }
+
+      // ---> RESTABLECER EL FILTRO <---
+      if (aplicarBlur) {
+        ctx.filter = 'none';
       }
 
       return new THREE.CanvasTexture(canvas);
@@ -705,9 +723,10 @@
       btnEtiquetas.textContent = etiquetasVisibles ? 'Ocultar' : 'Etiquetas';
     });
 
-    // SOL
+// SOL
     const solGeo = new THREE.SphereGeometry(6.25, 40, 40);
-    const solMat = new THREE.MeshBasicMaterial({ map: crearTexturaPlaneta('#ffbb22', '#ff5500', 'crateres') });
+    // Añadimos 'true' al final para activar el blur exclusivamente en el Sol
+    const solMat = new THREE.MeshBasicMaterial({ map: crearTexturaPlaneta('#ffbb22', '#ff5500', 'crateres', true) });
     const sol = new THREE.Mesh(solGeo, solMat);
     scene.add(sol);
 
@@ -860,7 +879,7 @@
       tempMin: '465 °C'
     });
 
-    const terra = crearPlaneta(1.88, crearTexturaPlaneta('#1c5ba6', '#2e8b57', 'tierra'), 58, 0.00, {
+    const terra = crearPlaneta(1.88, crearTexturaPlaneta('#1c5ba6', '#2e8b57', 'tierra', true), 58, 0.00, {
       nombre: 'Tierra',
       tipo: 'Rocoso (71% líquido)',
       distancia: '149,6 millones km',
@@ -891,7 +910,7 @@
     const fobos = crearLunaPlaneta('Fobos', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, marte);
     const deimos = crearLunaPlaneta('Deimos', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, marte);
 
-    const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'bandas'), 130, 1.31, {
+const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'jupiter'), 130, 1.31, {
       nombre: 'Júpiter',
       tipo: 'Gigante gaseoso',
       distancia: '778,5 millones km',
