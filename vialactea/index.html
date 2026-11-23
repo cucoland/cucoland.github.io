@@ -205,25 +205,25 @@
     .etiqueta-satelite {
       position: absolute;
       transform: translate(-50%, -125%);
-      background: rgba(10, 15, 28, 0.85);
-      border: 1px solid rgba(56, 189, 248, 0.5);
-      border-radius: 5px;
+     /* background: rgba(10, 15, 28, 0.85);*/
+     /* border: 1px solid rgba(56, 189, 248, 0.5);*/
+     /* border-radius: 5px;*/
       padding: 4px 10px;
       color: #38bdf8;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      white-space: nowrap;
-      backdrop-filter: blur(4px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.65);
+      font-size: 10px;
+     /* font-weight: 700;*/
+     /* letter-spacing: 0.3px;*/
+     /* white-space: nowrap;*/
+     /* backdrop-filter: blur(4px);*/
+      /*box-shadow: 0 3px 8px rgba(0, 0, 0, 0.65);*/
       display: none;
     }
 
     .etiqueta-satelite {
-      background: rgba(15, 23, 42, 0.92);
-      border-color: rgba(125, 211, 252, 0.8);
+      /*background: rgba(15, 23, 42, 0.92);*/
+      /*border-color: rgba(125, 211, 252, 0.8);*/
       color: #bae6fd;
-      font-size: 11px;
+      font-size: 10px;
       padding: 3px 8px;
     }
 
@@ -1102,13 +1102,15 @@ function crearTexturaAnilloRadial(color1, color2) {
     saturno.mesh.add(saturnoRingExterior);
     saturnoRingExterior.rotation.x = -0.5 * Math.PI;
 
-    // Anillos de Urano
+// Anillos de Urano
     const uranoRingMat = new THREE.MeshBasicMaterial({
-      map: crearTexturaAnilloLineal('rgba(125, 227, 244, 0.5)', 'rgba(70, 168, 186, 0.2)'),
+      color: 0xffffff,
       side: THREE.DoubleSide,
-      transparent: true
+      transparent: true,
+      opacity: 0.15, // Ajusta este valor (0.1 a 0.5) para mayor o menor transparencia
+      depthWrite: false
     });
-    const uranoRingGeo = new THREE.RingGeometry(15.5, 16.5, 64);
+    const uranoRingGeo = new THREE.RingGeometry(15.5, 16, 64);
     const uranoRing = new THREE.Mesh(uranoRingGeo, uranoRingMat);
     urano.mesh.add(uranoRing);
     uranoRing.rotation.x = -0.5 * Math.PI;
