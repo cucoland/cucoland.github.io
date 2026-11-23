@@ -387,10 +387,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r122/three.min.js"></script>
 
   <script>
-    // 1. RENDERIZADOR Y ESCENA
+    // 1. RENDERIZADOR Y ESCENA (Con sombras habilitadas)
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     document.body.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -430,7 +432,6 @@
       camTarget.addScaledVector(derecha, -deltaX * factorPaneo);
       camTarget.addScaledVector(arriba, deltaY * factorPaneo);
 
-      // Limitar el desplazamiento para no perder el Sistema Solar de vista
       camTarget.clampScalar(-260, 260);
     }
 
@@ -442,7 +443,7 @@
     actualizarCamara();
 
     // 3. GENERADOR DE TEXTURAS PROCEDURALES Y MINIATURAS DE SATÉLITES
-   function crearTexturaPlaneta(colorBase, colorSecundario, tipo, aplicarBlur = false) {
+    function crearTexturaPlaneta(colorBase, colorSecundario, tipo, aplicarBlur = false) {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
       canvas.height = 256;
@@ -451,7 +452,6 @@
       ctx.fillStyle = colorBase;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // ---> APLICA EL BLUR SOLO SI SE INDICA <---
       if (aplicarBlur) {
         ctx.filter = 'blur(6px)';
       }
@@ -510,7 +510,6 @@
         ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
       }
 
-      // ---> RESTABLECER EL FILTRO <---
       if (aplicarBlur) {
         ctx.filter = 'none';
       }
@@ -518,7 +517,6 @@
       return new THREE.CanvasTexture(canvas);
     }
 
-    // Genera una imagen circular 2D (DataURL) con aspecto esférico para mostrar en la ficha lateral
     function crearImagenSatelite(colorBase, colorSecundario, tipo) {
       const canvas = document.createElement('canvas');
       canvas.width = 96;
@@ -549,7 +547,6 @@
         }
       }
 
-      // Sombreado esférico 3D
       ctx.globalAlpha = 1;
       const grad = ctx.createRadialGradient(32, 30, 6, 48, 48, 48);
       grad.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
@@ -613,11 +610,16 @@
     const campoEstrellas = new THREE.Points(estrellasGeo, estrellasMat);
     scene.add(campoEstrellas);
 
-    // 5. ILUMINACIÓN SOLAR
+    // 5. ILUMINACIÓN SOLAR (Configurada para proyectar sombras)
     const ambientLight = new THREE.AmbientLight(0x282832);
     scene.add(ambientLight);
 
     const pointLight = new THREE.PointLight(0xFFF3D6, 1.6, 800, 1.1);
+    pointLight.castShadow = true;
+    pointLight.shadow.mapSize.width = 1024;
+    pointLight.shadow.mapSize.height = 1024;
+    pointLight.shadow.camera.near = 0.5;
+    pointLight.shadow.camera.far = 1000;
     scene.add(pointLight);
 
     const hemiLight = new THREE.HemisphereLight(0xffeedd, 0x080814, 0.35);
@@ -723,9 +725,8 @@
       btnEtiquetas.textContent = etiquetasVisibles ? 'Ocultar' : 'Etiquetas';
     });
 
-// SOL
+    // SOL
     const solGeo = new THREE.SphereGeometry(6.25, 40, 40);
-    // Añadimos 'true' al final para activar el blur exclusivamente en el Sol
     const solMat = new THREE.MeshBasicMaterial({ map: crearTexturaPlaneta('#ffbb22', '#ff5500', 'crateres', true) });
     const sol = new THREE.Mesh(solGeo, solMat);
     scene.add(sol);
@@ -796,12 +797,15 @@
       const geo = new THREE.SphereGeometry(radio, 32, 32);
       const mat = new THREE.MeshStandardMaterial({ map: textura, roughness: 0.68, metalness: 0.05 });
       const mesh = new THREE.Mesh(geo, mat);
+      
+      // Permitir que el planeta reciba sombras de sus lunas
+      mesh.receiveShadow = true;
+
       const obj = new THREE.Object3D();
       obj.add(mesh);
       orbitaGrupo.add(obj);
       mesh.position.x = distanciaX;
 
-      // Etiqueta flotante: únicamente con el nombre del planeta
       const div = document.createElement('div');
       div.className = 'etiqueta-planeta';
       div.textContent = info.nombre;
@@ -816,12 +820,15 @@
       return { mesh, obj, orbitaGrupo, info };
     }
 
-    // Función auxiliar para crear satélites y registrarlos en la ficha del planeta anfitrión
     function crearLunaPlaneta(nombreSatelite, radioLuna, colorBase, colorSec, tipoTextura, distanciaOrbita, planetaAnfitrion) {
       const texturaLuna = crearTexturaPlaneta(colorBase, colorSec, tipoTextura);
       const geo = new THREE.SphereGeometry(radioLuna, 24, 24);
       const mat = new THREE.MeshStandardMaterial({ map: texturaLuna, roughness: 0.72 });
       const mesh = new THREE.Mesh(geo, mat);
+
+      // Permitir que la luna proyecte sombra sobre el planeta
+      mesh.castShadow = true;
+
       const obj = new THREE.Object3D();
       obj.add(mesh);
       planetaAnfitrion.mesh.add(obj);
@@ -910,7 +917,7 @@
     const fobos = crearLunaPlaneta('Fobos', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, marte);
     const deimos = crearLunaPlaneta('Deimos', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, marte);
 
-const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'jupiter'), 130, 1.31, {
+    const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'jupiter'), 130, 1.31, {
       nombre: 'Júpiter',
       tipo: 'Gigante gaseoso',
       distancia: '778,5 millones km',
@@ -995,28 +1002,26 @@ const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', '
 
     const caronte = crearLunaPlaneta('Caronte', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, plutao);
 
-// Anillos de Saturno divididos (con la División de Cassini en el medio)
+    // Anillos de Saturno
     const saturnoRingMat = new THREE.MeshBasicMaterial({
       map: crearTexturaAnillo('rgba(210, 190, 150, 0.85)', 'rgba(150, 130, 90, 0.4)'),
       side: THREE.DoubleSide,
       transparent: true
     });
 
-    // 1. Anillo interior (desde radio 19.5 hasta 25.2)
     const ringInteriorGeo = new THREE.RingGeometry(34, 39, 64);
     const saturnoRingInterior = new THREE.Mesh(ringInteriorGeo, saturnoRingMat);
     saturno.obj.add(saturnoRingInterior);
     saturnoRingInterior.position.x = 162;
     saturnoRingInterior.rotation.x = -0.45 * Math.PI;
 
-    // 2. Anillo exterior (desde radio 25.2 hasta 30, dejando el espacio vacío entre 25.2 y 26)
     const ringExteriorGeo = new THREE.RingGeometry(26, 33, 64);
     const saturnoRingExterior = new THREE.Mesh(ringExteriorGeo, saturnoRingMat);
     saturno.obj.add(saturnoRingExterior);
     saturnoRingExterior.position.x = 162;
     saturnoRingExterior.rotation.x = -0.45 * Math.PI;
 
-// ---> Anillos de Urano (Anillo exterior, de 15.5 a 16.5) <---
+    // Anillos de Urano
     const uranoRingGeo = new THREE.RingGeometry(15.5, 16.5, 64);
     const uranoRingMat = new THREE.MeshBasicMaterial({
       map: crearTexturaAnillo('rgba(125, 227, 244, 0.5)', 'rgba(70, 168, 186, 0.2)'),
@@ -1028,7 +1033,6 @@ const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', '
     uranoRing.position.x = 189;
     uranoRing.rotation.x = -0.5 * Math.PI;
 
-    // ---> Anillo de Urano (interior, de 13.5 a 13.8) <---
     const uranoRing2Geo = new THREE.RingGeometry(13.5, 13.8, 64);
     const uranoRing2 = new THREE.Mesh(uranoRing2Geo, uranoRingMat);
     urano.obj.add(uranoRing2);
