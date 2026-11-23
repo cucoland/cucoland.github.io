@@ -364,8 +364,8 @@
 <body>
 
   <div id="panel-controles">
-    <button id="btn-pausa" class="btn-control">Pausar</button>
-    <button id="btn-etiquetas" class="btn-control">Mostrar etiquetas</button>
+    <button id="btn-pausa" class="btn-control">❚❚</button>
+    <button id="btn-etiquetas" class="btn-control">Etiquetas</button>
   </div>
 
   <!-- Ficha informativa en el margen izquierdo -->
@@ -442,7 +442,440 @@
     actualizarCamara();
 
     // 3. GENERADOR DE TEXTURAS PROCEDURALES Y MINIATURAS DE SATÉLITES
+    // Ruido Perlin 3D con semilla (compartido por las texturas de la Tierra)
+    function crearRuido(semilla) {
+      // ---------- Ruido Perlin 3D con semilla ----------
+      function rng(a) {
+        return function () {
+          a |= 0; a = (a + 0x6D2B79F5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+      const rand = rng(semilla);
+      const p = new Uint8Array(256);
+      for (let i = 0; i < 256; i++) p[i] = i;
+      for (let i = 255; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        const tmp = p[i]; p[i] = p[j]; p[j] = tmp;
+      }
+      const perm = new Uint8Array(512);
+      for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+
+      const fade = t => t * t * t * (t * (t * 6 - 15) + 10);
+      const lerp = (a, b, t) => a + (b - a) * t;
+      function grad(h, x, y, z) {
+        h &= 15;
+        const u = h < 8 ? x : y;
+        const v = h < 4 ? y : (h === 12 || h === 14 ? x : z);
+        return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
+      }
+      function noise3(x, y, z) {
+        const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+        x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+        const u = fade(x), v = fade(y), w = fade(z);
+        const A = perm[X] + Y, AA = perm[A] + Z, AB = perm[A + 1] + Z;
+        const B = perm[X + 1] + Y, BA = perm[B] + Z, BB = perm[B + 1] + Z;
+        return lerp(
+          lerp(lerp(grad(perm[AA], x, y, z), grad(perm[BA], x - 1, y, z), u),
+               lerp(grad(perm[AB], x, y - 1, z), grad(perm[BB], x - 1, y - 1, z), u), v),
+          lerp(lerp(grad(perm[AA + 1], x, y, z - 1), grad(perm[BA + 1], x - 1, y, z - 1), u),
+               lerp(grad(perm[AB + 1], x, y - 1, z - 1), grad(perm[BB + 1], x - 1, y - 1, z - 1), u), v),
+          w);
+      }
+      function fbm(x, y, z, octavas) {
+        let suma = 0, amp = 1, frec = 1, norm = 0;
+        for (let i = 0; i < octavas; i++) {
+          suma += noise3(x * frec, y * frec, z * frec) * amp;
+          norm += amp; amp *= 0.5; frec *= 2.03;
+        }
+        return suma / norm;
+      }
+      return { noise3, fbm };
+    }
+
+    // =====================================================================
+    //  TIERRA CON GEOGRAFÍA REAL
+    //  Descarga el contorno de continentes y países (Natural Earth) y pinta
+    //  la textura a partir de él. Mientras llega (o si falla la descarga)
+    //  se muestra la versión procedural de respaldo.
+    // =====================================================================
+    const URLS_GEOJSON_PAISES = [
+      'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_admin_0_countries.geojson',
+      'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson',
+      'https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson',
+      'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
+    ];
+    const MOSTRAR_FRONTERAS = true;                       // dibujar fronteras y costas
+    const COLOR_FRONTERAS = 'rgba(70, 45, 20, 0.55)';
+
+    // Regiones climáticas/relieve: [lon, lat, radioLon°, radioLat°, ΔHumedad, ΔAltitud]
+    const REGIONES_TIERRA = [
+      // Desiertos
+      [8, 23, 24, 7, -0.65, 0],      // Sáhara
+      [45, 24, 9, 7, -0.60, 0],      // Arabia
+      [55, 32, 7, 5, -0.40, 0],      // Irán
+      [62, 41, 9, 5, -0.40, 0],      // Karakum / Kyzylkum
+      [83, 40, 6, 3, -0.50, 0],      // Taklamakán
+      [103, 43, 13, 5, -0.50, 0],    // Gobi
+      [71, 27, 4, 3, -0.40, 0],      // Thar
+      [133, -25, 14, 8, -0.55, 0],   // Interior de Australia
+      [19, -24, 7, 5, -0.45, 0],     // Kalahari / Namib
+      [-69.5, -23, 2.5, 7, -0.55, 0],// Atacama
+      [-113, 33, 6, 5, -0.45, 0],    // Suroeste de EE. UU. / México
+      [-68, -45, 5, 8, -0.30, 0],    // Patagonia
+      // Zonas húmedas / selvas / bosques
+      [-62, -4, 12, 8, 0.55, 0],     // Amazonia
+      [22, 0, 9, 6, 0.55, 0],        // Congo
+      [-5, 8, 10, 4, 0.25, 0],       // África occidental
+      [114, 0, 8, 6, 0.50, 0],       // Borneo
+      [142, -5, 6, 3, 0.50, 0],      // Nueva Guinea
+      [104, 13, 6, 6, 0.35, 0],      // Indochina
+      [110, 28, 8, 6, 0.30, 0],      // Sur de China
+      [135, 36, 5, 5, 0.30, 0],      // Japón / Corea
+      [148, -33, 3, 5, 0.30, 0],     // Sureste de Australia
+      [-82, 37, 6, 7, 0.30, 0],      // Este de EE. UU.
+      [15, 50, 14, 6, 0.20, 0],      // Europa central
+      [100, 60, 50, 7, 0.30, 0],     // Taiga siberiana
+      [-100, 57, 25, 6, 0.30, 0],    // Bosque boreal de Canadá
+      // Montañas
+      [88, 32, 14, 5, -0.20, 0.60],  // Meseta tibetana
+      [85, 28.5, 10, 1.5, 0, 0.50],  // Himalaya
+      [75, 40, 8, 3, 0, 0.60],       // Tian Shan / Pamir
+      [90, 49, 5, 3, 0, 0.45],       // Altái
+      [-75, 5, 2, 6, 0, 0.50],       // Andes norte
+      [-72, -15, 2.5, 12, 0, 0.70],  // Andes centrales
+      [-71, -40, 2, 12, 0, 0.55],    // Andes sur
+      [-112, 45, 4, 15, 0, 0.55],    // Rocosas
+      [-80, 38, 2, 6, 0, 0.30],      // Apalaches
+      [10, 46.5, 5, 1.8, 0, 0.50],   // Alpes
+      [60, 58, 1.5, 8, 0, 0.35],     // Urales
+      [40, 9, 4, 5, 0, 0.40]         // Etiopía
+    ];
+
+    // Desenfoque de caja separable (horizontal circular, vertical acotado)
+    function difuminar(src, w, h, r) {
+      const tmp = new Float32Array(w * h), out = new Float32Array(w * h);
+      const d = 2 * r + 1;
+      for (let y = 0; y < h; y++) {
+        const o = y * w;
+        let s = 0;
+        for (let k = -r; k <= r; k++) s += src[o + ((k + w) % w)];
+        for (let x = 0; x < w; x++) {
+          tmp[o + x] = s / d;
+          s += src[o + ((x + r + 1) % w)] - src[o + ((x - r + w) % w)];
+        }
+      }
+      for (let x = 0; x < w; x++) {
+        let s = 0;
+        for (let k = -r; k <= r; k++) s += tmp[Math.min(h - 1, Math.max(0, k)) * w + x];
+        for (let y = 0; y < h; y++) {
+          out[y * w + x] = s / d;
+          s += tmp[Math.min(h - 1, y + r + 1) * w + x] - tmp[Math.max(0, y - r) * w + x];
+        }
+      }
+      return out;
+    }
+
+    async function cargarGeografiaTierra(textura, ancho = 2048, alto = 1024, semilla = 7) {
+      // ---------- 1. Descargar el GeoJSON de países ----------
+      let geo = null;
+      for (const url of URLS_GEOJSON_PAISES) {
+        try {
+          const r = await fetch(url);
+          if (!r.ok) continue;
+          const j = await r.json();
+          if (j && j.features && j.features.length) { geo = j; break; }
+        } catch (e) { /* se prueba la siguiente URL */ }
+      }
+      if (!geo) {
+        console.warn('No se pudo descargar el mapa de países; se mantiene la Tierra procedural.');
+        return;
+      }
+
+      const poligonos = []; // cada polígono = lista de anillos [[lon, lat], ...]
+      for (const f of geo.features) {
+        const g = f.geometry;
+        if (!g) continue;
+        if (g.type === 'Polygon') poligonos.push(g.coordinates);
+        else if (g.type === 'MultiPolygon') for (const pol of g.coordinates) poligonos.push(pol);
+      }
+      const X = lon => (lon + 180) / 360 * ancho;
+      const Y = lat => (90 - lat) / 180 * alto;
+
+      // ---------- 2. Máscara tierra/mar ----------
+      const cm = document.createElement('canvas');
+      cm.width = ancho; cm.height = alto;
+      const cmx = cm.getContext('2d');
+      cmx.fillStyle = '#000';
+      cmx.fillRect(0, 0, ancho, alto);
+      cmx.fillStyle = '#fff';
+      for (const pol of poligonos) {
+        cmx.beginPath();
+        for (const anillo of pol) {
+          for (let i = 0; i < anillo.length; i++) {
+            if (i === 0) cmx.moveTo(X(anillo[i][0]), Y(anillo[i][1]));
+            else cmx.lineTo(X(anillo[i][0]), Y(anillo[i][1]));
+          }
+          cmx.closePath();
+        }
+        cmx.fill('evenodd');
+      }
+      const dm = cmx.getImageData(0, 0, ancho, alto).data;
+      const mascara = new Float32Array(ancho * alto);
+      for (let i = 0; i < mascara.length; i++) mascara[i] = dm[i * 4] / 255;
+      // Cercanía a la costa (para el gradiente de aguas poco profundas)
+      const cerca = difuminar(difuminar(mascara, ancho, alto, 6), ancho, alto, 6);
+
+      // ---------- 3. Pintado por píxel ----------
+      const { fbm } = crearRuido(semilla);
+      const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+      const mezcla = (c1, c2, t) => [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+
+      const OCEANO_PROFUNDO = [4, 20, 62];
+      const OCEANO_MEDIO    = [10, 55, 120];
+      const OCEANO_SOMERO   = [40, 140, 180];
+      const DESIERTO = [200, 160, 100];
+      const SABANA   = [150, 150, 70];
+      const PRADERA  = [90, 130, 55];
+      const BOSQUE   = [40, 96, 40];
+      const SELVA    = [18, 70, 32];
+      const TUNDRA   = [135, 135, 110];
+      const ROCA     = [118, 104, 92];
+      const NIEVE    = [246, 249, 253];
+
+      const cnv = document.createElement('canvas');
+      cnv.width = ancho; cnv.height = alto;
+      const ctx = cnv.getContext('2d');
+      const img = ctx.createImageData(ancho, alto);
+
+      for (let py = 0; py < alto; py++) {
+        // Ceder el control al navegador cada cierto número de filas (evita bloquear la animación)
+        if (py % 48 === 0) await new Promise(r => setTimeout(r, 0));
+
+        const latDeg = 90 - (py + 0.5) / alto * 180;
+        const lat = latDeg * Math.PI / 180;
+        const cl = Math.cos(lat), sl = Math.sin(lat);
+        const latAbs = Math.abs(latDeg) / 90;
+
+        for (let px = 0; px < ancho; px++) {
+          const lonDeg = (px + 0.5) / ancho * 360 - 180;
+          const lon = lonDeg * Math.PI / 180;
+          const x = cl * Math.cos(lon), y = sl, z = cl * Math.sin(lon);
+          const idx = py * ancho + px;
+          const m = mascara[idx];
+
+          // ----- Océano -----
+          const prof = fbm(x * 2 + 5, y * 2, z * 2, 3) * 0.5 + 0.5;
+          let color = mezcla(OCEANO_MEDIO, OCEANO_PROFUNDO, smooth(0.3, 0.8, prof) * 0.75);
+          const cercania = clamp(cerca[idx] * 2.4);
+          color = mezcla(color, OCEANO_SOMERO, Math.pow(cercania, 1.5) * 0.9);
+
+          // ----- Tierra -----
+          if (m > 0.02) {
+            // Efecto de las regiones (desiertos, selvas, montañas)
+            let dh = 0, da = 0;
+            for (let k = 0; k < REGIONES_TIERRA.length; k++) {
+              const r = REGIONES_TIERRA[k];
+              let dx = lonDeg - r[0];
+              if (dx > 180) dx -= 360; else if (dx < -180) dx += 360;
+              const dy = latDeg - r[1];
+              if (Math.abs(dx) > r[2] * 2.5 || Math.abs(dy) > r[3] * 2.5) continue;
+              const g = Math.exp(-(dx * dx) / (r[2] * r[2]) - (dy * dy) / (r[3] * r[3]));
+              dh += r[4] * g; da += r[5] * g;
+            }
+
+            const ruido = fbm(x * 12, y * 12, z * 12, 3);
+            da *= 0.65 + 0.7 * (ruido * 0.5 + 0.5);   // relieve irregular
+            const alt = clamp(clamp(fbm(x * 4, y * 4 + 9, z * 4 + 3, 4) * 1.4) * 0.45 + da);
+            const temp = 1 - Math.pow(latAbs, 1.4) - alt * 0.45 + ruido * 0.08;
+
+            let hum = fbm(x * 2.5 + 77, y * 2.5, z * 2.5, 5) * 0.5 + 0.5;
+            hum += 0.5 * (-0.40 * Math.exp(-Math.pow((latAbs - 0.33) / 0.13, 2))
+                          + 0.20 * Math.exp(-Math.pow(latAbs / 0.15, 2)));
+            hum = clamp(hum + dh);
+
+            let tierra = mezcla(DESIERTO, SABANA, smooth(0.28, 0.42, hum));
+            tierra = mezcla(tierra, PRADERA, smooth(0.40, 0.52, hum));
+            tierra = mezcla(tierra, BOSQUE, smooth(0.50, 0.64, hum));
+            tierra = mezcla(tierra, SELVA, smooth(0.62, 0.78, hum) * smooth(0.55, 0.8, temp));
+            tierra = mezcla(TUNDRA, tierra, smooth(0.22, 0.38, temp));
+            tierra = mezcla(tierra, ROCA, smooth(0.5, 0.8, alt));
+
+            // Nieve por latitud (Antártida entera) y por altitud
+            let nieve = latDeg >= 0 ? smooth(66, 76, latDeg + ruido * 6)
+                                    : smooth(58, 66, -latDeg + ruido * 3);
+            if (lonDeg > -74 && lonDeg < -11 && latDeg > 59.5) {   // Groenlandia
+              nieve = Math.max(nieve, 0.92 * smooth(59.5, 66, latDeg));
+            }
+            tierra = mezcla(tierra, NIEVE, Math.max(nieve, smooth(0.75, 0.92, alt)));
+
+            const v = 0.86 + 0.28 * (ruido * 0.5 + 0.5);
+            tierra = [tierra[0] * v, tierra[1] * v, tierra[2] * v];
+
+            color = mezcla(color, tierra, m);
+          }
+
+          // ----- Polos blancos (hielo marino y casquetes) -----
+          const rh = fbm(x * 6, y * 6, z * 6, 4);
+          const lim = latDeg >= 0 ? 76 + rh * 8 : 69 + rh * 8;
+          const hielo = smooth(lim - 3, lim + 3, Math.abs(latDeg));
+          const blanco = mezcla([228, 236, 246], NIEVE, rh * 0.5 + 0.5);
+          color = mezcla(color, blanco, hielo);
+
+          const i = idx * 4;
+          img.data[i] = color[0];
+          img.data[i + 1] = color[1];
+          img.data[i + 2] = color[2];
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+
+      // ---------- 4. Fronteras y costas ----------
+      if (MOSTRAR_FRONTERAS) {
+        ctx.strokeStyle = COLOR_FRONTERAS;
+        ctx.lineWidth = Math.max(0.6, ancho / 2048 * 0.9);
+        ctx.lineJoin = 'round';
+        for (const pol of poligonos) {
+          for (const anillo of pol) {
+            ctx.beginPath();
+            for (let i = 1; i < anillo.length; i++) {
+              const a = anillo[i - 1], b = anillo[i];
+              // Omitir los cortes artificiales del antimeridiano (±180°) y del polo sur
+              const corteLon = Math.abs(a[0]) >= 179.99 && Math.abs(b[0]) >= 179.99 && Math.sign(a[0]) === Math.sign(b[0]);
+              const cortePolo = a[1] <= -89.9 && b[1] <= -89.9;
+              if (corteLon || cortePolo) continue;
+              ctx.moveTo(X(a[0]), Y(a[1]));
+              ctx.lineTo(X(b[0]), Y(b[1]));
+            }
+            ctx.stroke();
+          }
+        }
+      }
+
+      // ---------- 5. Sustituir la textura de respaldo ----------
+      textura.image = cnv;
+      textura.anisotropy = 8;
+      textura.needsUpdate = true;
+    }
+
+    // Textura procedural realista de la Tierra: ruido Perlin 3D sobre la esfera (sin costuras)
+    function crearTexturaTierra(ancho = 1024, alto = 512, semilla = 7) {
+      const canvas = document.createElement('canvas');
+      canvas.width = ancho;
+      canvas.height = alto;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(ancho, alto);
+
+      const { fbm } = crearRuido(semilla);
+
+      // ---------- Utilidades de color ----------
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+      const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+      const mezcla = (c1, c2, t) => [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+
+      const OCEANO_PROFUNDO = [4, 20, 62];
+      const OCEANO_MEDIO    = [10, 55, 120];
+      const OCEANO_SOMERO   = [35, 130, 170];
+      const ARENA           = [214, 190, 130];
+      const DESIERTO        = [200, 160, 100];
+      const SABANA          = [150, 150, 70];
+      const PRADERA         = [90, 130, 55];
+      const BOSQUE          = [40, 96, 40];
+      const SELVA           = [18, 70, 32];
+      const TUNDRA          = [135, 135, 110];
+      const ROCA            = [112, 100, 92];
+      const NIEVE           = [245, 248, 252];
+
+      const NIVEL_MAR = 0.12; // más alto = menos tierra; más bajo = más tierra
+
+      for (let py = 0; py < alto; py++) {
+        const lat = (0.5 - (py + 0.5) / alto) * Math.PI;
+        const cl = Math.cos(lat), sl = Math.sin(lat);
+        const latAbs = Math.abs(lat) / (Math.PI / 2); // 0 ecuador, 1 polo
+
+        for (let px = 0; px < ancho; px++) {
+          const lon = (px / ancho) * Math.PI * 2;
+          const x = cl * Math.cos(lon), y = sl, z = cl * Math.sin(lon);
+
+          // Altura: continentes + detalle + cordilleras
+          let h = fbm(x * 1.4 + 10, y * 1.4, z * 1.4, 6);
+          h += 0.18 * fbm(x * 5, y * 5 + 3, z * 5, 4);
+          const cordillera = 1 - Math.abs(fbm(x * 3.2 + 40, y * 3.2, z * 3.2, 4)) * 2.2;
+          h += 0.20 * Math.max(0, cordillera) * smooth(NIVEL_MAR, 0.35, h);
+
+          let color;
+
+          if (h < NIVEL_MAR) {
+            // ----- Océano -----
+            const prof = clamp((NIVEL_MAR - h) / 0.45);
+            color = prof < 0.25
+              ? mezcla(OCEANO_SOMERO, OCEANO_MEDIO, prof / 0.25)
+              : mezcla(OCEANO_MEDIO, OCEANO_PROFUNDO, (prof - 0.25) / 0.75);
+            const costa = smooth(NIVEL_MAR - 0.02, NIVEL_MAR, h);
+            color = mezcla(color, [90, 190, 190], costa * 0.6);
+          } else {
+            // ----- Tierra -----
+            const alt = clamp((h - NIVEL_MAR) / 0.5);
+            const ruido = fbm(x * 12, y * 12, z * 12, 3);
+
+            const temp = 1 - Math.pow(latAbs, 1.4) - alt * 0.45 + ruido * 0.08;
+
+            let hum = fbm(x * 2.5 + 77, y * 2.5, z * 2.5, 5) * 0.5 + 0.5;
+            hum -= 0.40 * Math.exp(-Math.pow((latAbs - 0.33) / 0.13, 2)); // desiertos subtropicales
+            hum += 0.20 * Math.exp(-Math.pow(latAbs / 0.15, 2));          // trópico húmedo
+            hum = clamp(hum);
+
+            color = mezcla(DESIERTO, SABANA, smooth(0.28, 0.42, hum));
+            color = mezcla(color, PRADERA, smooth(0.40, 0.52, hum));
+            color = mezcla(color, BOSQUE, smooth(0.50, 0.64, hum));
+            color = mezcla(color, SELVA, smooth(0.62, 0.78, hum) * smooth(0.55, 0.8, temp));
+
+            color = mezcla(ARENA, color, smooth(0, 0.035, h - NIVEL_MAR));
+            color = mezcla(TUNDRA, color, smooth(0.22, 0.38, temp));
+            color = mezcla(color, ROCA, smooth(0.45, 0.70, alt));
+            color = mezcla(color, NIEVE, Math.max(smooth(0.08, 0.20, 0.2 - temp), smooth(0.75, 0.92, alt)));
+
+            const v = 0.86 + 0.28 * (ruido * 0.5 + 0.5);
+            color = [color[0] * v, color[1] * v, color[2] * v];
+          }
+
+          // ----- Casquetes polares (también hielo marino) -----
+          const limiteHielo = 0.80 + fbm(x * 6, y * 6, z * 6, 4) * 0.12;
+          const hielo = smooth(limiteHielo - 0.03, limiteHielo + 0.03, latAbs);
+          color = mezcla(color, NIEVE, hielo * (h < NIVEL_MAR ? 0.9 : 1));
+
+          // ----- Nubes -----
+          const n = fbm(x * 2.2 + 200, y * 2.2 * 1.6, z * 2.2, 6) * 0.5 + 0.5;
+          const nube = smooth(0.52, 0.72, n) * 0.85;
+          color = mezcla(color, [255, 255, 255], nube);
+
+          const i = (py * ancho + px) * 4;
+          img.data[i]     = color[0];
+          img.data[i + 1] = color[1];
+          img.data[i + 2] = color[2];
+          img.data[i + 3] = 255;
+        }
+      }
+
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 8;
+      return tex;
+    }
+
     function crearTexturaPlaneta(colorBase, colorSecundario, tipo) {
+      if (tipo === 'tierra') {
+        const tex = crearTexturaTierra(512, 256); // respaldo procedural inmediato
+        cargarGeografiaTierra(tex);               // lo sustituye por la geografía real al descargarla
+        return tex;
+      }
+
       const canvas = document.createElement('canvas');
       canvas.width = 512;
       canvas.height = 256;
@@ -464,19 +897,6 @@
           ctx.fillStyle = colorSecundario;
           ctx.globalAlpha = Math.random() * 0.4 + 0.1;
           ctx.fill();
-        }
-      } else if (tipo === 'tierra') {
-        ctx.fillStyle = colorSecundario;
-        for (let i = 0; i < 25; i++) {
-          ctx.beginPath();
-          ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 35 + 10, 0, Math.PI * 2);
-          ctx.globalAlpha = 0.85;
-          ctx.fill();
-        }
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 40; i++) {
-          ctx.globalAlpha = 0.25;
-          ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 60 + 20, 4);
         }
       }
 
@@ -639,9 +1059,9 @@
       fichaCuerpo.innerHTML = `
         <p class="ficha-dato"><strong>Tipo:</strong> ${info.tipo}</p>
         <p class="ficha-dato"><strong>Distancia al Sol:</strong> ${info.distancia}</p>
-        <p class="ficha-dato"><strong>Traslación (vuelta al Sol):</strong> ${info.tiempoOrbita}</p>
-        <p class="ficha-dato"><strong>Rotación (sobre sí mismo):</strong> ${info.tiempoRotacion}</p>
-        <p class="ficha-dato"><strong>Tamaño respecto a la Tierra:</strong> ${info.tamanoTierra}</p>
+        <p class="ficha-dato"><strong>Traslación (año):</strong> ${info.tiempoOrbita}</p>
+        <p class="ficha-dato"><strong>Rotación (día):</strong> ${info.tiempoRotacion}</p>
+        <p class="ficha-dato"><strong>Tamaño:</strong> ${info.tamanoTierra}</p>
         <p class="ficha-dato"><strong>Temp. Máx:</strong> ${info.tempMax}</p>
         <p class="ficha-dato"><strong>Temp. Mín:</strong> ${info.tempMin}</p>
         ${htmlSatelites}
@@ -674,7 +1094,7 @@
     const btnPausa = document.getElementById('btn-pausa');
     btnPausa.addEventListener('click', () => {
       animacionPausada = !animacionPausada;
-      btnPausa.textContent = animacionPausada ? 'Reanudar' : 'Pausar';
+      btnPausa.textContent = animacionPausada ? '▶' : '❚❚';
     });
 
     const btnEtiquetas = document.getElementById('btn-etiquetas');
@@ -685,7 +1105,7 @@
           item.visible = etiquetasVisibles;
         }
       }
-      btnEtiquetas.textContent = etiquetasVisibles ? 'Ocultar etiquetas' : 'Mostrar etiquetas';
+      btnEtiquetas.textContent = etiquetasVisibles ? 'Ocultar' : 'Etiquetas';
     });
 
     // SOL
@@ -697,13 +1117,13 @@
     const infoSol = {
       nombre: 'Sol',
       tipo: 'Estrella enana amarilla (G2V)',
-      distancia: '0 millones km (Centro del sistema)',
+    //  distancia: '0 millones km (Centro del sistema)',
       tiempoOrbita: '~230 millones de años (órbita galáctica)',
       tiempoRotacion: '~25 días (ecuador) / ~35 días (polos)',
       tamanoTierra: '109 × Tierra (diámetro)',
       tempMax: '5.500 °C (superficie)',
       tempMin: '5.500 °C (superficie)',
-      satelites: []
+      
     };
     sol.userData.infoPlaneta = infoSol;
     meshesInteractivos.push(sol);
@@ -885,7 +1305,7 @@
       tiempoOrbita: '11,86 años terrestres',
       tiempoRotacion: '9 h 55 min',
       colorEscala: '#d39c7e',
-      tamanoTierra: '10,97 × Tierra (~11 veces mayor)',
+      tamanoTierra: '10,97 × Tierra (~11 veces mayor diámetro)',
       tempMax: '-110 °C (nubes)',
       tempMin: '-160 °C'
     });
@@ -903,7 +1323,7 @@
       tiempoOrbita: '29,45 años terrestres',
       tiempoRotacion: '10 h 33 min',
       colorEscala: '#ead6b8',
-      tamanoTierra: '9,14 × Tierra (~9 veces mayor)',
+      tamanoTierra: '9,14 × Tierra (~9 veces mayor diámetro)',
       tempMax: '-140 °C (nubes)',
       tempMin: '-178 °C'
     });
@@ -923,7 +1343,7 @@
       tiempoOrbita: '84 años terrestres',
       tiempoRotacion: '17 h 14 min (retrógrada)',
       colorEscala: '#7de3f4',
-      tamanoTierra: '3,98 × Tierra (~4 veces mayor)',
+      tamanoTierra: '3,98 × Tierra (~4 veces mayor diámetro)',
       tempMax: '-195 °C',
       tempMin: '-224 °C'
     });
@@ -942,7 +1362,7 @@
       tiempoOrbita: '164,8 años terrestres',
       tiempoRotacion: '16 h 6 min',
       colorEscala: '#60a5fa',
-      tamanoTierra: '3,86 × Tierra (~3,9 veces mayor)',
+      tamanoTierra: '3,86 × Tierra (~3,9 veces mayor diámetro)',
       tempMax: '-200 °C',
       tempMin: '-218 °C'
     });
