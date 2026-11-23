@@ -157,6 +157,9 @@
     .item-satelite.activa .nombre-satelite {
       color: #0f172a;
     }
+    .item-satelite.activa .diametro-satelite {
+      color: #1e293b;
+    }
     .item-satelite img {
       width: 34px;
       height: 34px;
@@ -165,11 +168,21 @@
       box-shadow: inset -4px -4px 8px rgba(0, 0, 0, 0.7), 0 0 6px rgba(255, 255, 255, 0.15);
       flex-shrink: 0;
     }
+    .info-satelite-texto {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex-wrap: wrap;
+      text-align: left;
+    }
     .nombre-satelite {
       font-size: 13px;
       font-weight: 600;
       color: #f1f5f9;
-      text-align: left;
+    }
+    .diametro-satelite {
+      font-size: 11.5px;
+      color: #94a3b8;
     }
     .sin-satelites {
       font-size: 12px;
@@ -254,7 +267,6 @@
       touch-action: manipulation;
     }
 
-    /* Área táctil ampliada invisible alrededor de cada punto de la escala */
     .punto-escala::after {
       content: '';
       position: absolute;
@@ -319,7 +331,6 @@
       box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
     }
 
-    /* Adaptación responsiva para dispositivos móviles y pantallas estrechas */
     @media (max-width: 640px) {
       #panel-controles {
         top: 12px;
@@ -368,7 +379,6 @@
     <button id="btn-etiquetas" class="btn-control">Etiquetas</button>
   </div>
 
-  <!-- Ficha informativa en el margen izquierdo -->
   <aside id="ficha-lateral">
     <div class="ficha-header">
       <h3 id="ficha-titulo">Planeta</h3>
@@ -379,7 +389,6 @@
 
   <div id="contenedor-etiquetas"></div>
 
-  <!-- Línea inferior de distancia a escala entre planetas (Sol a Plutón) -->
   <div id="barra-escala-inferior" aria-label="Escala de distancia desde el Sol hasta Plutón">
     <div class="escala-pista" id="escala-pista"></div>
   </div>
@@ -387,7 +396,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r122/three.min.js"></script>
 
   <script>
-    // 1. RENDERIZADOR Y ESCENA (Con sombras habilitadas)
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -398,7 +406,6 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
-    // 2. CÁMARA Y CONTROLES DE RATÓN Y TÁCTILES INTEGRADOS
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2500);
     let camRadius = 380;
     let camTheta = -0.6;
@@ -418,7 +425,6 @@
       camera.lookAt(camTarget);
     }
 
-    // Desplaza el punto objetivo (paneo) en el plano paralelo a la pantalla
     function desplazarCamTarget(deltaX, deltaY) {
       const factorPaneo = camRadius * 0.0014;
       const derecha = new THREE.Vector3(Math.cos(camTheta), 0, -Math.sin(camTheta));
@@ -442,7 +448,6 @@
 
     actualizarCamara();
 
-    // 3. GENERADOR DE TEXTURAS PROCEDURALES Y MINIATURAS DE SATÉLITES
     function crearTexturaPlaneta(colorBase, colorSecundario, tipo, aplicarBlur = false) {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
@@ -594,7 +599,6 @@
       return new THREE.CanvasTexture(canvas);
     }
 
-    // 4. FONDO DE ESTRELLAS
     const estrellasGeo = new THREE.BufferGeometry();
     const estrellasVertices = [];
     for (let i = 0; i < 3000; i++) {
@@ -610,7 +614,6 @@
     const campoEstrellas = new THREE.Points(estrellasGeo, estrellasMat);
     scene.add(campoEstrellas);
 
-    // 5. ILUMINACIÓN SOLAR (Configurada para proyectar sombras)
     const ambientLight = new THREE.AmbientLight(0x282832);
     scene.add(ambientLight);
 
@@ -625,7 +628,6 @@
     const hemiLight = new THREE.HemisphereLight(0xffeedd, 0x080814, 0.35);
     scene.add(hemiLight);
 
-    // 6. PLANETAS, FICHA LATERAL Y CONTROLES DE INTERFAZ
     const contenedorEtiquetas = document.getElementById('contenedor-etiquetas');
     const listaEtiquetas = [];
     const meshesInteractivos = [];
@@ -654,14 +656,19 @@
       fichaTitulo.textContent = info.nombre;
 
       let htmlSatelites = '';
-      if (info.satelites && info.satelites.length > 0) {
+      if (info.esSol) {
+        htmlSatelites = '';
+      } else if (info.satelites && info.satelites.length > 0) {
         htmlSatelites = `
           <div class="ficha-satelites-titulo">Principales satélites (${info.satelites.length})</div>
           <div class="lista-satelites">
             ${info.satelites.map((sat, idx) => `
               <div class="item-satelite" role="button" tabindex="0" data-sat-idx="${idx}" aria-pressed="false">
                 <img src="${sat.imagen}" alt="${sat.nombre}">
-                <span class="nombre-satelite">${sat.nombre}</span>
+                <div class="info-satelite-texto">
+                  <span class="nombre-satelite">${sat.nombre}</span>
+                  <span class="diametro-satelite">(Ø ${sat.diametro})</span>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -673,9 +680,11 @@
         `;
       }
 
+      let htmlDistancia = info.esSol ? '' : `<p class="ficha-dato"><strong>Distancia al Sol:</strong> ${info.distancia}</p>`;
+
       fichaCuerpo.innerHTML = `
         <p class="ficha-dato"><strong>Tipo:</strong> ${info.tipo}</p>
-        <p class="ficha-dato"><strong>Distancia al Sol:</strong> ${info.distancia}</p>
+        ${htmlDistancia}
         <p class="ficha-dato"><strong>Traslación (año):</strong> ${info.tiempoOrbita}</p>
         <p class="ficha-dato"><strong>Rotación (día):</strong> ${info.tiempoRotacion}</p>
         <p class="ficha-dato"><strong>Tamaño:</strong> ${info.tamanoTierra}</p>
@@ -725,7 +734,6 @@
       btnEtiquetas.textContent = etiquetasVisibles ? 'Ocultar' : 'Etiquetas';
     });
 
-    // SOL
     const solGeo = new THREE.SphereGeometry(6.25, 40, 40);
     const solMat = new THREE.MeshBasicMaterial({ map: crearTexturaPlaneta('#ffbb22', '#ff5500', 'crateres', true) });
     const sol = new THREE.Mesh(solGeo, solMat);
@@ -733,6 +741,7 @@
 
     const infoSol = {
       nombre: 'Sol',
+      esSol: true,
       tipo: 'Estrella enana amarilla (G2V)',
       tiempoOrbita: '~230 millones de años (órbita galáctica)',
       tiempoRotacion: '~25 días (ecuador) / ~35 días (polos)',
@@ -798,7 +807,6 @@
       const mat = new THREE.MeshStandardMaterial({ map: textura, roughness: 0.68, metalness: 0.05 });
       const mesh = new THREE.Mesh(geo, mat);
       
-      // Permitir que el planeta reciba sombras de sus lunas
       mesh.receiveShadow = true;
 
       const obj = new THREE.Object3D();
@@ -820,13 +828,12 @@
       return { mesh, obj, orbitaGrupo, info };
     }
 
-    function crearLunaPlaneta(nombreSatelite, radioLuna, colorBase, colorSec, tipoTextura, distanciaOrbita, planetaAnfitrion) {
+    function crearLunaPlaneta(nombreSatelite, diametroKm, radioLuna, colorBase, colorSec, tipoTextura, distanciaOrbita, planetaAnfitrion) {
       const texturaLuna = crearTexturaPlaneta(colorBase, colorSec, tipoTextura);
       const geo = new THREE.SphereGeometry(radioLuna, 24, 24);
       const mat = new THREE.MeshStandardMaterial({ map: texturaLuna, roughness: 0.72 });
       const mesh = new THREE.Mesh(geo, mat);
 
-      // Permitir que la luna proyecte sombra sobre el planeta
       mesh.castShadow = true;
 
       const obj = new THREE.Object3D();
@@ -852,6 +859,7 @@
 
       planetaAnfitrion.info.satelites.push({
         nombre: nombreSatelite,
+        diametro: diametroKm,
         imagen: crearImagenSatelite(colorBase, colorSec, tipoTextura),
         registroEtiqueta: registroSat
       });
@@ -859,7 +867,6 @@
       return { mesh, obj };
     }
 
-    // CREACIÓN DE PLANETAS Y SUS SATÉLITES
     const mercurio = crearPlaneta(0.72, crearTexturaPlaneta('#8c8c8c', '#595959', 'crateres'), 25, 7.00, {
       nombre: 'Mercurio',
       tipo: 'Rocoso',
@@ -894,12 +901,12 @@
       tiempoOrbita: '365,25 días (~1 año)',
       tiempoRotacion: '23 h 56 min 4 s (~24 horas)',
       colorEscala: '#38bdf8',
-      tamanoTierra: '1,00 × Tierra (Referencia)',
+      tamanoTierra: 'Diámetro: ~12.742 km, ~510,1 millones de km²',
       tempMax: '56,7 °C',
       tempMin: '-89,2 °C'
     });
 
-    const luna = crearLunaPlaneta('Luna', 0.5125, '#a0a0a0', '#555555', 'crateres', 3, terra);
+    const luna = crearLunaPlaneta('Luna', '3.474 km', 0.5125, '#a0a0a0', '#555555', 'crateres', 3, terra);
 
     const marte = crearPlaneta(1.0, crearTexturaPlaneta('#c1440e', '#7a2504', 'crateres'), 78, 1.85, {
       nombre: 'Marte',
@@ -914,8 +921,8 @@
       tempMin: '-153 °C'
     });
 
-    const fobos = crearLunaPlaneta('Fobos', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, marte);
-    const deimos = crearLunaPlaneta('Deimos', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, marte);
+    const fobos = crearLunaPlaneta('Fobos', '22,5 km', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, marte);
+    const deimos = crearLunaPlaneta('Deimos', '12,4 km', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, marte);
 
     const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', 'jupiter'), 130, 1.31, {
       nombre: 'Júpiter',
@@ -930,10 +937,10 @@
       tempMin: '-160 °C'
     });
 
-    const io = crearLunaPlaneta('Ío', 0.5375, '#e6c65c', '#b33600', 'crateres', 23, jupiter);
-    const europa = crearLunaPlaneta('Europa', 0.46, '#d9e2ec', '#829ab1', 'crateres', 25.5, jupiter);
-    const ganimedes = crearLunaPlaneta('Ganímedes', 0.7775, '#827b70', '#484238', 'crateres', 28.5, jupiter);
-    const calisto = crearLunaPlaneta('Calisto', 0.71, '#5c5652', '#332e2b', 'crateres', 32, jupiter);
+    const io = crearLunaPlaneta('Ío', '3.643 km', 0.5375, '#e6c65c', '#b33600', 'crateres', 23, jupiter);
+    const europa = crearLunaPlaneta('Europa', '3.122 km', 0.46, '#d9e2ec', '#829ab1', 'crateres', 25.5, jupiter);
+    const ganimedes = crearLunaPlaneta('Ganímedes', '5.268 km', 0.7775, '#827b70', '#484238', 'crateres', 28.5, jupiter);
+    const calisto = crearLunaPlaneta('Calisto', '4.821 km', 0.71, '#5c5652', '#332e2b', 'crateres', 32, jupiter);
 
     const saturno = crearPlaneta(17.18, crearTexturaPlaneta('#ead6b8', '#b89f78', 'bandas'), 162, 2.49, {
       nombre: 'Saturno',
@@ -948,11 +955,11 @@
       tempMin: '-178 °C'
     });
 
-    const tetis = crearLunaPlaneta('Tetis', 0.22, '#e2e8f0', '#94a3b8', 'crateres', 18.2, saturno);
-    const dione = crearLunaPlaneta('Dione', 0.24, '#cbd5e1', '#64748b', 'crateres', 18.7, saturno);
-    const rea = crearLunaPlaneta('Rea', 0.23, '#cfd8dc', '#78909c', 'crateres', 19.2, saturno);
-    const titan = crearLunaPlaneta('Titán', 0.76, '#d4a373', '#bc6c25', 'bandas', 21.25, saturno);
-    const japeto = crearLunaPlaneta('Jápeto', 0.28, '#9ca3af', '#374151', 'crateres', 24.5, saturno);
+    const tetis = crearLunaPlaneta('Tetis', '1.062 km', 0.22, '#e2e8f0', '#94a3b8', 'crateres', 18.2, saturno);
+    const dione = crearLunaPlaneta('Dione', '1.123 km', 0.24, '#cbd5e1', '#64748b', 'crateres', 18.7, saturno);
+    const rea = crearLunaPlaneta('Rea', '1.527 km', 0.23, '#cfd8dc', '#78909c', 'crateres', 19.2, saturno);
+    const titan = crearLunaPlaneta('Titán', '5.149 km', 0.76, '#d4a373', '#bc6c25', 'bandas', 21.25, saturno);
+    const japeto = crearLunaPlaneta('Jápeto', '1.469 km', 0.28, '#9ca3af', '#374151', 'crateres', 24.5, saturno);
 
     const urano = crearPlaneta(7.4825, crearTexturaPlaneta('#7de3f4', '#46a8ba', 'bandas'), 189, 0.77, {
       nombre: 'Urano',
@@ -967,10 +974,10 @@
       tempMin: '-224 °C'
     });
 
-    const ariel = crearLunaPlaneta('Ariel', 0.21, '#dbeafe', '#60a5fa', 'crateres', 8.4, urano);
-    const umbriel = crearLunaPlaneta('Umbriel', 0.21, '#6b7280', '#374151', 'crateres', 8.95, urano);
-    const titania = crearLunaPlaneta('Titania', 0.2325, '#a8dadc', '#457b9d', 'crateres', 9.5, urano);
-    const oberon = crearLunaPlaneta('Oberón', 0.225, '#9e9599', '#5c5357', 'crateres', 11.2, urano);
+    const ariel = crearLunaPlaneta('Ariel', '1.158 km', 0.21, '#dbeafe', '#60a5fa', 'crateres', 8.4, urano);
+    const umbriel = crearLunaPlaneta('Umbriel', '1.169 km', 0.21, '#6b7280', '#374151', 'crateres', 8.95, urano);
+    const titania = crearLunaPlaneta('Titania', '1.577 km', 0.2325, '#a8dadc', '#457b9d', 'crateres', 9.5, urano);
+    const oberon = crearLunaPlaneta('Oberón', '1.523 km', 0.225, '#9e9599', '#5c5357', 'crateres', 11.2, urano);
 
     const netuno = crearPlaneta(7.265, crearTexturaPlaneta('#3f54ba', '#1d2b75', 'bandas'), 204, 1.77, {
       nombre: 'Neptuno',
@@ -985,7 +992,7 @@
       tempMin: '-218 °C'
     });
 
-    const triton = crearLunaPlaneta('Tritón', 0.40, '#bde0fe', '#a2d2ff', 'crateres', 9.5, netuno);
+    const triton = crearLunaPlaneta('Tritón', '2.707 km', 0.40, '#bde0fe', '#a2d2ff', 'crateres', 9.5, netuno);
 
     const plutao = crearPlaneta(0.35, crearTexturaPlaneta('#bcaaa4', '#795548', 'crateres'), 216, 17.16, {
       nombre: 'Plutón',
@@ -1000,9 +1007,8 @@
       tempMin: '-233 °C'
     });
 
-    const caronte = crearLunaPlaneta('Caronte', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, plutao);
+    const caronte = crearLunaPlaneta('Caronte', '1.212 km', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, plutao);
 
-    // Anillos de Saturno
     const saturnoRingMat = new THREE.MeshBasicMaterial({
       map: crearTexturaAnillo('rgba(210, 190, 150, 0.85)', 'rgba(150, 130, 90, 0.4)'),
       side: THREE.DoubleSide,
@@ -1021,7 +1027,6 @@
     saturnoRingExterior.position.x = 162;
     saturnoRingExterior.rotation.x = -0.45 * Math.PI;
 
-    // Anillos de Urano
     const uranoRingGeo = new THREE.RingGeometry(15.5, 16.5, 64);
     const uranoRingMat = new THREE.MeshBasicMaterial({
       map: crearTexturaAnillo('rgba(125, 227, 244, 0.5)', 'rgba(70, 168, 186, 0.2)'),
@@ -1039,7 +1044,6 @@
     uranoRing2.position.x = 189;
     uranoRing2.rotation.x = -0.5 * Math.PI;
 
-    // LÍNEA INFERIOR DE DISTANCIA A ESCALA (SOL -> PLUTÓN)
     const escalaPista = document.getElementById('escala-pista');
     const tamBasePunto = 8;
     const hitosEscala = [
@@ -1124,7 +1128,6 @@
       escalaPista.appendChild(btnPunto);
     }
 
-    // 7. RAYCASTER Y CONTROLES DE RATÓN + TÁCTILES
     const raycaster = new THREE.Raycaster();
     const mouseNDC = new THREE.Vector2();
 
@@ -1146,7 +1149,6 @@
       );
     }
 
-    // --- EVENTOS DE RATÓN (ESCRITORIO) ---
     window.addEventListener('mousedown', (e) => {
       if (esElementoUI(e.target)) return;
       isDragging = true;
@@ -1214,7 +1216,6 @@
       actualizarCamara();
     }, { passive: true });
 
-    // --- EVENTOS TÁCTILES (MÓVILES Y TABLETS) ---
     let modoTactil = 'ninguno';
     let toqueInicio = { x: 0, y: 0, tiempo: 0 };
     let toquePrevio = { x: 0, y: 0 };
@@ -1345,7 +1346,6 @@
       }
     });
 
-    // 8. ACTUALIZACIÓN DE ETIQUETAS FLOTANTES (SOLO NOMBRE)
     const vectorProyeccion = new THREE.Vector3();
 
     function actualizarEtiquetas() {
@@ -1374,7 +1374,6 @@
       }
     }
 
-    // 9. BUCLE DE ANIMACIÓN
     let tiempoPulso = 0;
 
     function animacao() {
@@ -1390,7 +1389,6 @@
         netuno.mesh.rotateY(0.032);
         plutao.mesh.rotateY(0.008);
 
-        // Animaciones de las lunas
         luna.mesh.rotateY(0.01); luna.obj.rotateY(0.035);
 
         fobos.mesh.rotateY(0.02); fobos.obj.rotateY(0.06);
