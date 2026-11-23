@@ -617,7 +617,7 @@
     const ambientLight = new THREE.AmbientLight(0x282832);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xFFF3D6, 2.6, 800, 1.1);
+    const pointLight = new THREE.PointLight(0xFFF3D6, 1.6, 800, 1.1);
     scene.add(pointLight);
 
     const hemiLight = new THREE.HemisphereLight(0xffeedd, 0x080814, 0.35);
@@ -1003,21 +1003,21 @@ const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', '
     });
 
     // 1. Anillo interior (desde radio 19.5 hasta 25.2)
-    const ringInteriorGeo = new THREE.RingGeometry(19.5, 25.2, 64);
+    const ringInteriorGeo = new THREE.RingGeometry(34, 39, 64);
     const saturnoRingInterior = new THREE.Mesh(ringInteriorGeo, saturnoRingMat);
     saturno.obj.add(saturnoRingInterior);
     saturnoRingInterior.position.x = 162;
     saturnoRingInterior.rotation.x = -0.45 * Math.PI;
 
     // 2. Anillo exterior (desde radio 25.2 hasta 30, dejando el espacio vacío entre 25.2 y 26)
-    const ringExteriorGeo = new THREE.RingGeometry(26, 30, 64);
+    const ringExteriorGeo = new THREE.RingGeometry(26, 33, 64);
     const saturnoRingExterior = new THREE.Mesh(ringExteriorGeo, saturnoRingMat);
     saturno.obj.add(saturnoRingExterior);
     saturnoRingExterior.position.x = 162;
     saturnoRingExterior.rotation.x = -0.45 * Math.PI;
 
-    // Anillos de Urano
-    const uranoRingGeo = new THREE.RingGeometry(8.5, 11.5, 64);
+// ---> Anillos de Urano (Anillo exterior, de 15.5 a 16.5) <---
+    const uranoRingGeo = new THREE.RingGeometry(15.5, 16.5, 64);
     const uranoRingMat = new THREE.MeshBasicMaterial({
       map: crearTexturaAnillo('rgba(125, 227, 244, 0.5)', 'rgba(70, 168, 186, 0.2)'),
       side: THREE.DoubleSide,
@@ -1027,6 +1027,13 @@ const jupiter = crearPlaneta(20.625, crearTexturaPlaneta('#d39c7e', '#8f593b', '
     urano.obj.add(uranoRing);
     uranoRing.position.x = 189;
     uranoRing.rotation.x = -0.5 * Math.PI;
+
+    // ---> Anillo de Urano (interior, de 13.5 a 13.8) <---
+    const uranoRing2Geo = new THREE.RingGeometry(13.5, 13.8, 64);
+    const uranoRing2 = new THREE.Mesh(uranoRing2Geo, uranoRingMat);
+    urano.obj.add(uranoRing2);
+    uranoRing2.position.x = 189;
+    uranoRing2.rotation.x = -0.5 * Math.PI;
 
     // LÍNEA INFERIOR DE DISTANCIA A ESCALA (SOL -> PLUTÓN)
     const escalaPista = document.getElementById('escala-pista');
