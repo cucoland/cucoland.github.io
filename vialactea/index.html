@@ -18,6 +18,37 @@
       -webkit-user-select: none;
       user-select: none;
     }
+/* ==========================================
+       PERSONALIZACIÓN DE BARRAS DE DESPLAZAMIENTO
+       ========================================== */
+    
+    /* Para navegadores basados en WebKit (Chrome, Edge, Safari) */
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: rgba(10, 15, 28, 0.6);
+      border-radius: 4px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.3);
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.7);
+    }
+
+    /* Para Firefox */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(56, 189, 248, 0.3) rgba(10, 15, 28, 0.6);
+    }
+    
     canvas {
       display: block;
       width: 100%;
