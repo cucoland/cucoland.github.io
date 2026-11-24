@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok → MP3 / Video</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --bg2: #131624;
+      --line: #242a3d;
+      --text: #eef0f7;
+      --muted: #98a0b8;
+      --cyan: #25f4ee;
+      --pink: #fe2c55;
+      --ok: #3ddc97;
+      --err: #ff6b81;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      padding: 18px 0;
+    }
+    .logo b {
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero { padding: 48px 0; text-align: center; }
+    h1 {
+      font-size: clamp(2rem, 5.5vw, 3.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 28px;
+      text-shadow: rgba(37,244,238,0.55) -2px 0, rgba(254,44,85,0.55) 2px 0;
+    }
+    .box {
+      display: flex;
+      gap: 10px;
+      padding: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+    .box:focus-within { border-color: var(--cyan); }
+    .box input {
+      flex: 1;
+      min-width: 0;
+      background: none;
+      border: 0;
+      color: var(--text);
+      font: inherit;
+      padding: 12px 14px;
+    }
+    .box input:focus { outline: none; }
+    .box input::placeholder { color: #656d86; }
+    .paste {
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 0 14px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.9rem;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+      justify-content: center;
+    }
+    .btn {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 12px 28px;
+      color: #06080f;
+      background: linear-gradient(100deg, var(--cyan), #8af7f2 45%, #ff7d96);
+      min-width: 140px;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:disabled { opacity: 0.55; cursor: progress; }
+    .btn.secondary {
+      background: var(--bg2);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .msg {
+      min-height: 1.6em;
+      margin-top: 16px;
+      font-size: 0.95rem;
+    }
+    .msg.err { color: var(--err); }
+    .msg.ok { color: var(--ok); }
+    #result {
+      display: none;
+      margin-top: 28px;
+      text-align: left;
+      background: var(--bg2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+    }
+    #result.show { display: block; }
+    #result a {
+      display: inline-block;
+      margin: 12px 10px 0 0;
+      padding: 11px 18px;
+      background: linear-gradient(100deg, var(--cyan), #8af7f2 45%, #ff7d96);
+      color: #06080f;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    @media (max-width: 560px) {
+      .box { flex-wrap: wrap; }
+      .box input { flex-basis: 100%; }
+      .paste { padding: 12px; width: 100%; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">tik<b>4k</b></div>
+    <main class="hero">
+      <h1>TikTok → MP3 / Video</h1>
+
+      <div class="box">
+        <input id="url" type="url" placeholder="Pega aquí el enlace del vídeo de TikTok" autocomplete="off">
+        <button class="paste" id="pasteBtn" type="button">Pegar</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnMp3" type="button">Descargar MP3</button>
+        <button class="btn secondary" id="btnVideo" type="button">Descargar Video</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+      <div id="result"></div>
+    </main>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const RESOLVER = "https://www.tikwm.com/api/";
+
+    // Botón Pegar
+    $("pasteBtn").onclick = async () => {
+      try {
+        $("url").value = await navigator.clipboard.readText();
+        setMsg("");
+      } catch {
+        setMsg("No se pudo acceder al portapapeles", "err");
+      }
+    };
+
+    function setMsg(text, kind = "") {
+      const m = $("msg");
+      m.textContent = text || "";
+      m.className = "msg" + (kind ? " " + kind : "");
+    }
+
+    function setLoading(loading) {
+      $("btnMp3").disabled = loading;
+      $("btnVideo").disabled = loading;
+    }
+
+    // Función principal (independiente para cada botón)
+    async function procesar(tipo) {
+      const url = $("url").value.trim();
+      const result = $("result");
+
+      result.classList.remove("show");
+      result.innerHTML = "";
+
+      if (!url) {
+        setMsg("Pega primero un enlace de TikTok.", "err");
+        return;
+      }
+
+      setLoading(true);
+      setMsg("Procesando…");
+
+      try {
+        const res = await fetch(`${RESOLVER}?url=${encodeURIComponent(url)}&hd=1`);
+        const json = await res.json();
+
+        if (!json || json.code !== 0 || !json.data) {
+          throw new Error("No se pudo obtener la información");
+        }
+
+        const data = json.data;
+        let html = `<strong>${data.title || "Vídeo encontrado"}</strong><br>`;
+
+        if (tipo === "mp3") {
+          // Buscamos el audio
+          const audio = data.music || data.music_info?.play_url || data.play;
+          if (audio) {
+            html += `<a href="${audio}" download target="_blank" rel="noopener">Descargar MP3</a>`;
+            setMsg("Audio listo.", "ok");
+          } else {
+            throw new Error("No se encontró la pista de audio");
+          }
+        } else {
+          // Video sin marca de agua (prioridad a HD)
+          const video = data.hdplay || data.play || data.wmplay;
+          if (video) {
+            html += `<a href="${video}" download target="_blank" rel="noopener">Descargar Video</a>`;
+            setMsg("Vídeo listo.", "ok");
+          } else {
+            throw new Error("No se encontró el vídeo");
+          }
+        }
+
+        result.innerHTML = html;
+        result.classList.add("show");
+
+      } catch (err) {
+        setMsg(err.message || "Error al procesar el enlace. Prueba otro o usa vididown.com", "err");
+      }
+
+      setLoading(false);
+    }
+
+    // Cada botón funciona de forma independiente
+    $("btnMp3").onclick = () => procesar("mp3");
+    $("btnVideo").onclick = () => procesar("video");
+
+    // Enter también lanza MP3 por defecto
+    $("url").addEventListener("keydown", e => {
+      if (e.key === "Enter") procesar("mp3");
+    });
+  </script>
+</body>
+</html>
