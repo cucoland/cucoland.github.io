@@ -72,9 +72,11 @@
       position: fixed;
       top: 70px;
       left: 20px;
-      width: 290px;
+      right: 20px;
+      width: 280px;
       max-height: calc(100vh - 100px);
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       background: rgba(10, 15, 28, 0.95);
       border: 1px solid rgba(56, 189, 248, 0.5);
       border-left: 4px solid #38bdf8;
@@ -528,7 +530,7 @@
     <div class="menu-seccion">
       <h3>Velocidad de Animación</h3>
       <div class="grupo-botones-velocidad">
-        <button class="btn-vel" data-vel="0.1">0.1x</button>
+        <button class="btn-vel" data-vel="0.25">0.25x</button>
         <button class="btn-vel" data-vel="0.5">0.5x</button>
         <button class="btn-vel activo" data-vel="1">1x</button>
         <button class="btn-vel" data-vel="2">2x</button>
@@ -596,7 +598,7 @@
     let objetoSeguido = null;
     const vectorTemporal = new THREE.Vector3();
 
-    let velocidadAnimacion = 0.5;
+    let velocidadAnimacion = 1.0;
     const lineasOrbitasGlobal = [];
     const registrosAstrosControlables = [];
 
@@ -1318,7 +1320,7 @@
     // --- PLUTÓN Y SUS LUNAS ---
     const plutao = crearPlaneta(0.35, crearTexturaPlaneta('#bcaaa4', '#795548', 'crateres'), 290, 17.16, 122.53, 3.9, {
       nombre: 'Plutón', tipo: 'Planeta enano', distancia: '5.906 millones km', distanciaMillonesKm: 5906,
-      tiempoOrbita: '248 años', tiempoRotacion: '6 días 9 h', colorEscala: '#bcaaa4',
+      tiempoOrbita: '248 años', tiempoRotacion: '6 days 9 h', colorEscala: '#bcaaa4',
       tamanoTierra: '2.377 km diámetro', tempMax: '-223 °C', tempMin: '-233 °C'
     }, false, '#bcaaa4', '#795548', 'crateres');
     const caronte = crearLunaPlaneta('Caronte', '1.212 km', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, 0.0, plutao);
