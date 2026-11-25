@@ -264,9 +264,8 @@
       left: 20px;
       width: 315px;
       max-height: calc(100vh - 110px);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
+      display: none;
+      flex-direction: column;
       background: rgba(10, 15, 28, 0.92);
       border: 1px solid rgba(56, 189, 248, 0.5);
       border-left: 4px solid #38bdf8;
@@ -276,10 +275,8 @@
       z-index: 110;
       backdrop-filter: blur(8px);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.75);
-      display: none;
     }
     #ficha-lateral.minimizado {
-      overflow-y: hidden;
       padding-bottom: 18px;
     }
     #ficha-lateral.minimizado .ficha-header {
@@ -295,9 +292,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.15);
       padding-bottom: 10px;
       margin-bottom: 12px;
+    }
+    #ficha-cuerpo {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      padding-right: 4px;
     }
     .ficha-titulo-contenedor {
       display: flex;
@@ -461,16 +465,15 @@
       transform: translate(-50%, -125%);
       padding: 5px 11px;
       color: #38bdf8;
+      text-shadow: 1px 1px 2px #222, -1px -1px 2px #000000de, -1px 1px 2px #000000;
       font-size: 11px;
       font-weight: 600;
       display: none;
       pointer-events: auto;
       cursor: pointer;
-      background: rgba(10, 15, 28, 0.82);
-      border: 1px solid rgba(56, 189, 248, 0.45);
       border-radius: 6px;
-      backdrop-filter: blur(6px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+     /* backdrop-filter: blur(6px);*/
+     /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);*/
       transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
       touch-action: manipulation;
     }
@@ -675,9 +678,9 @@
   </div>
 
   <div id="panel-controles">
-    <button id="btn-pausa" class="btn-control">❚❚</button>
-    <button id="btn-etiquetas" class="btn-control">Etiquetas</button>
-    <button id="btn-vista-general" class="btn-control">Vista General</button>
+    <button id="btn-pausa" class="btn-control" title="Pausar animación">❚❚</button>
+    <button id="btn-etiquetas" class="btn-control" title="Añadir o quitar etiquetas">Etiquetas</button>
+    <button id="btn-vista-general" class="btn-control" title="Vista general">Vista General</button>
   </div>
 
   <aside id="ficha-lateral">
@@ -1161,7 +1164,8 @@
         });
       });
 
-      fichaLateral.style.display = 'block';
+      fichaCuerpo.scrollTop = 0;
+      fichaLateral.style.display = 'flex';
     }
 
     let animacionPausada = false;
