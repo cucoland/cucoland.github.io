@@ -18,11 +18,10 @@
       -webkit-user-select: none;
       user-select: none;
     }
-/* ==========================================
+
+    /* ==========================================
        PERSONALIZACIÓN DE BARRAS DE DESPLAZAMIENTO
        ========================================== */
-    
-    /* Para navegadores basados en WebKit (Chrome, Edge, Safari) */
     *::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -43,7 +42,6 @@
       background: rgba(56, 189, 248, 0.7);
     }
 
-    /* Para Firefox */
     * {
       scrollbar-width: thin;
       scrollbar-color: rgba(56, 189, 248, 0.3) rgba(10, 15, 28, 0.6);
@@ -105,7 +103,7 @@
       bottom: 55px;
       left: 20px;
       right: 20px;
-      width: 280px;
+      width: 320px;
       max-height: calc(100vh - 100px);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -145,6 +143,78 @@
       width: 15px;
       height: 15px;
     }
+
+    /* ESTILOS DE LOS ITEMS EN LA SECCIÓN DE VISIBILIDAD */
+    .item-astro-menu {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+    }
+    .item-astro-menu:hover {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+    .item-astro-menu label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      margin: 0;
+      flex-grow: 1;
+    }
+    
+    .grupo-acciones-menu {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .btn-seguir-astro-menu,
+    .btn-etiqueta-astro-menu {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      font-size: 13px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      touch-action: manipulation;
+    }
+    .btn-etiqueta-astro-menu {
+      font-style: italic;
+      font-weight: 700;
+    }
+    .btn-seguir-astro-menu:hover,
+    .btn-etiqueta-astro-menu:hover {
+      background: #9eaaaf;
+      color: #0f172a;
+    }
+    .btn-etiqueta-astro-menu.activo {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+
+
+
+
+
     .grupo-botones-velocidad {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -389,16 +459,35 @@
     .etiqueta-satelite {
       position: absolute;
       transform: translate(-50%, -125%);
-      padding: 4px 10px;
+      padding: 5px 11px;
       color: #38bdf8;
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: 600;
       display: none;
+      pointer-events: auto;
+      cursor: pointer;
+      background: rgba(10, 15, 28, 0.82);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 6px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+      touch-action: manipulation;
     }
 
     .etiqueta-satelite {
       color: #bae6fd;
       font-size: 10px;
-      padding: 3px 8px;
+      padding: 4px 9px;
+      border-color: rgba(186, 230, 253, 0.4);
+    }
+
+    .etiqueta-planeta:hover,
+    .etiqueta-satelite:hover {
+      background: rgba(56, 189, 248, 0.28);
+      border-color: #38bdf8;
+      color: #ffffff;
+      transform: translate(-50%, -130%) scale(1.06);
     }
 
     #barra-escala-inferior {
@@ -624,7 +713,7 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 4500);
     let camRadius = 320;
     let camTheta = -0.6;
     let camPhi = 0.85;
@@ -635,6 +724,7 @@
     let velocidadAnimacion = 1.0;
     const lineasOrbitasGlobal = [];
     const registrosAstrosControlables = [];
+    const animacionesLunas = [];
 
     let isDragging = false;
     let isPanning = false;
@@ -679,7 +769,7 @@
       camTarget.addScaledVector(derecha, -deltaX * factorPaneo);
       camTarget.addScaledVector(arriba, deltaY * factorPaneo);
 
-      camTarget.clampScalar(-300, 300);
+      camTarget.clampScalar(-650, 650);
     }
 
     function centrarCamaraEnOrigen() {
@@ -689,6 +779,30 @@
     }
 
     actualizarCamara();
+
+    function crearGeometriaFormaOriginal(radioBase, escalaX = 1, escalaY = 1, escalaZ = 1, irregularidad = 0) {
+      const segs = irregularidad > 0 ? 22 : 32;
+      const geo = new THREE.SphereGeometry(radioBase, segs, segs);
+      geo.scale(escalaX, escalaY, escalaZ);
+
+      const posAttr = geo.getAttribute ? geo.getAttribute('position') : (geo.attributes && geo.attributes.position);
+      if (irregularidad > 0 && posAttr) {
+        for (let i = 0; i < posAttr.count; i++) {
+          const x = posAttr.getX(i);
+          const y = posAttr.getY(i);
+          const z = posAttr.getZ(i);
+          const ruido = 1 + irregularidad * (
+            Math.sin(x * 7.3 + y * 4.1) * 0.5 +
+            Math.cos(y * 6.7 + z * 5.9) * 0.35 +
+            Math.sin(z * 8.2 - x * 3.7) * 0.15
+          );
+          posAttr.setXYZ(i, x * ruido, y * ruido, z * ruido);
+        }
+        posAttr.needsUpdate = true;
+        geo.computeVertexNormals();
+      }
+      return geo;
+    }
 
     function crearTexturaPlaneta(colorBase, colorSecundario, tipo, aplicarBlur = false) {
       const canvas = document.createElement('canvas');
@@ -885,10 +999,10 @@
     const estrellasGeo = new THREE.BufferGeometry();
     const estrellasVertices = [];
     for (let i = 0; i < 3000; i++) {
-      const x = (Math.random() - 0.5) * 1800;
-      const y = (Math.random() - 0.5) * 1800;
-      const z = (Math.random() - 0.5) * 1800;
-      if (Math.hypot(x, y, z) > 400) {
+      const x = (Math.random() - 0.5) * 2600;
+      const y = (Math.random() - 0.5) * 2600;
+      const z = (Math.random() - 0.5) * 2600;
+      if (Math.hypot(x, y, z) > 650) {
         estrellasVertices.push(x, y, z);
       }
     }
@@ -900,12 +1014,12 @@
     const ambientLight = new THREE.AmbientLight(0x282832);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xFFF3D6, 1.6, 900, 1.1);
+    const pointLight = new THREE.PointLight(0xFFF3D6, 1.6, 1400, 1.0);
     pointLight.castShadow = true;
     pointLight.shadow.mapSize.width = 1024;
     pointLight.shadow.mapSize.height = 1024;
     pointLight.shadow.camera.near = 0.5;
-    pointLight.shadow.camera.far = 1200;
+    pointLight.shadow.camera.far = 1600;
     scene.add(pointLight);
 
     const hemiLight = new THREE.HemisphereLight(0xffeedd, 0x080814, 0.35);
@@ -914,7 +1028,7 @@
     const contenedorEtiquetas = document.getElementById('contenedor-etiquetas');
     const listaEtiquetas = [];
     const meshesInteractivos = [];
-    let etiquetasVisibles = false;
+    let etiquetasVisibles = false; // Estado global maestro de etiquetas
 
     const fichaLateral = document.getElementById('ficha-lateral');
     const fichaImg = document.getElementById('ficha-img');
@@ -964,8 +1078,8 @@
 
       if (info.mesh) {
         objetoSeguido = info.mesh;
-        const radioObj = info.mesh.geometry?.parameters?.radius || info.mesh.geometry?.parameters?.outerRadius || info.mesh.geometry?.parameters?.radiusX || 5;
-        camRadius = Math.max(30, radioObj * 5.5);
+        const radioObj = info.radioAprox || info.mesh.geometry?.parameters?.radius || info.mesh.geometry?.parameters?.outerRadius || 5;
+        camRadius = Math.max(18, radioObj * 5.5);
       }
 
       let htmlSatelites = '';
@@ -1042,7 +1156,7 @@
               itemSat.setAttribute('aria-pressed', 'true');
             }
             objetoSeguido = sat.registroEtiqueta.mesh;
-            camRadius = Math.max(15, sat.registroEtiqueta.radio * 8);
+            camRadius = Math.max(12, sat.registroEtiqueta.radio * 8);
           }
         });
       });
@@ -1063,6 +1177,9 @@
       for (const item of listaEtiquetas) {
         if (!item.esSatelite && item.grupoControl.visible) {
           item.visible = etiquetasVisibles;
+          if (item.registroMenu) {
+            item.registroMenu.classList.toggle('activo', etiquetasVisibles);
+          }
         }
       }
       btnEtiquetas.textContent = etiquetasVisibles ? 'Ocultar' : 'Etiquetas';
@@ -1078,6 +1195,7 @@
       esSol: true,
       esPrincipal: true,
       mesh: sol,
+      radioAprox: 6.25,
       distanciaMillonesKm: 0,
       imagen: crearImagenSatelite('#ffbb22', '#ff5500', 'crateres'),
       tipo: 'Estrella enana amarilla (G2V)',
@@ -1113,15 +1231,34 @@
     spriteCorona.scale.set(31.25, 31.25, 1);
     sol.add(spriteCorona);
 
-    function crearLineaOrbita(distanciaX, grupoPadre) {
+    const divSol = document.createElement('div');
+    divSol.className = 'etiqueta-planeta';
+    divSol.textContent = 'Sol';
+    contenedorEtiquetas.appendChild(divSol);
+    divSol.addEventListener('click', (e) => {
+      e.stopPropagation();
+      objetoSeguido = sol;
+      camRadius = Math.max(18, 6.25 * 5.5);
+      mostrarFichaPlaneta(infoSol);
+    });
+    const registroSol = {
+      mesh: sol, radio: 6.25, offsetY: 3.5, elemento: divSol, visible: true, esSatelite: false, seleccionado: false, grupoControl: sol, esPrincipal: true
+    };
+    listaEtiquetas.push(registroSol);
+    
+    registrosAstrosControlables.push({ nombre: 'Sol', grupo: sol, registroEtiqueta: registroSol, esPrincipal: true, info: infoSol, distanciaKm: 0 });
+
+    function crearLineaOrbita(distanciaX, grupoPadre, excentricidad = 0) {
       const puntos = [];
-      const segmentos = 128;
+      const segmentos = 160;
+      const b = distanciaX * Math.sqrt(1 - excentricidad * excentricidad);
+      const focoX = distanciaX * excentricidad;
       for (let i = 0; i <= segmentos; i++) {
         const angulo = (i / segmentos) * Math.PI * 2;
         puntos.push(new THREE.Vector3(
-          Math.cos(angulo) * distanciaX,
+          Math.cos(angulo) * distanciaX - focoX,
           0,
-          Math.sin(angulo) * distanciaX
+          Math.sin(angulo) * b
         ));
       }
       const orbitaGeo = new THREE.BufferGeometry().setFromPoints(puntos);
@@ -1136,13 +1273,13 @@
       return lineaOrbita;
     }
 
-    function crearPlanetaCustom(geo, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info, esPrincipal = false, colorBaseImg = '#38bdf8', colorSecImg = '#0f172a', tipoImg = 'crateres') {
+    function crearPlanetaCustom(geo, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info, esPrincipal = false, colorBaseImg = '#38bdf8', colorSecImg = '#0f172a', tipoImg = 'crateres', radioAproxOverride = null, excentricidad = 0) {
       const orbitaGrupo = new THREE.Object3D();
       orbitaGrupo.rotation.z = THREE.MathUtils.degToRad(inclinacionOrbitalGrados);
       orbitaGrupo.rotation.y = anguloInicialRad;
       scene.add(orbitaGrupo);
 
-      crearLineaOrbita(distanciaX, orbitaGrupo);
+      crearLineaOrbita(distanciaX, orbitaGrupo, excentricidad);
 
       const mat = new THREE.MeshStandardMaterial({ map: textura, roughness: 0.68, metalness: 0.05 });
       const mesh = new THREE.Mesh(geo, mat);
@@ -1153,18 +1290,27 @@
       const obj = new THREE.Object3D();
       obj.add(mesh);
       orbitaGrupo.add(obj);
-      mesh.position.x = distanciaX;
+      mesh.position.x = distanciaX * (1 - excentricidad);
 
       const div = document.createElement('div');
       div.className = 'etiqueta-planeta';
       div.textContent = info.nombre;
       contenedorEtiquetas.appendChild(div);
 
+      const radioAprox = radioAproxOverride || geo.parameters?.radius || geo.parameters?.radiusX || 5;
       info.mesh = mesh;
+      info.radioAprox = radioAprox;
       info.esPrincipal = esPrincipal;
       info.imagen = info.imagen || crearImagenSatelite(colorBaseImg, colorSecImg, tipoImg);
-      const radioAprox = geo.parameters?.radius || geo.parameters?.radiusX || 5;
-      const registro = { mesh, radio: radioAprox, offsetY: 3.5, elemento: div, visible: false, esSatelite: false, seleccionado: false, grupoControl: orbitaGrupo, esPrincipal };
+      
+      div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        objetoSeguido = mesh;
+        camRadius = Math.max(18, radioAprox * 5.5);
+        mostrarFichaPlaneta(info);
+      });
+
+      const registro = { mesh, radio: radioAprox, offsetY: 3.5, elemento: div, visible: esPrincipal, esSatelite: false, seleccionado: false, grupoControl: orbitaGrupo, esPrincipal };
       info.satelites = info.satelites || [];
       mesh.userData.infoPlaneta = info;
       listaEtiquetas.push(registro);
@@ -1174,21 +1320,34 @@
       return { mesh, obj, orbitaGrupo, info };
     }
 
-    function crearPlaneta(radio, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info, esPrincipal = false, colorBaseImg = '#38bdf8', colorSecImg = '#0f172a', tipoImg = 'crateres') {
+    function crearPlaneta(radio, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info, esPrincipal = false, colorBaseImg = '#38bdf8', colorSecImg = '#0f172a', tipoImg = 'crateres', excentricidad = 0) {
       const geo = new THREE.SphereGeometry(radio, 32, 32);
-      return crearPlanetaCustom(geo, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info, esPrincipal, colorBaseImg, colorSecImg, tipoImg);
+      return crearPlanetaCustom(geo, textura, distanciaX, inclinacionOrbitalGrados, inclinacionAxialGrados, anguloInicialRad, info, esPrincipal, colorBaseImg, colorSecImg, tipoImg, radio, excentricidad);
     }
 
-    function crearLunaPlaneta(nombreSatelite, diametroKm, radioLuna, colorBase, colorSec, tipoTextura, distanciaOrbita, inclinacionOrbitalGrados, planetaAnfitrion) {
+    function crearLunaPlaneta(nombreSatelite, diametroKm, radioLuna, colorBase, colorSec, tipoTextura, distanciaOrbita, inclinacionOrbitalGrados, planetaAnfitrion, opciones = {}) {
+      const {
+        escalaX = 1,
+        escalaY = 1,
+        escalaZ = 1,
+        irregularidad = 0,
+        velRot = 0.015,
+        velOrb = 0.04,
+        anguloInicial = Math.random() * Math.PI * 2,
+        inclinacionAxial = 0
+      } = opciones;
+
       const texturaLuna = crearTexturaPlaneta(colorBase, colorSec, tipoTextura);
-      const geo = new THREE.SphereGeometry(radioLuna, 24, 24);
+      const geo = crearGeometriaFormaOriginal(radioLuna, escalaX, escalaY, escalaZ, irregularidad);
       const mat = new THREE.MeshStandardMaterial({ map: texturaLuna, roughness: 0.72 });
       const mesh = new THREE.Mesh(geo, mat);
 
       mesh.castShadow = true;
+      mesh.rotation.z = THREE.MathUtils.degToRad(inclinacionAxial);
 
       const objOrbitaLuna = new THREE.Object3D();
       objOrbitaLuna.rotation.z = THREE.MathUtils.degToRad(inclinacionOrbitalGrados);
+      objOrbitaLuna.rotation.y = anguloInicial;
       objOrbitaLuna.add(mesh);
 
       planetaAnfitrion.mesh.add(objOrbitaLuna);
@@ -1199,9 +1358,10 @@
       divSat.textContent = nombreSatelite;
       contenedorEtiquetas.appendChild(divSat);
 
+      const radioMax = radioLuna * Math.max(escalaX, escalaY, escalaZ);
       const registroSat = {
         mesh,
-        radio: radioLuna,
+        radio: radioMax,
         offsetY: 1.4,
         elemento: divSat,
         visible: false,
@@ -1210,6 +1370,14 @@
         grupoControl: planetaAnfitrion.mesh,
         esPrincipal: planetaAnfitrion.info.esPrincipal
       };
+
+      divSat.addEventListener('click', (e) => {
+        e.stopPropagation();
+        registroSat.seleccionado = true;
+        objetoSeguido = mesh;
+        camRadius = Math.max(12, radioMax * 8);
+      });
+
       listaEtiquetas.push(registroSat);
 
       planetaAnfitrion.info.satelites.push({
@@ -1219,10 +1387,12 @@
         registroEtiqueta: registroSat
       });
 
-      return { mesh, obj: objOrbitaLuna };
+      const lunaObj = { mesh, obj: objOrbitaLuna, velRot, velOrb };
+      animacionesLunas.push(lunaObj);
+      return lunaObj;
     }
 
-    // --- INTERIOR Y CINTURÓN DE ASTEROIDES ---
+    /* --- CREACIÓN DE ASTROS --- */
     const mercurio = crearPlaneta(0.72, crearTexturaPlaneta('#8c8c8c', '#595959', 'crateres'), 28, 7.00, 0.034, 1.2, {
       nombre: 'Mercurio', tipo: 'Rocoso', distancia: '57,9 millones km', distanciaMillonesKm: 57.9,
       tiempoOrbita: '88 días', tiempoRotacion: '58,6 días', colorEscala: '#9ca3af',
@@ -1240,15 +1410,15 @@
       tiempoOrbita: '365,25 días', tiempoRotacion: '23 h 56 min', colorEscala: '#38bdf8',
       tamanoTierra: '12.742 km diámetro', tempMax: '56,7 °C', tempMin: '-89,2 °C'
     }, true, '#1c5ba6', '#2e8b57', 'tierra');
-    const luna = crearLunaPlaneta('Luna', '3.474 km', 0.5125, '#a0a0a0', '#555555', 'crateres', 3, 5.14, terra);
+    crearLunaPlaneta('Luna', '3.474 km', 0.5125, '#a0a0a0', '#555555', 'crateres', 3, 5.14, terra, { velRot: 0.01, velOrb: 0.035 });
 
     const marte = crearPlaneta(1.0, crearTexturaPlaneta('#c1440e', '#7a2504', 'crateres'), 52, 1.85, 25.19, 0.5, {
       nombre: 'Marte', tipo: 'Rocoso', distancia: '227,9 millones km', distanciaMillonesKm: 227.9,
       tiempoOrbita: '687 días', tiempoRotacion: '24 h 37 min', colorEscala: '#ef4444',
       tamanoTierra: '0,53 × Tierra', tempMax: '20 °C', tempMin: '-153 °C'
     }, true, '#c1440e', '#7a2504', 'crateres');
-    const fobos = crearLunaPlaneta('Fobos', '22,5 km', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, 1.08, marte);
-    const deimos = crearLunaPlaneta('Deimos', '12,4 km', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, 1.79, marte);
+    crearLunaPlaneta('Fobos', '22,5 km', 0.24, '#8d7b74', '#4e413c', 'crateres', 1.8, 1.08, marte, { escalaX: 1.35, escalaY: 0.9, escalaZ: 1.05, irregularidad: 0.14, velRot: 0.02, velOrb: 0.06 });
+    crearLunaPlaneta('Deimos', '12,4 km', 0.18, '#b0a299', '#6e625b', 'crateres', 2.6, 1.79, marte, { escalaX: 1.25, escalaY: 0.9, escalaZ: 1.0, irregularidad: 0.12, velRot: 0.015, velOrb: 0.035 });
 
     const cinturonGeo = new THREE.BufferGeometry();
     const cinturonVertices = [];
@@ -1271,7 +1441,7 @@
     scene.add(meshCinturonInt);
     
     const infoCinturon = {
-      nombre: 'Cinturón de Asteroides', esCinturon: true, esPrincipal: false, mesh: meshCinturonInt, distanciaMillonesKm: 414,
+      nombre: 'Cinturón de Asteroides', esCinturon: true, esPrincipal: false, mesh: meshCinturonInt, radioAprox: 65, distanciaMillonesKm: 414,
       imagen: crearImagenSatelite('#94a3b8', '#475569', 'crateres'),
       tipo: 'Región de cuerpos rocosos menores', tiempoOrbita: '3 a 6 años',
       tiempoRotacion: 'Variable', tamanoTierra: 'Millones de asteroides', tempMax: '-60 °C', tempMin: '-120 °C'
@@ -1283,10 +1453,17 @@
     divCinturon.className = 'etiqueta-planeta';
     divCinturon.textContent = 'Cinturón de Asteroides';
     contenedorEtiquetas.appendChild(divCinturon);
-    listaEtiquetas.push({
-      mesh: meshCinturonInt, radio: 65, offsetY: 0, elemento: divCinturon, visible: false, esSatelite: false, seleccionado: false, grupoControl: cinturonAsteroides, esPrincipal: false
+    divCinturon.addEventListener('click', (e) => {
+      e.stopPropagation();
+      objetoSeguido = meshCinturonInt;
+      camRadius = 140;
+      mostrarFichaPlaneta(infoCinturon);
     });
-    registrosAstrosControlables.push({ nombre: 'Cinturón de Asteroides', grupo: cinturonAsteroides, registroEtiqueta: { elemento: divCinturon }, esPrincipal: false, info: infoCinturon, distanciaKm: 414 });
+    const registroCinturon = {
+      mesh: meshCinturonInt, radio: 65, offsetY: 0, elemento: divCinturon, visible: false, esSatelite: false, seleccionado: false, grupoControl: cinturonAsteroides, esPrincipal: false
+    };
+    listaEtiquetas.push(registroCinturon);
+    registrosAstrosControlables.push({ nombre: 'Cinturón de Asteroides', grupo: cinturonAsteroides, registroEtiqueta: registroCinturon, esPrincipal: false, info: infoCinturon, distanciaKm: 414 });
 
     const ceres = crearPlaneta(0.45, crearTexturaPlaneta('#736b63', '#403935', 'crateres'), 61, 10.59, 3.0, 1.0, {
       nombre: 'Ceres', tipo: 'Planeta enano', distancia: '414 millones km', distanciaMillonesKm: 414,
@@ -1294,17 +1471,21 @@
       tamanoTierra: '945 km diámetro', tempMax: '-38 °C', tempMin: '-105 °C'
     }, false, '#736b63', '#403935', 'crateres');
 
-    const vesta = crearPlaneta(0.26, crearTexturaPlaneta('#827d75', '#4a4540', 'crateres'), 63.5, 7.14, 29.0, 2.1, {
-      nombre: 'Vesta', tipo: 'Protoplaneta', distancia: '353 millones km', distanciaMillonesKm: 353,
+    const vesta = crearPlanetaCustom(
+      crearGeometriaFormaOriginal(0.26, 1.15, 0.88, 1.08, 0.08),
+      crearTexturaPlaneta('#827d75', '#4a4540', 'crateres'), 63.5, 7.14, 29.0, 2.1, {
+      nombre: 'Vesta', tipo: 'Protoplaneta (Esferoide irregular)', distancia: '353 millones km', distanciaMillonesKm: 353,
       tiempoOrbita: '3,6 años', tiempoRotacion: '5 h 20 min', colorEscala: '#b4b0a5',
       tamanoTierra: '525 km diámetro', tempMax: '-20 °C', tempMin: '-190 °C'
-    }, false, '#827d75', '#4a4540', 'crateres');
+    }, false, '#827d75', '#4a4540', 'crateres', 0.30);
 
-    const palas = crearPlaneta(0.25, crearTexturaPlaneta('#7d8285', '#42474a', 'crateres'), 66, 34.80, 78.0, 4.2, {
-      nombre: 'Palas', tipo: 'Asteroide', distancia: '414 millones km', distanciaMillonesKm: 414,
+    const palas = crearPlanetaCustom(
+      crearGeometriaFormaOriginal(0.25, 1.12, 0.90, 1.05, 0.09),
+      crearTexturaPlaneta('#7d8285', '#42474a', 'crateres'), 66, 34.80, 78.0, 4.2, {
+      nombre: 'Palas', tipo: 'Asteroide (Irregular)', distancia: '414 millones km', distanciaMillonesKm: 414,
       tiempoOrbita: '4,6 años', tiempoRotacion: '7 h 48 min', colorEscala: '#93999d',
       tamanoTierra: '512 km diámetro', tempMax: '-30 °C', tempMin: '-200 °C'
-    }, false, '#7d8285', '#42474a', 'crateres');
+    }, false, '#7d8285', '#42474a', 'crateres', 0.28);
 
     const higia = crearPlaneta(0.22, crearTexturaPlaneta('#636669', '#323538', 'crateres'), 68.5, 3.84, 60.0, 5.5, {
       nombre: 'Higia', tipo: 'Asteroide / Planeta enano', distancia: '470 millones km', distanciaMillonesKm: 470,
@@ -1317,62 +1498,115 @@
       tiempoOrbita: '11,86 años', tiempoRotacion: '9 h 55 min', colorEscala: '#d39c7e',
       tamanoTierra: '10,97 × Tierra', tempMax: '-110 °C', tempMin: '-160 °C'
     }, true, '#d39c7e', '#8f593b', 'jupiter');
-    const io = crearLunaPlaneta('Ío', '3.643 km', 0.5375, '#e6c65c', '#b33600', 'crateres', 23, 0.05, jupiter);
-    const europa = crearLunaPlaneta('Europa', '3.122 km', 0.46, '#d9e2ec', '#829ab1', 'crateres', 25.5, 0.47, jupiter);
-    const ganimedes = crearLunaPlaneta('Ganímedes', '5.268 km', 0.7775, '#827b70', '#484238', 'crateres', 28.5, 0.20, jupiter);
-    const calisto = crearLunaPlaneta('Calisto', '4.821 km', 0.71, '#5c5652', '#332e2b', 'crateres', 32, 0.30, jupiter);
+    crearLunaPlaneta('Amaltea', '167 km', 0.16, '#b91c1c', '#7f1d1d', 'crateres', 21.6, 0.37, jupiter, { escalaX: 1.5, escalaY: 0.85, escalaZ: 0.9, irregularidad: 0.16, velRot: 0.025, velOrb: 0.085 });
+    crearLunaPlaneta('Ío', '3.643 km', 0.5375, '#e6c65c', '#b33600', 'crateres', 23, 0.05, jupiter, { velRot: 0.02, velOrb: 0.07 });
+    crearLunaPlaneta('Europa', '3.122 km', 0.46, '#d9e2ec', '#829ab1', 'crateres', 25.5, 0.47, jupiter, { velRot: 0.018, velOrb: 0.055 });
+    crearLunaPlaneta('Ganímedes', '5.268 km', 0.7775, '#827b70', '#484238', 'crateres', 28.5, 0.20, jupiter, { velRot: 0.015, velOrb: 0.04 });
+    crearLunaPlaneta('Calisto', '4.821 km', 0.71, '#5c5652', '#332e2b', 'crateres', 32, 0.30, jupiter, { velRot: 0.012, velOrb: 0.025 });
+    crearLunaPlaneta('Himalia', '170 km', 0.17, '#78716c', '#44403c', 'crateres', 36.5, 27.5, jupiter, { escalaX: 1.25, escalaY: 0.9, escalaZ: 0.95, irregularidad: 0.14, velRot: 0.015, velOrb: 0.012 });
 
-    // --- OBJETOS EXTERNOS ---
+    const caricloGeo = crearGeometriaFormaOriginal(0.24, 1.22, 0.86, 1.04, 0.06);
+    const cariclo = crearPlanetaCustom(caricloGeo, crearTexturaPlaneta('#78716c', '#44403c', 'crateres'), 112, 23.37, 25.0, 0.9, {
+      nombre: 'Cariclo', tipo: 'Centauro con anillos (Elipsoidal)', distancia: '2.360 millones km', distanciaMillonesKm: 2360,
+      tiempoOrbita: '63 años', tiempoRotacion: '7 h 00 min', colorEscala: '#94a3b8',
+      tamanoTierra: '250 km diámetro', tempMax: '-190 °C', tempMin: '-215 °C'
+    }, false, '#78716c', '#44403c', 'crateres', 0.30);
+
+    const caricloRingMat = new THREE.MeshStandardMaterial({
+      color: 0xd6d3d1,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.55,
+      roughness: 0.6
+    });
+    const caricloRing1 = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.47, 48), caricloRingMat);
+    caricloRing1.rotation.x = -0.5 * Math.PI;
+    cariclo.mesh.add(caricloRing1);
+
+    const caricloRing2 = new THREE.Mesh(new THREE.RingGeometry(0.50, 0.53, 48), caricloRingMat);
+    caricloRing2.rotation.x = -0.5 * Math.PI;
+    cariclo.mesh.add(caricloRing2);
+
     const saturno = crearPlaneta(17.18, crearTexturaPlaneta('#ead6b8', '#b89f78', 'bandas'), 140, 2.49, 26.73, 1.8, {
       nombre: 'Saturno', tipo: 'Gigante gaseoso', distancia: '1.434 millones km', distanciaMillonesKm: 1434,
       tiempoOrbita: '29,45 años', tiempoRotacion: '10 h 33 min', colorEscala: '#ead6b8',
       tamanoTierra: '9,14 × Tierra', tempMax: '-140 °C', tempMin: '-178 °C'
     }, true, '#ead6b8', '#b89f78', 'bandas');
-    const tetis = crearLunaPlaneta('Tetis', '1.062 km', 0.22, '#e2e8f0', '#94a3b8', 'crateres', 18.2, 1.10, saturno);
-    const dione = crearLunaPlaneta('Dione', '1.123 km', 0.24, '#cbd5e1', '#64748b', 'crateres', 18.7, 0.02, saturno);
-    const rea = crearLunaPlaneta('Rea', '1.527 km', 0.23, '#cfd8dc', '#78909c', 'crateres', 19.2, 0.35, saturno);
-    const titan = crearLunaPlaneta('Titán', '5.149 km', 0.76, '#d4a373', '#bc6c25', 'bandas', 21.25, 0.35, saturno);
-    const japeto = crearLunaPlaneta('Jápeto', '1.469 km', 0.28, '#9ca3af', '#374151', 'crateres', 24.5, 15.47, saturno);
+    crearLunaPlaneta('Encélado', '504 km', 0.16, '#f8fafc', '#cbd5e1', 'crateres', 17.8, 0.02, saturno, { escalaX: 1.03, escalaY: 0.98, escalaZ: 1.0, velRot: 0.02, velOrb: 0.058 });
+    crearLunaPlaneta('Tetis', '1.062 km', 0.22, '#e2e8f0', '#94a3b8', 'crateres', 18.4, 1.10, saturno, { velRot: 0.018, velOrb: 0.052 });
+    crearLunaPlaneta('Dione', '1.123 km', 0.24, '#cbd5e1', '#64748b', 'crateres', 19.0, 0.02, saturno, { velRot: 0.017, velOrb: 0.047 });
+    crearLunaPlaneta('Rea', '1.527 km', 0.23, '#cfd8dc', '#78909c', 'crateres', 19.6, 0.35, saturno, { velRot: 0.016, velOrb: 0.042 });
+    crearLunaPlaneta('Titán', '5.149 km', 0.76, '#d4a373', '#bc6c25', 'bandas', 21.25, 0.35, saturno, { velRot: 0.015, velOrb: 0.03 });
+    crearLunaPlaneta('Jápeto', '1.469 km', 0.28, '#9ca3af', '#374151', 'crateres', 24.5, 15.47, saturno, { velRot: 0.011, velOrb: 0.018 });
+    crearLunaPlaneta('Tarvos', '15 km', 0.11, '#b91c1c', '#7f1d1d', 'crateres', 29.0, 33.8, saturno, { escalaX: 1.4, escalaY: 0.85, escalaZ: 0.95, irregularidad: 0.16, velRot: 0.015, velOrb: 0.009 });
 
     const urano = crearPlaneta(7.4825, crearTexturaPlaneta('#7de3f4', '#46a8ba', 'bandas'), 190, 0.77, 97.77, 5.0, {
       nombre: 'Urano', tipo: 'Gigante helado', distancia: '2.871 millones km', distanciaMillonesKm: 2871,
       tiempoOrbita: '84 años', tiempoRotacion: '17 h 14 min', colorEscala: '#7de3f4',
       tamanoTierra: '3,98 × Tierra', tempMax: '-195 °C', tempMin: '-224 °C'
     }, true, '#7de3f4', '#46a8ba', 'bandas');
-    const ariel = crearLunaPlaneta('Ariel', '1.158 km', 0.21, '#dbeafe', '#60a5fa', 'crateres', 8.4, 0.31, urano);
-    const umbriel = crearLunaPlaneta('Umbriel', '1.169 km', 0.21, '#6b7280', '#374151', 'crateres', 8.95, 0.13, urano);
-    const titania = crearLunaPlaneta('Titania', '1.577 km', 0.2325, '#a8dadc', '#457b9d', 'crateres', 9.5, 0.08, urano);
-    const oberon = crearLunaPlaneta('Oberón', '1.523 km', 0.225, '#9e9599', '#5c5357', 'crateres', 11.2, 0.07, urano);
+    crearLunaPlaneta('Porcia', '135 km', 0.11, '#94a3b8', '#475569', 'crateres', 7.8, 0.06, urano, { escalaX: 1.25, escalaY: 0.9, escalaZ: 0.95, irregularidad: 0.13, velRot: 0.022, velOrb: 0.065 });
+    crearLunaPlaneta('Puck', '162 km', 0.12, '#64748b', '#334155', 'crateres', 8.05, 0.32, urano, { escalaX: 1.15, escalaY: 0.92, escalaZ: 0.96, irregularidad: 0.10, velRot: 0.02, velOrb: 0.058 });
+    crearLunaPlaneta('Miranda', '471 km', 0.16, '#cbd5e1', '#64748b', 'crateres', 8.35, 4.23, urano, { escalaX: 1.04, escalaY: 0.97, escalaZ: 1.0, irregularidad: 0.05, velRot: 0.018, velOrb: 0.051 });
+    crearLunaPlaneta('Ariel', '1.158 km', 0.21, '#dbeafe', '#60a5fa', 'crateres', 8.75, 0.31, urano, { velRot: 0.015, velOrb: 0.044 });
+    crearLunaPlaneta('Umbriel', '1.169 km', 0.21, '#6b7280', '#374151', 'crateres', 9.2, 0.13, urano, { velRot: 0.014, velOrb: 0.038 });
+    crearLunaPlaneta('Titania', '1.577 km', 0.2325, '#a8dadc', '#457b9d', 'crateres', 9.8, 0.08, urano, { velRot: 0.012, velOrb: 0.032 });
+    crearLunaPlaneta('Oberón', '1.523 km', 0.225, '#9e9599', '#5c5357', 'crateres', 11.2, 0.07, urano, { velRot: 0.011, velOrb: 0.024 });
+    crearLunaPlaneta('Sicorax', '150 km', 0.12, '#9a3412', '#431407', 'crateres', 14.5, 159.4, urano, { escalaX: 1.35, escalaY: 0.85, escalaZ: 0.9, irregularidad: 0.15, velRot: 0.012, velOrb: -0.010 });
 
     const netuno = crearPlaneta(7.265, crearTexturaPlaneta('#3f54ba', '#1d2b75', 'bandas'), 240, 1.77, 28.32, 2.2, {
       nombre: 'Neptuno', tipo: 'Gigante helado', distancia: '4.495 millones km', distanciaMillonesKm: 4495,
       tiempoOrbita: '164,8 años', tiempoRotacion: '16 h 6 min', colorEscala: '#60a5fa',
       tamanoTierra: '3,86 × Tierra', tempMax: '-200 °C', tempMin: '-218 °C'
     }, true, '#3f54ba', '#1d2b75', 'bandas');
-    const triton = crearLunaPlaneta('Tritón', '2.707 km', 0.40, '#bde0fe', '#a2d2ff', 'crateres', 9.5, 156.8, netuno);
+    crearLunaPlaneta('Despina', '150 km', 0.11, '#94a3b8', '#475569', 'crateres', 7.7, 0.07, netuno, { escalaX: 1.25, escalaY: 0.88, escalaZ: 0.95, irregularidad: 0.14, velRot: 0.024, velOrb: 0.068 });
+    crearLunaPlaneta('Galatea', '175 km', 0.12, '#cbd5e1', '#64748b', 'crateres', 8.0, 0.05, netuno, { escalaX: 1.25, escalaY: 0.88, escalaZ: 0.92, irregularidad: 0.14, velRot: 0.022, velOrb: 0.061 });
+    crearLunaPlaneta('Larisa', '194 km', 0.13, '#a1a1aa', '#52525b', 'crateres', 8.35, 0.20, netuno, { escalaX: 1.22, escalaY: 0.90, escalaZ: 0.95, irregularidad: 0.13, velRot: 0.020, velOrb: 0.054 });
+    crearLunaPlaneta('Proteo', '420 km', 0.18, '#71717a', '#3f3f46', 'crateres', 8.85, 0.52, netuno, { escalaX: 1.15, escalaY: 0.92, escalaZ: 0.96, irregularidad: 0.12, velRot: 0.018, velOrb: 0.045 });
+    crearLunaPlaneta('Tritón', '2.707 km', 0.40, '#bde0fe', '#a2d2ff', 'crateres', 9.9, 156.8, netuno, { velRot: 0.012, velOrb: -0.035 });
+    crearLunaPlaneta('Nereida', '340 km', 0.15, '#d4d4d8', '#71717a', 'crateres', 13.8, 7.23, netuno, { escalaX: 1.25, escalaY: 0.90, escalaZ: 0.95, irregularidad: 0.14, velRot: 0.014, velOrb: 0.012 });
 
-    // --- PLUTÓN Y SUS LUNAS ---
     const plutao = crearPlaneta(0.35, crearTexturaPlaneta('#bcaaa4', '#795548', 'crateres'), 290, 17.16, 122.53, 3.9, {
       nombre: 'Plutón', tipo: 'Planeta enano', distancia: '5.906 millones km', distanciaMillonesKm: 5906,
       tiempoOrbita: '248 años', tiempoRotacion: '6 days 9 h', colorEscala: '#bcaaa4',
       tamanoTierra: '2.377 km diámetro', tempMax: '-223 °C', tempMin: '-233 °C'
     }, false, '#bcaaa4', '#795548', 'crateres');
-    const caronte = crearLunaPlaneta('Caronte', '1.212 km', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, 0.0, plutao);
-    const estigia = crearLunaPlaneta('Estigia', '16 km', 0.08, '#cccccc', '#888888', 'crateres', 1.7, 0.5, plutao);
-    const nix = crearLunaPlaneta('Nix', '49 km', 0.12, '#ddddaa', '#999966', 'crateres', 2.2, 0.2, plutao);
-    const cerbero = crearLunaPlaneta('Cerbero', '22 km', 0.09, '#aaaaaa', '#666666', 'crateres', 2.8, 0.4, plutao);
-    const hidra = crearLunaPlaneta('Hidra', '51 km', 0.13, '#eeeeee', '#aaaaaa', 'crateres', 3.5, 0.25, plutao);
+    crearLunaPlaneta('Caronte', '1.212 km', 0.20, '#9e9e9e', '#616161', 'crateres', 1.15, 0.0, plutao, { velRot: 0.012, velOrb: 0.03 });
+    crearLunaPlaneta('Estigia', '16 km', 0.08, '#cccccc', '#888888', 'crateres', 1.7, 0.5, plutao, { escalaX: 1.4, escalaY: 0.8, escalaZ: 0.9, irregularidad: 0.15, velRot: 0.01, velOrb: 0.04 });
+    crearLunaPlaneta('Nix', '49 km', 0.12, '#ddddaa', '#999966', 'crateres', 2.2, 0.2, plutao, { escalaX: 1.45, escalaY: 0.85, escalaZ: 0.9, irregularidad: 0.15, velRot: 0.01, velOrb: 0.035 });
+    crearLunaPlaneta('Cerbero', '22 km', 0.09, '#aaaaaa', '#666666', 'crateres', 2.8, 0.4, plutao, { escalaX: 1.5, escalaY: 0.8, escalaZ: 0.85, irregularidad: 0.16, velRot: 0.01, velOrb: 0.038 });
+    crearLunaPlaneta('Hidra', '51 km', 0.13, '#eeeeee', '#aaaaaa', 'crateres', 3.5, 0.25, plutao, { escalaX: 1.4, escalaY: 0.85, escalaZ: 0.9, irregularidad: 0.15, velRot: 0.01, velOrb: 0.03 });
 
-    // --- HAUMEA Y SUS LUNAS ---
-    const haumeaGeo = new THREE.SphereGeometry(1, 32, 32);
-    haumeaGeo.scale(1.7, 0.9, 0.9);
-    const haumea = crearPlanetaCustom(haumeaGeo, crearTexturaPlaneta('#e2e8f0', '#94a3b8', 'crateres'), 340, 28.19, 0.0, 1.5, {
-      nombre: 'Haumea', tipo: 'Planeta enano (Elipsoidal)', distancia: '6.452 millones km', distanciaMillonesKm: 6452,
+    const orcus = crearPlaneta(0.28, crearTexturaPlaneta('#cbd5e1', '#64748b', 'crateres'), 315, 20.58, 0.0, 0.7, {
+      nombre: 'Orcus', tipo: 'Objeto transneptuniano (Plutino)', distancia: '5.890 millones km', distanciaMillonesKm: 5890,
+      tiempoOrbita: '245 años', tiempoRotacion: '13 h 11 min', colorEscala: '#cbd5e1',
+      tamanoTierra: '910 km diámetro', tempMax: '-229 °C', tempMin: '-235 °C'
+    }, false, '#cbd5e1', '#64748b', 'crateres');
+    crearLunaPlaneta('Vanth', '442 km', 0.16, '#94a3b8', '#475569', 'crateres', 1.1, 0.1, orcus, { velRot: 0.012, velOrb: 0.032 });
+
+    const haumeaGeo = crearGeometriaFormaOriginal(1, 1.7, 0.88, 1.15, 0.02);
+    const haumea = crearPlanetaCustom(haumeaGeo, crearTexturaPlaneta('#e2e8f0', '#94a3b8', 'crateres'), 340, 28.19, 126.0, 1.5, {
+      nombre: 'Haumea', tipo: 'Planeta enano (Elipsoide triaxial)', distancia: '6.452 millones km', distanciaMillonesKm: 6452,
       tiempoOrbita: '284 años', tiempoRotacion: '3 h 55 min', colorEscala: '#cbd5e1',
       tamanoTierra: '1.632 km diámetro', tempMax: '-223 °C', tempMin: '-241 °C'
-    }, false, '#e2e8f0', '#94a3b8', 'crateres');
-    const namaka = crearLunaPlaneta('Namaka', '170 km', 0.16, '#d0d0d0', '#808080', 'crateres', 1.8, 13.4, haumea);
-    const hiiaka = crearLunaPlaneta("Hi'iaka", '310 km', 0.22, '#e0e0e0', '#909090', 'crateres', 2.8, 28.2, haumea);
+    }, false, '#e2e8f0', '#94a3b8', 'crateres', 1.2);
+    crearLunaPlaneta('Namaka', '170 km', 0.16, '#d0d0d0', '#808080', 'crateres', 1.8, 13.4, haumea, { velRot: 0.012, velOrb: 0.045 });
+    crearLunaPlaneta("Hi'iaka", '310 km', 0.22, '#e0e0e0', '#909090', 'crateres', 2.8, 28.2, haumea, { velRot: 0.012, velOrb: 0.035 });
+
+    const varunaGeo = crearGeometriaFormaOriginal(0.24, 1.45, 0.78, 1.05, 0.03);
+    const varuna = crearPlanetaCustom(varunaGeo, crearTexturaPlaneta('#b45309', '#78350f', 'crateres'), 355, 17.2, 60.0, 2.9, {
+      nombre: 'Varuna', tipo: 'Cubewano (Elipsoide elongado)', distancia: '6.410 millones km', distanciaMillonesKm: 6410,
+      tiempoOrbita: '281 años', tiempoRotacion: '6 h 20 min', colorEscala: '#b45309',
+      tamanoTierra: '668 km diámetro', tempMax: '-230 °C', tempMin: '-236 °C'
+    }, false, '#b45309', '#78350f', 'crateres', 0.28);
+
+    const quaoarGeo = crearGeometriaFormaOriginal(0.30, 1.08, 0.92, 1.02, 0.02);
+    const quaoar = crearPlanetaCustom(quaoarGeo, crearTexturaPlaneta('#9a3412', '#431407', 'crateres'), 372, 7.99, 14.0, 5.1, {
+      nombre: 'Quaoar', tipo: 'Cubewano / Planeta enano', distancia: '6.530 millones km', distanciaMillonesKm: 6530,
+      tiempoOrbita: '288 años', tiempoRotacion: '8 h 50 min', colorEscala: '#c2410c',
+      tamanoTierra: '1.110 km diámetro', tempMax: '-220 °C', tempMin: '-235 °C'
+    }, false, '#9a3412', '#431407', 'crateres', 0.30);
+    crearLunaPlaneta('Weywot', '170 km', 0.12, '#78716c', '#44403c', 'crateres', 1.15, 14.0, quaoar, { velRot: 0.012, velOrb: 0.036 });
 
     const makemake = crearPlaneta(0.33, crearTexturaPlaneta('#b45309', '#78350f', 'crateres'), 390, 29.0, 0.0, 4.8, {
       nombre: 'Makemake', tipo: 'Planeta enano', distancia: '6.850 millones km', distanciaMillonesKm: 6850,
@@ -1380,15 +1614,19 @@
       tamanoTierra: '1.430 km diámetro', tempMax: '-239 °C', tempMin: '-243 °C'
     }, false, '#b45309', '#78350f', 'crateres');
 
-    // --- ERIS Y DYSNOMIA ---
+    const gonggong = crearPlaneta(0.32, crearTexturaPlaneta('#991b1b', '#450a0a', 'crateres'), 415, 30.7, 0.0, 1.9, {
+      nombre: 'Gonggong', tipo: 'Disco disperso / Planeta enano', distancia: '10.070 millones km', distanciaMillonesKm: 10070,
+      tiempoOrbita: '554 años', tiempoRotacion: '22 h 24 min', colorEscala: '#dc2626',
+      tamanoTierra: '1.230 km diámetro', tempMax: '-235 °C', tempMin: '-243 °C'
+    }, false, '#991b1b', '#450a0a', 'crateres');
+
     const eris = crearPlaneta(0.36, crearTexturaPlaneta('#f1f5f9', '#cbd5e1', 'crateres'), 440, 44.18, 0.0, 5.5, {
       nombre: 'Eris', tipo: 'Planeta enano', distancia: '10.120 millones km', distanciaMillonesKm: 10120,
       tiempoOrbita: '557 años', tiempoRotacion: '25 h 54 min', colorEscala: '#f8fafc',
       tamanoTierra: '2.326 km diámetro', tempMax: '-217 °C', tempMin: '-243 °C'
     }, false, '#f1f5f9', '#cbd5e1', 'crateres');
-    const dysnomia = crearLunaPlaneta('Dysnomia', '700 km', 0.25, '#ffffff', '#cccccc', 'crateres', 1.6, 5.0, eris);
+    crearLunaPlaneta('Dysnomia', '700 km', 0.25, '#ffffff', '#cccccc', 'crateres', 1.6, 5.0, eris, { velRot: 0.012, velOrb: 0.03 });
 
-    // --- CINTURÓN DE KUIPER ---
     const kuiperGeo = new THREE.BufferGeometry();
     const kuiperVertices = [];
     for (let i = 0; i < 5000; i++) {
@@ -1410,7 +1648,7 @@
     scene.add(meshKuiperInt);
     
     const infoKuiper = {
-      nombre: 'Cinturón de Kuiper', esCinturon: true, esPrincipal: false, mesh: meshKuiperInt, distanciaMillonesKm: 7500,
+      nombre: 'Cinturón de Kuiper', esCinturon: true, esPrincipal: false, mesh: meshKuiperInt, radioAprox: 485, distanciaMillonesKm: 7500,
       imagen: crearImagenSatelite('#7dd3fc', '#0284c7', 'crateres'),
       tipo: 'Disco circundante de cuerpos helados', tiempoOrbita: '200+ años',
       tiempoRotacion: 'Variable', tamanoTierra: 'Miles de objetos helados', tempMax: '-220 °C', tempMin: '-240 °C'
@@ -1422,12 +1660,24 @@
     divKuiper.className = 'etiqueta-planeta';
     divKuiper.textContent = 'Cinturón de Kuiper';
     contenedorEtiquetas.appendChild(divKuiper);
-    listaEtiquetas.push({
-      mesh: meshKuiperInt, radio: 485, offsetY: 0, elemento: divKuiper, visible: false, esSatelite: false, seleccionado: false, grupoControl: cinturonKuiper, esPrincipal: false
+    divKuiper.addEventListener('click', (e) => {
+      e.stopPropagation();
+      objetoSeguido = meshKuiperInt;
+      camRadius = 180;
+      mostrarFichaPlaneta(infoKuiper);
     });
-    registrosAstrosControlables.push({ nombre: 'Cinturón de Kuiper', grupo: cinturonKuiper, registroEtiqueta: { elemento: divKuiper }, esPrincipal: false, info: infoKuiper, distanciaKm: 7500 });
+    const registroKuiper = {
+      mesh: meshKuiperInt, radio: 485, offsetY: 0, elemento: divKuiper, visible: false, esSatelite: false, seleccionado: false, grupoControl: cinturonKuiper, esPrincipal: false
+    };
+    listaEtiquetas.push(registroKuiper);
+    registrosAstrosControlables.push({ nombre: 'Cinturón de Kuiper', grupo: cinturonKuiper, registroEtiqueta: registroKuiper, esPrincipal: false, info: infoKuiper, distanciaKm: 7500 });
 
-    // --- ANILLOS DE SATURNO Y URANO (CON SOMBRAS) ---
+    const sedna = crearPlaneta(0.28, crearTexturaPlaneta('#b91c1c', '#7f1d1d', 'crateres'), 580, 11.93, 0.0, 0.35, {
+      nombre: 'Sedna', tipo: 'Sednoide (Nube de Oort interior)', distancia: '76.000 millones km (media)', distanciaMillonesKm: 76000,
+      tiempoOrbita: '~11.400 años', tiempoRotacion: '10 h 16 min', colorEscala: '#ef4444',
+      tamanoTierra: '995 km diámetro', tempMax: '-240 °C', tempMin: '-261 °C'
+    }, false, '#b91c1c', '#7f1d1d', 'crateres', 0.25);
+
     const saturnoRingMat = new THREE.MeshStandardMaterial({
       map: crearTexturaAnilloRadial('rgba(210, 190, 150, 0.85)', 'rgba(150, 130, 90, 0.4)'),
       side: THREE.DoubleSide,
@@ -1461,7 +1711,6 @@
     uranoRing2.rotation.x = -0.5 * Math.PI;
     uranoRing2.castShadow = true;
 
-    // --- CONSTRUCCIÓN DE LA BARRA DE ESCALA DINÁMICA ---
     const escalaPista = document.getElementById('escala-pista');
     const botonesEscala = [];
 
@@ -1478,7 +1727,7 @@
       const elementosVisibles = [];
       
       if (sol.visible) {
-        elementosVisibles.push({ info: infoSol, km: 0, color: '#fbbf24', aumentoPct: 150 });
+        elementosVisibles.push({ info: infoSol, km: 0, color: '#fbbf24', aumentoPct: 150, registroEtiqueta: registroSol });
       }
 
       registrosAstrosControlables.forEach(item => {
@@ -1493,7 +1742,8 @@
             km: item.distanciaKm,
             color: color,
             aumentoPct: (item.esPrincipal ? 50 : 0),
-            esSaturno: esSaturno
+            esSaturno: esSaturno,
+            registroEtiqueta: item.registroEtiqueta
           });
         }
       });
@@ -1520,21 +1770,23 @@
         btnPunto.style.backgroundColor = hito.color;
         btnPunto.setAttribute('aria-label', hito.info.nombre);
 
-        const etiqueta = document.createElement('span');
-        etiqueta.className = 'etiqueta-escala';
+        const etiquetaEscala = document.createElement('span');
+        etiquetaEscala.className = 'etiqueta-escala';
+        
         const nombreSpan = document.createElement('span');
         nombreSpan.textContent = hito.info.nombre;
-        etiqueta.appendChild(nombreSpan);
+        etiquetaEscala.appendChild(nombreSpan);
 
         if (hito.info.nombre !== 'Sol') {
-          const distSpan = document.createElement('span');
-          distSpan.className = 'distancia-escala';
+          const distanciaSpan = document.createElement('span');
+          distanciaSpan.className = 'distancia-escala';
           const kmFormateado = Number.isInteger(hito.km) ? hito.km.toLocaleString('es-ES') : hito.km.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-          distSpan.textContent = `${kmFormateado} M km`;
-          etiqueta.appendChild(distSpan);
+          distanciaSpan.textContent = `${kmFormateado} M km`;
+          etiquetaEscala.appendChild(distanciaSpan);
         }
 
-        btnPunto.appendChild(etiqueta);
+        btnPunto.appendChild(etiquetaEscala);
+
         if (hito.esSaturno) {
           const anillo = document.createElement('span');
           anillo.className = 'anillo-escala-saturno';
@@ -1544,14 +1796,31 @@
         btnPunto.addEventListener('mouseenter', () => btnPunto.classList.add('mostrar-nombre'));
         btnPunto.addEventListener('mouseleave', () => btnPunto.classList.remove('mostrar-nombre'));
         btnPunto.addEventListener('touchstart', () => {
-          ocultarTodosNombresEscala(btnPunto);
-          btnPunto.classList.add('mostrar-nombre');
+          const yaMostrando = btnPunto.classList.contains('mostrar-nombre');
+          ocultarTodosNombresEscala(yaMostrando ? null : btnPunto);
+          if (!yaMostrando) btnPunto.classList.add('mostrar-nombre');
+          else btnPunto.classList.remove('mostrar-nombre');
         }, { passive: true });
 
-        btnPunto.addEventListener('click', () => {
+        // MODIFICACIÓN SOLICITADA: Al pulsar el punto en la barra inferior, se hace el seguimiento, se muestra su ficha y se activa su etiqueta flotante
+        btnPunto.addEventListener('click', (e) => {
+          e.stopPropagation();
           ocultarTodosNombresEscala(btnPunto);
           btnPunto.classList.add('mostrar-nombre');
-          mostrarFichaPlaneta(hito.info);
+          if (hito.info.mesh) {
+            objetoSeguido = hito.info.mesh;
+            const radioObj = hito.info.radioAprox || hito.info.mesh.geometry?.parameters?.radius || hito.info.mesh.geometry?.parameters?.outerRadius || 5;
+            camRadius = Math.max(18, radioObj * 5.5);
+            mostrarFichaPlaneta(hito.info);
+
+            // Activar automáticamente su etiqueta flotante
+            if (hito.registroEtiqueta) {
+              hito.registroEtiqueta.visible = true;
+              if (hito.registroEtiqueta.registroMenu) {
+                hito.registroEtiqueta.registroMenu.classList.add('activo');
+              }
+            }
+          }
         });
 
         botonesEscala.push(btnPunto);
@@ -1559,28 +1828,87 @@
       });
     }
 
-    // --- CONSTRUCCIÓN DEL MENÚ DE ASTROS ---
     const listaChecksAstros = document.getElementById('lista-checks-astros');
     const checkboxesMapa = new Map();
 
     registrosAstrosControlables.forEach((item) => {
+      const contenedorItem = document.createElement('div');
+      contenedorItem.className = 'item-astro-menu';
+
       const label = document.createElement('label');
       const chk = document.createElement('input');
       chk.type = 'checkbox';
       chk.checked = item.esPrincipal;
+      
       chk.addEventListener('change', () => {
         item.grupo.visible = chk.checked;
-        if (item.registroEtiqueta && item.registroEtiqueta.elemento && !chk.checked) {
-          item.registroEtiqueta.elemento.style.display = 'none';
+        if (item.registroEtiqueta) {
+          item.registroEtiqueta.visible = chk.checked;
+          if (item.registroEtiqueta.registroMenu) {
+            item.registroEtiqueta.registroMenu.classList.toggle('activo', item.registroEtiqueta.visible);
+          }
+          if (!item.registroEtiqueta.visible && item.registroEtiqueta.elemento) {
+            item.registroEtiqueta.elemento.style.display = 'none';
+          }
         }
         actualizarBarraEscala();
       });
+
       label.appendChild(chk);
       label.appendChild(document.createTextNode(item.nombre));
-      listaChecksAstros.appendChild(label);
+
+      const grupoAcciones = document.createElement('div');
+      grupoAcciones.className = 'grupo-acciones-menu';
+
+      // Botón Ancla
+      const btnSeguir = document.createElement('button');
+      btnSeguir.className = 'btn-seguir-astro-menu';
+      btnSeguir.textContent = '⚓';
+      btnSeguir.title = `Seguir a ${item.nombre}`;
+      btnSeguir.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (item.info && item.info.mesh) {
+          objetoSeguido = item.info.mesh;
+          const radioObj = item.info.radioAprox || item.info.mesh.geometry?.parameters?.radius || item.info.mesh.geometry?.parameters?.outerRadius || 5;
+          camRadius = Math.max(18, radioObj * 5.5);
+          mostrarFichaPlaneta(item.info);
+          menuDesplegable.style.display = 'none';
+          btnMenu.classList.remove('activo');
+        }
+      });
+
+      // Botón Letra A cursiva
+      const btnEtiquetaMenu = document.createElement('button');
+      btnEtiquetaMenu.className = 'btn-etiqueta-astro-menu';
+      btnEtiquetaMenu.textContent = 'A';
+      btnEtiquetaMenu.title = `Alternar etiqueta de ${item.nombre}`;
+      if (item.registroEtiqueta) {
+        btnEtiquetaMenu.classList.toggle('activo', item.registroEtiqueta.visible);
+        item.registroEtiqueta.registroMenu = btnEtiquetaMenu;
+      }
+      btnEtiquetaMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (item.registroEtiqueta) {
+          item.registroEtiqueta.visible = !item.registroEtiqueta.visible;
+          btnEtiquetaMenu.classList.toggle('activo', item.registroEtiqueta.visible);
+          if (!item.registroEtiqueta.visible && item.registroEtiqueta.elemento) {
+            item.registroEtiqueta.elemento.style.display = 'none';
+          }
+        }
+      });
+
+      grupoAcciones.appendChild(btnSeguir);
+      grupoAcciones.appendChild(btnEtiquetaMenu);
+
+      contenedorItem.appendChild(label);
+      contenedorItem.appendChild(grupoAcciones);
+      listaChecksAstros.appendChild(contenedorItem);
       checkboxesMapa.set(item, chk);
       
       item.grupo.visible = item.esPrincipal;
+      if (item.registroEtiqueta) {
+        item.registroEtiqueta.visible = item.esPrincipal;
+      }
     });
 
     function aplicarModoVisualizacion(soloPrincipales) {
@@ -1589,8 +1917,14 @@
         item.grupo.visible = mostrar;
         const chk = checkboxesMapa.get(item);
         if (chk) chk.checked = mostrar;
-        if (!mostrar && item.registroEtiqueta && item.registroEtiqueta.elemento) {
-          item.registroEtiqueta.elemento.style.display = 'none';
+        if (item.registroEtiqueta) {
+          item.registroEtiqueta.visible = mostrar;
+          if (item.registroEtiqueta.registroMenu) {
+            item.registroEtiqueta.registroMenu.classList.toggle('activo', item.registroEtiqueta.visible);
+          }
+          if (!item.registroEtiqueta.visible && item.registroEtiqueta.elemento) {
+            item.registroEtiqueta.elemento.style.display = 'none';
+          }
         }
       });
 
@@ -1605,7 +1939,17 @@
     }
 
     document.getElementById('btn-modo-8').addEventListener('click', () => aplicarModoVisualizacion(true));
-    document.getElementById('btn-modo-todo').addEventListener('click', () => aplicarModoVisualizacion(false));
+    document.getElementById('btn-modo-todo').addEventListener('click', () => {
+      aplicarModoVisualizacion(false);
+      etiquetasVisibles = true;
+      btnEtiquetas.textContent = 'Ocultar';
+      for (const item of listaEtiquetas) {
+        if (!item.esSatelite && item.grupoControl.visible) {
+          item.visible = true;
+          if (item.registroMenu) item.registroMenu.classList.add('activo');
+        }
+      }
+    });
 
     document.querySelectorAll('.btn-vel').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1651,7 +1995,8 @@
           target.closest('#panel-superior-izq') ||
           target.closest('#menu-desplegable') ||
           target.closest('#ficha-lateral') ||
-          target.closest('#barra-escala-inferior')
+          target.closest('#barra-escala-inferior') ||
+          target.closest('#contenedor-etiquetas')
         )
       );
     }
@@ -1709,7 +2054,7 @@
 
     window.addEventListener('wheel', (e) => {
       if (e.target && e.target.closest('#ficha-lateral, #menu-desplegable')) return;
-      camRadius = Math.max(20, Math.min(1500, camRadius + e.deltaY * 0.1));
+      camRadius = Math.max(12, Math.min(2200, camRadius + e.deltaY * 0.12));
       actualizarCamara();
     }, { passive: true });
 
@@ -1767,7 +2112,7 @@
           return;
         }
         const distActual = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
-        camRadius = Math.max(20, Math.min(1500, radioPellizcoInicial * (distanciaPellizcoInicial / distActual)));
+        camRadius = Math.max(12, Math.min(2200, radioPellizcoInicial * (distanciaPellizcoInicial / distActual)));
         const centroActual = calcularCentroToques(e.touches[0], e.touches[1]);
         desplazarCamTarget(centroActual.x - centroPellizcoPrevio.x, centroActual.y - centroPellizcoPrevio.y);
         centroPellizcoPrevio = centroActual;
@@ -1859,45 +2204,24 @@
         palas.mesh.rotateY(0.011 * velocidadAnimacion);
         higia.mesh.rotateY(0.009 * velocidadAnimacion);
         jupiter.mesh.rotateY(0.04 * velocidadAnimacion);
+        cariclo.mesh.rotateY(0.014 * velocidadAnimacion);
         saturno.mesh.rotateY(0.038 * velocidadAnimacion);
         urano.mesh.rotateY(0.03 * velocidadAnimacion);
         netuno.mesh.rotateY(0.032 * velocidadAnimacion);
         plutao.mesh.rotateY(0.008 * velocidadAnimacion);
-        haumea.mesh.rotateY(0.012 * velocidadAnimacion);
+        orcus.mesh.rotateY(0.01 * velocidadAnimacion);
+        haumea.mesh.rotateY(0.018 * velocidadAnimacion);
+        varuna.mesh.rotateY(0.015 * velocidadAnimacion);
+        quaoar.mesh.rotateY(0.012 * velocidadAnimacion);
         makemake.mesh.rotateY(0.01 * velocidadAnimacion);
+        gonggong.mesh.rotateY(0.01 * velocidadAnimacion);
         eris.mesh.rotateY(0.009 * velocidadAnimacion);
+        sedna.mesh.rotateY(0.011 * velocidadAnimacion);
 
-        luna.mesh.rotateY(0.01 * velocidadAnimacion); luna.obj.rotateY(0.035 * velocidadAnimacion);
-        fobos.mesh.rotateY(0.02 * velocidadAnimacion); fobos.obj.rotateY(0.06 * velocidadAnimacion);
-        deimos.mesh.rotateY(0.015 * velocidadAnimacion); deimos.obj.rotateY(0.035 * velocidadAnimacion);
-        
-        io.mesh.rotateY(0.02 * velocidadAnimacion); io.obj.rotateY(0.07 * velocidadAnimacion);
-        europa.mesh.rotateY(0.018 * velocidadAnimacion); europa.obj.rotateY(0.055 * velocidadAnimacion);
-        ganimedes.mesh.rotateY(0.015 * velocidadAnimacion); ganimedes.obj.rotateY(0.04 * velocidadAnimacion);
-        calisto.mesh.rotateY(0.012 * velocidadAnimacion); calisto.obj.rotateY(0.025 * velocidadAnimacion);
-
-        tetis.mesh.rotateY(0.018 * velocidadAnimacion); tetis.obj.rotateY(0.052 * velocidadAnimacion);
-        dione.mesh.rotateY(0.017 * velocidadAnimacion); dione.obj.rotateY(0.047 * velocidadAnimacion);
-        rea.mesh.rotateY(0.016 * velocidadAnimacion); rea.obj.rotateY(0.042 * velocidadAnimacion);
-        titan.mesh.rotateY(0.015 * velocidadAnimacion); titan.obj.rotateY(0.03 * velocidadAnimacion);
-        japeto.mesh.rotateY(0.011 * velocidadAnimacion); japeto.obj.rotateY(0.018 * velocidadAnimacion);
-
-        ariel.mesh.rotateY(0.015 * velocidadAnimacion); ariel.obj.rotateY(0.044 * velocidadAnimacion);
-        umbriel.mesh.rotateY(0.014 * velocidadAnimacion); umbriel.obj.rotateY(0.038 * velocidadAnimacion);
-        titania.mesh.rotateY(0.012 * velocidadAnimacion); titania.obj.rotateY(0.032 * velocidadAnimacion);
-        oberon.mesh.rotateY(0.011 * velocidadAnimacion); oberon.obj.rotateY(0.024 * velocidadAnimacion);
-
-        triton.mesh.rotateY(0.012 * velocidadAnimacion); triton.obj.rotateY(-0.035 * velocidadAnimacion);
-        
-        caronte.mesh.rotateY(0.012 * velocidadAnimacion); caronte.obj.rotateY(0.03 * velocidadAnimacion);
-        estigia.mesh.rotateY(0.01 * velocidadAnimacion); estigia.obj.rotateY(0.04 * velocidadAnimacion);
-        nix.mesh.rotateY(0.01 * velocidadAnimacion); nix.obj.rotateY(0.035 * velocidadAnimacion);
-        cerbero.mesh.rotateY(0.01 * velocidadAnimacion); cerbero.obj.rotateY(0.038 * velocidadAnimacion);
-        hidra.mesh.rotateY(0.01 * velocidadAnimacion); hidra.obj.rotateY(0.03 * velocidadAnimacion);
-
-        namaka.mesh.rotateY(0.012 * velocidadAnimacion); namaka.obj.rotateY(0.045 * velocidadAnimacion);
-        hiiaka.mesh.rotateY(0.012 * velocidadAnimacion); hiiaka.obj.rotateY(0.035 * velocidadAnimacion);
-        dysnomia.mesh.rotateY(0.012 * velocidadAnimacion); dysnomia.obj.rotateY(0.03 * velocidadAnimacion);
+        for (const l of animacionesLunas) {
+          l.mesh.rotateY(l.velRot * velocidadAnimacion);
+          l.obj.rotateY(l.velOrb * velocidadAnimacion);
+        }
 
         mercurio.orbitaGrupo.rotation.y += 0.04 * dt * 60;
         venus.orbitaGrupo.rotation.y += 0.015 * dt * 60;
@@ -1908,13 +2232,19 @@
         palas.orbitaGrupo.rotation.y += 0.0048 * dt * 60;
         higia.orbitaGrupo.rotation.y += 0.0042 * dt * 60;
         jupiter.orbitaGrupo.rotation.y += 0.002 * dt * 60;
+        cariclo.orbitaGrupo.rotation.y += 0.0013 * dt * 60;
         saturno.orbitaGrupo.rotation.y += 0.0009 * dt * 60;
         urano.orbitaGrupo.rotation.y += 0.0004 * dt * 60;
         netuno.orbitaGrupo.rotation.y += 0.0001 * dt * 60;
         plutao.orbitaGrupo.rotation.y += 0.00007 * dt * 60;
+        orcus.orbitaGrupo.rotation.y += 0.000068 * dt * 60;
         haumea.orbitaGrupo.rotation.y += 0.00005 * dt * 60;
+        varuna.orbitaGrupo.rotation.y += 0.000052 * dt * 60;
+        quaoar.orbitaGrupo.rotation.y += 0.000048 * dt * 60;
         makemake.orbitaGrupo.rotation.y += 0.00004 * dt * 60;
+        gonggong.orbitaGrupo.rotation.y += 0.000032 * dt * 60;
         eris.orbitaGrupo.rotation.y += 0.00003 * dt * 60;
+        sedna.orbitaGrupo.rotation.y += 0.000015 * dt * 60;
 
         cinturonAsteroides.rotation.y += 0.001 * dt * 60;
         cinturonKuiper.rotation.y += 0.0002 * dt * 60;
