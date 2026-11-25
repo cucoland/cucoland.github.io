@@ -54,18 +54,22 @@
       touch-action: none;
     }
 
-    #panel-superior-izq {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 100;
-    }
-
     #panel-controles {
       position: fixed;
       top: 20px;
+      left: 20px;
       right: 20px;
       z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+    #panel-controles > * {
+      pointer-events: auto;
+    }
+    .panel-controles-derecha {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -595,13 +599,7 @@
         top: 12px;
         right: 12px;
         left: 12px;
-        justify-content: flex-end;
         gap: 8px;
-      }
-          #panel-superior-izq {
-    	top: 12px;
-	left: 12px;
-	gap: 8px;
       }
 
       .btn-control {
@@ -720,9 +718,14 @@
     <div class="loader-texto">...completando</div>
   </div>
 
-  <!-- Botón de Menú Superior Izquierdo -->
-  <div id="panel-superior-izq">
+  <!-- Panel Principal de Controles (Menú a la izquierda, resto a la derecha) -->
+  <div id="panel-controles">
     <button id="btn-menu" class="btn-control">☰ Menú</button>
+    <div class="panel-controles-derecha">
+      <button id="btn-pausa" class="btn-control" title="Pausar animación">❚❚</button>
+      <button id="btn-etiquetas" class="btn-control" title="Añadir o quitar etiquetas">Etiquetas</button>
+      <button id="btn-vista-general" class="btn-control" title="Vista general">Vista General</button>
+    </div>
   </div>
 
   <!-- Panel Desplegable de Ajustes -->
@@ -755,12 +758,6 @@
       <h3>Visibilidad Individual</h3>
       <div id="lista-checks-astros"></div>
     </div>
-  </div>
-
-  <div id="panel-controles">
-    <button id="btn-pausa" class="btn-control" title="Pausar animación">❚❚</button>
-    <button id="btn-etiquetas" class="btn-control" title="Añadir o quitar etiquetas">Etiquetas</button>
-    <button id="btn-vista-general" class="btn-control" title="Vista general">Vista General</button>
   </div>
 
   <aside id="ficha-lateral">
@@ -2072,7 +2069,6 @@
       return Boolean(
         target && (
           target.closest('#panel-controles') ||
-          target.closest('#panel-superior-izq') ||
           target.closest('#menu-desplegable') ||
           target.closest('#ficha-lateral') ||
           target.closest('#barra-escala-inferior') ||
@@ -2366,4 +2362,4 @@
   </script>
 </body>
 </html>
-```[cite: 3]
+```[cite: 3, 4]
