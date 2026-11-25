@@ -54,6 +54,13 @@
       touch-action: none;
     }
 
+    #panel-superior-izq {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+    }
+
     #panel-controles {
       position: fixed;
       top: 20px;
@@ -277,6 +284,7 @@
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.75);
     }
     #ficha-lateral.minimizado {
+      bottom: auto;
       padding-bottom: 18px;
     }
     #ficha-lateral.minimizado .ficha-header {
@@ -718,16 +726,6 @@
     <div class="loader-texto">...completando</div>
   </div>
 
-  <!-- Panel Principal de Controles (Menú a la izquierda, resto a la derecha) -->
-  <div id="panel-controles">
-    <button id="btn-menu" class="btn-control">☰ Menú</button>
-    <div class="panel-controles-derecha">
-      <button id="btn-pausa" class="btn-control" title="Pausar animación">❚❚</button>
-      <button id="btn-etiquetas" class="btn-control" title="Añadir o quitar etiquetas">Etiquetas</button>
-      <button id="btn-vista-general" class="btn-control" title="Vista general">Vista General</button>
-    </div>
-  </div>
-
   <!-- Panel Desplegable de Ajustes -->
   <div id="menu-desplegable">
     <div class="menu-seccion">
@@ -757,6 +755,15 @@
     <div class="menu-seccion">
       <h3>Visibilidad Individual</h3>
       <div id="lista-checks-astros"></div>
+    </div>
+  </div>
+
+  <div id="panel-controles">
+    <button id="btn-menu" class="btn-control">☰ Menú</button>
+    <div class="panel-controles-derecha">
+      <button id="btn-pausa" class="btn-control" title="Pausar animación">❚❚</button>
+      <button id="btn-etiquetas" class="btn-control" title="Añadir o quitar etiquetas">Etiquetas</button>
+      <button id="btn-vista-general" class="btn-control" title="Vista general">Vista General</button>
     </div>
   </div>
 
@@ -2362,4 +2369,3 @@
   </script>
 </body>
 </html>
-```[cite: 3, 4]
