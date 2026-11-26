@@ -2405,7 +2405,6 @@
     let toqueSeMovio = false;
     let distanciaPellizcoInicial = 0;
     let radioPellizcoInicial = camRadius;
-    let centroPellizcoPrevio = { x: 0, y: 0 };
     let ultimoTapTiempo = 0;
     let ultimoTapPos = { x: 0, y: 0 };
 
@@ -2429,7 +2428,6 @@
         toqueSeMovio = true;
         distanciaPellizcoInicial = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
         radioPellizcoInicial = camRadius;
-        centroPellizcoPrevio = calcularCentroToques(e.touches[0], e.touches[1]);
       }
     }, { passive: false });
 
@@ -2449,14 +2447,10 @@
           modoTactil = 'pellizco';
           distanciaPellizcoInicial = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
           radioPellizcoInicial = camRadius;
-          centroPellizcoPrevio = calcularCentroToques(e.touches[0], e.touches[1]);
           return;
         }
         const distActual = Math.max(10, calcularDistanciaToques(e.touches[0], e.touches[1]));
         camRadius = Math.max(12, Math.min(2500, radioPellizcoInicial * (distanciaPellizcoInicial / distActual)));
-        const centroActual = calcularCentroToques(e.touches[0], e.touches[1]);
-        desplazarCamTarget(centroActual.x - centroPellizcoPrevio.x, centroActual.y - centroPellizcoPrevio.y);
-        centroPellizcoPrevio = centroActual;
         actualizarCamara();
       }
     }, { passive: false });
