@@ -667,6 +667,28 @@
         left: 12px;
         gap: 8px;
       }
+      
+  #menu-desplegable {
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    bottom: 52px;
+    width: auto; /* Evita desbordamiento horizontal en móviles estrechos (<360px) */
+    max-height: none;
+    padding: 14px;
+  }
+
+  .selector-orden {
+    min-height: 44px; /* Estándar táctil recomendado (44px) */
+    font-size: 16px;  /* Evita que iOS/Safari haga zoom automático al abrir el desplegable */
+    padding: 10px 38px 10px 12px;
+    border-radius: 10px;
+    border-color: rgba(56, 189, 248, 0.6);
+    background-color: rgba(15, 23, 42, 0.96);
+    background-position: right 12px center;
+    background-size: 17px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  }
 
       .btn-control {
         padding: 9px 13px;
