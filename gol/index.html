@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Penaltis 3D - Estadio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body { overflow: hidden; background: #0a192f; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+        canvas { display: block; touch-action: none; }
+        
+        #hud {
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            pointer-events: none; z-index: 10; flex-wrap: wrap; gap: 10px;
+        }
+        .scoreboard {
+            background: rgba(10, 20, 35, 0.88); color: #fff;
+            padding: 10px 20px; border-radius: 12px; border: 2px solid #00e676;
+            display: flex; gap: 20px; font-size: 1.05rem; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .score-item span { color: #00e676; font-size: 1.25rem; }
+        .score-item.saves span { color: #ff5252; }
+        
+        #cam-btn {
+            pointer-events: auto; background: #1e88e5; color: white; border: none;
+            padding: 12px 18px; border-radius: 10px; font-weight: bold; font-size: 0.95rem;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: transform 0.1s, background 0.2s;
+        }
+        #cam-btn:active { transform: scale(0.95); }
+        #cam-btn:hover { background: #1565c0; }
+
+        #message {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3.2rem; font-weight: 900; color: #fff;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.95), 0 0 12px #000;
+            pointer-events: none; opacity: 0; transition: opacity 0.25s, transform 0.25s;
+            text-align: center; z-index: 20; letter-spacing: 2px;
+        }
+        #message.show { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+
+        #instructions {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.75); color: #f0f0f0;
+            padding: 9px 18px; border-radius: 20px; font-size: 0.9rem;
+            pointer-events: none; text-align: center; max-width: 92vw;
+        }
+
+        #swipe-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5;
+        }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="hud">
+        <div class="scoreboard">
+            <div class="score-item">GOLES: <span id="goals">0</span></div>
+            <div class="score-item saves">PARADAS: <span id="saves">0</span></div>
+            <div class="score-item">TIROS: <span id="shots">0</span></div>
+        </div>
+        <button id="cam-btn">Cámara: Lanzador</button>
+    </div>
+    <div id="message">¡GOOOOL!</div>
+    <div id="instructions">Desliza el dedo o ratón hacia la portería (haz curva para dar efecto)</div>
+    <canvas id="gl-canvas"></canvas>
+    <canvas id="swipe-canvas"></canvas>
+</div>
+
+<script>
+// ==========================================
+// 1. MOTOR WEBGL 3D AUTOCONTENIDO (SIN DEPENDENCIAS EXTERNAS)
+// ==========================================
+const glCanvas = document.getElementById('gl-canvas');
+const gl = glCanvas.getContext('webgl', { antialias: true });
+const swipeCanvas = document.getElementById('swipe-canvas');
+const swipeCtx = swipeCanvas.getContext('2d');
+
+const vsSource = `
+    attribute vec3 aPos;
+    attribute vec3 aNorm;
+    attribute vec3 aColor;
+    uniform mat4 uProj;
+    uniform mat4 uView;
+    uniform mat4 uModel;
+    uniform mat3 uNormalMat;
+    varying vec3 vNormal;
+    varying vec3 vColor;
+    varying vec3 vWorldPos;
+    void main() {
+        vec4 worldPos = uModel * vec4(aPos, 1.0);
+        vWorldPos = worldPos.xyz;
+        vNormal = normalize(uNormalMat * aNorm);
+        vColor = aColor;
+        gl_Position = uProj * uView * worldPos;
+    }
+`;
+
+const fsSource = `
+    precision mediump float;
+    varying vec3 vNormal;
+    varying vec3 vColor;
+    varying vec3 vWorldPos;
+    uniform vec3 uLightDir1;
+    uniform vec3 uLightDir2;
+    uniform vec3 uFogColor;
+    uniform float uUnlit;
+    void main() {
+        vec3 base = vColor;
+        if (uUnlit < 0.5) {
+            vec3 n = normalize(vNormal);
+            float diff1 = max(dot(n, normalize(uLightDir1)), 0.0);
+            float diff2 = max(dot(n, normalize(uLightDir2)), 0.0) * 0.45;
+            float ambient = 0.48;
+            base = vColor * (ambient + diff1 * 0.65 + diff2);
+        }
+        float dist = length(vWorldPos - vec3(0.0, 2.0, 5.0));
+        float fogFactor = clamp((dist - 25.0) / 85.0, 0.0, 0.75);
+        vec3 finalColor = mix(base, uFogColor, fogFactor);
+        gl_FragColor = vec4(finalColor, 1.0);
+    }
+`;
+
+function compileShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+}
+
+const program = gl.createProgram();
+gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vsSource));
+gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fsSource));
+gl.linkProgram(program);
+gl.useProgram(program);
+
+const loc = {
+    aPos: gl.getAttribLocation(program, 'aPos'),
+    aNorm: gl.getAttribLocation(program, 'aNorm'),
+    aColor: gl.getAttribLocation(program, 'aColor'),
+    uProj: gl.getUniformLocation(program, 'uProj'),
+    uView: gl.getUniformLocation(program, 'uView'),
+    uModel: gl.getUniformLocation(program, 'uModel'),
+    uNormalMat: gl.getUniformLocation(program, 'uNormalMat'),
+    uLightDir1: gl.getUniformLocation(program, 'uLightDir1'),
+    uLightDir2: gl.getUniformLocation(program, 'uLightDir2'),
+    uFogColor: gl.getUniformLocation(program, 'uFogColor'),
+    uUnlit: gl.getUniformLocation(program, 'uUnlit')
+};
+
+gl.enable(gl.DEPTH_TEST);
+gl.uniform3f(loc.uLightDir1, -0.5, 0.85, 0.45);
+gl.uniform3f(loc.uLightDir2, 0.6, 0.7, -0.4);
+gl.uniform3f(loc.uFogColor, 0.043, 0.086, 0.172);
+
+// Matemáticas matriciales 4x4
+const Mat4 = {
+    identity: () => new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]),
+    multiply: (a, b) => {
+        const out = new Float32Array(16);
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                out[j*4+i] = a[i]*b[j*4] + a[4+i]*b[j*4+1] + a[8+i]*b[j*4+2] + a[12+i]*b[j*4+3];
+            }
+        }
+        return out;
+    },
+    perspective: (fovRad, aspect, near, far) => {
+        const f = 1.0 / Math.tan(fovRad / 2);
+        const nf = 1 / (near - far);
+        return new Float32Array([
+            f / aspect, 0, 0, 0,
+            0, f, 0, 0,
+            0, 0, (far + near) * nf, -1,
+            0, 0, (2 * far * near) * nf, 0
+        ]);
+    },
+    lookAt: (eye, target, up) => {
+        let zx = eye[0] - target[0], zy = eye[1] - target[1], zz = eye[2] - target[2];
+        let len = Math.hypot(zx, zy, zz) || 1;
+        zx /= len; zy /= len; zz /= len;
+        let xx = up[1]*zz - up[2]*zy, xy = up[2]*zx - up[0]*zz, xz = up[0]*zy - up[1]*zx;
+        len = Math.hypot(xx, xy, xz) || 1;
+        xx /= len; xy /= len; xz /= len;
+        let yx = zy*xz - zz*xy, yy = zz*xx - zx*xz, yz = zx*xy - zy*xx;
+        return new Float32Array([
+            xx, yx, zx, 0,
+            xy, yy, zy, 0,
+            xz, yz, zz, 0,
+            -(xx*eye[0] + xy*eye[1] + xz*eye[2]),
+            -(yx*eye[0] + yy*eye[1] + yz*eye[2]),
+            -(zx*eye[0] + zy*eye[1] + zz*eye[2]),
+            1
+        ]);
+    },
+    translate: (m, x, y, z) => Mat4.multiply(m, new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, x,y,z,1])),
+    scale: (m, x, y, z) => Mat4.multiply(m, new Float32Array([x,0,0,0, 0,y,0,0, 0,0,z,0, 0,0,0,1])),
+    rotateX: (m, r) => {
+        const c = Math.cos(r), s = Math.sin(r);
+        return Mat4.multiply(m, new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]));
+    },
+    rotateY: (m, r) => {
+        const c = Math.cos(r), s = Math.sin(r);
+        return Mat4.multiply(m, new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]));
+    },
+    rotateZ: (m, r) => {
+        const c = Math.cos(r), s = Math.sin(r);
+        return Mat4.multiply(m, new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]));
+    },
+    normalMat3: (m) => new Float32Array([m[0],m[1],m[2], m[4],m[5],m[6], m[8],m[9],m[10]])
+};
+
+// Generadores de primitivas 3D
+function hexToRgb(hex) {
+    return [((hex >> 16) & 255) / 255, ((hex >> 8) & 255) / 255, (hex & 255) / 255];
+}
+
+function createMesh(positions, normals, colors, indices, isLines = false) {
+    const posBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    const normBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+    const colBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    const idxBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+    return { posBuf, normBuf, colBuf, idxBuf, count: indices.length, isLines };
+}
+
+function createBoxMesh(w, h, d, hexColor) {
+    const [r, g, b] = hexToRgb(hexColor);
+    const hw = w/2, hh = h/2, hd = d/2;
+    const faces = [
+        { n: [0,0,1],  v: [[-hw,-hh,hd],[hw,-hh,hd],[hw,hh,hd],[-hw,hh,hd]] },
+        { n: [0,0,-1], v: [[hw,-hh,-hd],[-hw,-hh,-hd],[-hw,hh,-hd],[hw,hh,-hd]] },
+        { n: [0,1,0],  v: [[-hw,hh,hd],[hw,hh,hd],[hw,hh,-hd],[-hw,hh,-hd]] },
+        { n: [0,-1,0], v: [[-hw,-hh,-hd],[hw,-hh,-hd],[hw,-hh,hd],[-hw,-hh,hd]] },
+        { n: [1,0,0],  v: [[hw,-hh,hd],[hw,-hh,-hd],[hw,hh,-hd],[hw,hh,hd]] },
+        { n: [-1,0,0], v: [[-hw,-hh,-hd],[-hw,-hh,hd],[-hw,hh,hd],[-hw,hh,-hd]] }
+    ];
+    const pos = [], norm = [], col = [], idx = [];
+    faces.forEach((f, fi) => {
+        f.v.forEach(p => { pos.push(...p); norm.push(...f.n); col.push(r, g, b); });
+        const o = fi * 4;
+        idx.push(o, o+1, o+2, o, o+2, o+3);
+    });
+    return createMesh(pos, norm, col, idx);
+}
+
+function createCylinderMesh(rTop, rBot, h, segs, hexColor) {
+    const [r, g, b] = hexToRgb(hexColor);
+    const pos = [], norm = [], col = [], idx = [];
+    const hh = h / 2;
+    for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        const ca = Math.cos(a), sa = Math.sin(a);
+        pos.push(ca * rTop, hh, sa * rTop);
+        norm.push(ca, 0.15, sa);
+        col.push(r, g, b);
+
+        pos.push(ca * rBot, -hh, sa * rBot);
+        norm.push(ca, -0.15, sa);
+        col.push(r, g, b);
+    }
+    for (let i = 0; i < segs; i++) {
+        const p = i * 2;
+        idx.push(p, p+1, p+3, p, p+3, p+2);
+    }
+    return createMesh(pos, norm, col, idx);
+}
+
+function createSphereMesh(rad, segs, hexColor, isBall = false) {
+    const [r, g, b] = hexToRgb(hexColor);
+    const pos = [], norm = [], col = [], idx = [];
+    for (let y = 0; y <= segs; y++) {
+        const v = y / segs;
+        const phi = v * Math.PI;
+        for (let x = 0; x <= segs; x++) {
+            const u = x / segs;
+            const theta = u * Math.PI * 2;
+            const nx = Math.cos(theta) * Math.sin(phi);
+            const ny = Math.cos(phi);
+            const nz = Math.sin(theta) * Math.sin(phi);
+            pos.push(nx * rad, ny * rad, nz * rad);
+            norm.push(nx, ny, nz);
+            if (isBall) {
+                const pattern = (Math.sin(nx * 7) * Math.sin(ny * 7) * Math.sin(nz * 7)) > 0.18;
+                if (pattern) col.push(0.1, 0.1, 0.12);
+                else col.push(0.97, 0.97, 0.97);
+            } else {
+                col.push(r, g, b);
+            }
+        }
+    }
+    for (let y = 0; y < segs; y++) {
+        for (let x = 0; x < segs; x++) {
+            const a = y * (segs + 1) + x;
+            const b1 = a + segs + 1;
+            idx.push(a, b1, a + 1, b1, b1 + 1, a + 1);
+        }
+    }
+    return createMesh(pos, norm, col, idx);
+}
+
+function drawMesh(mesh, modelMat, unlit = false) {
+    gl.uniformMatrix4fv(loc.uModel, false, modelMat);
+    gl.uniformMatrix3fv(loc.uNormalMat, false, Mat4.normalMat3(modelMat));
+    gl.uniform1f(loc.uUnlit, unlit ? 1.0 : 0.0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.posBuf);
+    gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.aPos);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.normBuf);
+    gl.vertexAttribPointer(loc.aNorm, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.aNorm);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.colBuf);
+    gl.vertexAttribPointer(loc.aColor, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(loc.aColor);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.idxBuf);
+    gl.drawElements(mesh.isLines ? gl.LINES : gl.TRIANGLES, mesh.count, gl.UNSIGNED_SHORT, 0);
+}
+
+// ==========================================
+// 2. CONSTRUCCIÓN DEL ESTADIO, CÉSPED Y PORTERÍA
+// ==========================================
+const GOAL_W = 3.66;
+const GOAL_H = 2.44;
+const GOAL_Z = -11;
+const BALL_RADIUS = 0.14;
+
+// Césped con franjas alternas
+const grassStrips = [];
+for (let i = 0; i < 16; i++) {
+    const color = i % 2 === 0 ? 0x2e7d32 : 0x388e3c;
+    const mesh = createBoxMesh(75, 0.1, 6.5, color);
+    grassStrips.push({ mesh, z: -45 + i * 6.5 });
+}
+
+// Líneas blancas del campo
+const lineMeshes = [
+    { mesh: createBoxMesh(40, 0.02, 0.16, 0xffffff), x: 0, z: -11 },
+    { mesh: createBoxMesh(40, 0.02, 0.16, 0xffffff), x: 0, z: 5.5 },
+    { mesh: createBoxMesh(0.16, 0.02, 16.5, 0xffffff), x: -20, z: -2.75 },
+    { mesh: createBoxMesh(0.16, 0.02, 16.5, 0xffffff), x: 20, z: -2.75 },
+    { mesh: createBoxMesh(18.3, 0.02, 0.16, 0xffffff), x: 0, z: -5.5 },
+    { mesh: createBoxMesh(0.16, 0.02, 5.5, 0xffffff), x: -9.15, z: -8.25 },
+    { mesh: createBoxMesh(0.16, 0.02, 5.5, 0xffffff), x: 9.15, z: -8.25 },
+    { mesh: createCylinderMesh(0.22, 0.22, 0.02, 16, 0xffffff), x: 0, z: 0 }
+];
+
+// Gradas y público
+const standBack = createBoxMesh(85, 16, 14, 0x1a2639);
+const standSide = createBoxMesh(14, 16, 95, 0x1a2639);
+const crowdColors = [0xe53935, 0x1e88e5, 0xfdd835, 0xffffff, 0x43a047];
+const fanMeshes = crowdColors.map(c => createBoxMesh(0.55, 0.75, 0.55, c));
+const fansData = [];
+for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 44; col++) {
+        fansData.push({
+            mesh: fanMeshes[(row * 7 + col * 3) % fanMeshes.length],
+            x: -36 + col * 1.65 + (row % 2) * 0.4,
+            y: 2.2 + row * 1.1,
+            z: -21.5 - row * 1.05
+        });
+    }
+}
+
+// Portería reglamentaria y red
+const postVertMesh = createCylinderMesh(0.08, 0.08, GOAL_H, 14, 0xffffff);
+const postHorizMesh = createCylinderMesh(0.08, 0.08, GOAL_W * 2 + 0.16, 14, 0xffffff);
+
+function buildNetMesh() {
+    const pos = [], norm = [], col = [], idx = [];
+    const depth = 2.0;
+    const cols = 22, rows = 10, dSegs = 8;
+    const addLine3D = (x1, y1, z1, x2, y2, z2) => {
+        const base = pos.length / 3;
+        pos.push(x1, y1, z1, x2, y2, z2);
+        norm.push(0, 1, 0, 0, 1, 0);
+        col.push(0.88, 0.92, 0.95, 0.88, 0.92, 0.95);
+        idx.push(base, base + 1);
+    };
+    // Fondo
+    for (let i = 0; i <= cols; i++) {
+        const x = -GOAL_W + (i / cols) * GOAL_W * 2;
+        addLine3D(x, 0, GOAL_Z - depth, x, GOAL_H, GOAL_Z - depth);
+        addLine3D(x, GOAL_H, GOAL_Z, x, GOAL_H, GOAL_Z - depth);
+    }
+    for (let j = 0; j <= rows; j++) {
+        const y = (j / rows) * GOAL_H;
+        addLine3D(-GOAL_W, y, GOAL_Z - depth, GOAL_W, y, GOAL_Z - depth);
+        addLine3D(-GOAL_W, y, GOAL_Z, -GOAL_W, y, GOAL_Z - depth);
+        addLine3D(GOAL_W, y, GOAL_Z, GOAL_W, y, GOAL_Z - depth);
+    }
+    for (let k = 1; k < dSegs; k++) {
+        const z = GOAL_Z - (k / dSegs) * depth;
+        addLine3D(-GOAL_W, GOAL_H, z, GOAL_W, GOAL_H, z);
+        addLine3D(-GOAL_W, 0, z, -GOAL_W, GOAL_H, z);
+        addLine3D(GOAL_W, 0, z, GOAL_W, GOAL_H, z);
+    }
+    return createMesh(pos, norm, col, idx, true);
+}
+const netMesh = buildNetMesh();
+
+// ==========================================
+// 3. HUMANOS ARTICULADOS (LANZADOR Y PORTERO)
+// ==========================================
+function createPlayerRig(jerseyColor, shortsColor, socksColor, gloveColor, hairColor) {
+    const skinColor = 0xe0ac69;
+    const bootColor = 0x151515;
+    const handColor = gloveColor || skinColor;
+
+    return {
+        pos: { x: 0, y: 0, z: 0 },
+        rotY: 0,
+        pelvisY: 0.95,
+        pelvisRot: { x: 0, y: 0, z: 0 },
+        torsoRot: { x: 0.1, y: 0, z: 0 },
+        leftArmRot: { x: 0, y: 0, z: 0.25 },
+        rightArmRot: { x: 0, y: 0, z: -0.25 },
+        leftLegRot: { x: 0, y: 0, z: 0 },
+        leftKneeRot: 0,
+        rightLegRot: { x: 0, y: 0, z: 0 },
+        rightKneeRot: 0,
+        meshes: {
+            pelvis: createCylinderMesh(0.16, 0.17, 0.22, 14, shortsColor),
+            chest: createCylinderMesh(0.21, 0.16, 0.52, 14, jerseyColor),
+            shoulder: createSphereMesh(0.085, 10, jerseyColor),
+            neck: createCylinderMesh(0.065, 0.075, 0.1, 10, skinColor),
+            head: createSphereMesh(0.135, 14, skinColor),
+            hair: createSphereMesh(0.138, 12, hairColor),
+            upperArm: createCylinderMesh(0.065, 0.052, 0.28, 10, jerseyColor),
+            lowerArm: createCylinderMesh(0.052, 0.044, 0.26, 10, skinColor),
+            hand: createBoxMesh(0.08, 0.13, 0.05, handColor),
+            thigh: createCylinderMesh(0.095, 0.072, 0.44, 12, shortsColor),
+            shin: createCylinderMesh(0.072, 0.052, 0.43, 12, socksColor),
+            boot: createBoxMesh(0.10, 0.08, 0.24, bootColor)
+        }
+    };
+}
+
+function renderPlayer(rig) {
+    const m = rig.meshes;
+    let rootMat = Mat4.identity();
+    rootMat = Mat4.translate(rootMat, rig.pos.x, rig.pos.y, rig.pos.z);
+    rootMat = Mat4.rotateY(rootMat, rig.rotY);
+
+    // Pelvis
+    let pelvisMat = Mat4.translate(rootMat, 0, rig.pelvisY, 0);
+    pelvisMat = Mat4.rotateX(pelvisMat, rig.pelvisRot.x);
+    pelvisMat = Mat4.rotateY(pelvisMat, rig.pelvisRot.y);
+    pelvisMat = Mat4.rotateZ(pelvisMat, rig.pelvisRot.z);
+    drawMesh(m.pelvis, pelvisMat);
+
+    // Torso
+    let torsoMat = Mat4.translate(pelvisMat, 0, 0.11, 0);
+    torsoMat = Mat4.rotateX(torsoMat, rig.torsoRot.x);
+    torsoMat = Mat4.rotateY(torsoMat, rig.torsoRot.y);
+    torsoMat = Mat4.rotateZ(torsoMat, rig.torsoRot.z);
+    drawMesh(m.chest, Mat4.translate(torsoMat, 0, 0.26, 0));
+
+    // Hombros y cabeza
+    drawMesh(m.shoulder, Mat4.translate(torsoMat, -0.22, 0.48, 0));
+    drawMesh(m.shoulder, Mat4.translate(torsoMat, 0.22, 0.48, 0));
+    drawMesh(m.neck, Mat4.translate(torsoMat, 0, 0.56, 0));
+    drawMesh(m.head, Mat4.scale(Mat4.translate(torsoMat, 0, 0.72, 0), 0.92, 1.08, 0.98));
+    drawMesh(m.hair, Mat4.scale(Mat4.translate(torsoMat, 0, 0.75, -0.02), 0.94, 0.95, 1.0));
+
+    // Brazos
+    const drawArm = (side, rot) => {
+        let armMat = Mat4.translate(torsoMat, side * 0.24, 0.47, 0);
+        armMat = Mat4.rotateX(armMat, rot.x);
+        armMat = Mat4.rotateZ(armMat, rot.z);
+        drawMesh(m.upperArm, Mat4.translate(armMat, 0, -0.14, 0));
+        let foreMat = Mat4.translate(armMat, 0, -0.28, 0);
+        foreMat = Mat4.rotateX(foreMat, -0.25);
+        drawMesh(m.lowerArm, Mat4.translate(foreMat, 0, -0.13, 0));
+        drawMesh(m.hand, Mat4.translate(foreMat, 0, -0.31, 0));
+    };
+    drawArm(-1, rig.leftArmRot);
+    drawArm(1, rig.rightArmRot);
+
+    // Piernas
+    const drawLeg = (side, rot, kneeRot) => {
+        let legMat = Mat4.translate(pelvisMat, side * 0.105, -0.06, 0);
+        legMat = Mat4.rotateX(legMat, rot.x);
+        legMat = Mat4.rotateZ(legMat, rot.z);
+        drawMesh(m.thigh, Mat4.translate(legMat, 0, -0.22, 0));
+        let shinMat = Mat4.translate(legMat, 0, -0.44, 0);
+        shinMat = Mat4.rotateX(shinMat, kneeRot);
+        drawMesh(m.shin, Mat4.translate(shinMat, 0, -0.215, 0));
+        drawMesh(m.boot, Mat4.translate(shinMat, 0, -0.46, 0.06));
+    };
+    drawLeg(-1, rig.leftLegRot, rig.leftKneeRot);
+    drawLeg(1, rig.rightLegRot, rig.rightKneeRot);
+}
+
+const keeper = createPlayerRig(0xcddc39, 0x212121, 0xcddc39, 0xffffff, 0x3e2723);
+const kicker = createPlayerRig(0xd32f2f, 0xffffff, 0xd32f2f, null, 0x1a1a1a);
+kicker.rotY = Math.PI;
+
+const ballMesh = createSphereMesh(BALL_RADIUS, 18, 0xffffff, true);
+const ballShadowMesh = createCylinderMesh(0.16, 0.16, 0.01, 14, 0x163b18);
+
+// ==========================================
+// 4. ESTADO DEL JUEGO, CÁMARAS Y FÍSICA
+// ==========================================
+const state = {
+    phase: 'AIMING', // AIMING, RUNUP, FLYING, RESULT
+    goals: 0,
+    saves: 0,
+    shots: 0,
+    runupTimer: 0,
+    shotParams: null,
+    ballPos: { x: 0, y: BALL_RADIUS, z: 0 },
+    ballRot: { x: 0, y: 0 },
+    ballVel: { x: 0, y: 0, z: 0 },
+    ballSpin: 0,
+    keeperTarget: { x: 0, y: 1.0, dir: 0 },
+    keeperAnim: 0,
+    camIndex: 0
+};
+
+const cameras = [
+    { name: 'Lanzador', pos: [0, 2.25, 5.4], look: [0, 1.1, -11] },
+    { name: 'Lateral TV', pos: [11.5, 3.3, -3.5], look: [-1, 1.1, -9.5] },
+    { name: 'Portero', pos: [0, 1.85, -13.9], look: [0, 1.1, 0] },
+    { name: 'Aérea', pos: [0, 11.8, 6.8], look: [0, 0.5, -8] }
+];
+let currentCamPos = [...cameras[0].pos];
+let currentCamLook = [...cameras[0].look];
+
+document.getElementById('cam-btn').addEventListener('click', () => {
+    state.camIndex = (state.camIndex + 1) % cameras.length;
+    document.getElementById('cam-btn').textContent = `Cámara: ${cameras[state.camIndex].name}`;
+});
+
+function resetRound() {
+    state.phase = 'AIMING';
+    state.runupTimer = 0;
+    state.keeperAnim = 0;
+
+    state.ballPos = { x: 0, y: BALL_RADIUS, z: 0 };
+    state.ballRot = { x: 0, y: 0 };
+    state.ballVel = { x: 0, y: 0, z: 0 };
+    state.ballSpin = 0;
+
+    kicker.pos = { x: -0.85, y: 0, z: 2.4 };
+    kicker.pelvisRot = { x: 0, y: 0, z: 0 };
+    kicker.torsoRot = { x: 0.1, y: 0, z: 0 };
+    kicker.leftLegRot = { x: 0, y: 0, z: 0 };
+    kicker.leftKneeRot = 0;
+    kicker.rightLegRot = { x: 0, y: 0, z: 0 };
+    kicker.rightKneeRot = 0;
+    kicker.leftArmRot = { x: 0, y: 0, z: 0.25 };
+    kicker.rightArmRot = { x: 0, y: 0, z: -0.25 };
+
+    keeper.pos = { x: 0, y: 0, z: GOAL_Z + 0.35 };
+    keeper.pelvisY = 0.95;
+    keeper.pelvisRot = { x: 0, y: 0, z: 0 };
+    keeper.torsoRot = { x: 0.15, y: 0, z: 0 };
+    keeper.leftArmRot = { x: -0.6, y: 0, z: 0.45 };
+    keeper.rightArmRot = { x: -0.6, y: 0, z: -0.45 };
+    keeper.leftLegRot = { x: -0.15, y: 0, z: 0.15 };
+    keeper.rightLegRot = { x: -0.15, y: 0, z: -0.15 };
+}
+resetRound();
+
+// ==========================================
+// 5. CAPTURA TÁCTIL Y DE RATÓN (DIRECCIÓN, FUERZA, CURVA)
+// ==========================================
+let isDragging = false;
+let dragPoints = [];
+
+function handleResize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    glCanvas.width = w;
+    glCanvas.height = h;
+    swipeCanvas.width = w;
+    swipeCanvas.height = h;
+    gl.viewport(0, 0, w, h);
+}
+window.addEventListener('resize', handleResize);
+handleResize();
+
+function getPointerPos(e) {
+    const p = e.touches ? e.touches[0] : e;
+    return { x: p.clientX, y: p.clientY };
+}
+
+function onPointerDown(e) {
+    if (state.phase !== 'AIMING') return;
+    isDragging = true;
+    dragPoints = [getPointerPos(e)];
+}
+
+function onPointerMove(e) {
+    if (!isDragging) return;
+    dragPoints.push(getPointerPos(e));
+    drawSwipeTrail();
+}
+
+function onPointerUp() {
+    if (!isDragging) return;
+    isDragging = false;
+    swipeCtx.clearRect(0, 0, swipeCanvas.width, swipeCanvas.height);
+
+    if (dragPoints.length < 3) return;
+
+    const start = dragPoints[0];
+    const end = dragPoints[dragPoints.length - 1];
+    const dx = end.x - start.x;
+    const dy = start.y - end.y;
+
+    if (dy < 35) return;
+
+    const dist = Math.hypot(dx, dy);
+    const maxDist = Math.min(window.innerHeight * 0.55, 420);
+    const powerRatio = Math.max(0.25, Math.min(1.0, dist / maxDist));
+
+    const normX = dx / (window.innerWidth * 0.42);
+    const normY = Math.max(0.05, Math.min(1.15, (dy - 35) / (window.innerHeight * 0.48)));
+
+    let signedMaxCurve = 0;
+    const lineLen = Math.hypot(end.x - start.x, end.y - start.y);
+    if (lineLen > 10) {
+        for (let i = 1; i < dragPoints.length - 1; i++) {
+            const p = dragPoints[i];
+            const cross = ((end.x - start.x) * (p.y - start.y) - (end.y - start.y) * (p.x - start.x)) / lineLen;
+            if (Math.abs(cross) > Math.abs(signedMaxCurve)) {
+                signedMaxCurve = cross;
+            }
+        }
+    }
+    const curveFactor = Math.max(-1.2, Math.min(1.2, -signedMaxCurve / 110));
+
+    prepareShot(normX, normY, powerRatio, curveFactor);
+}
+
+function drawSwipeTrail() {
+    swipeCtx.clearRect(0, 0, swipeCanvas.width, swipeCanvas.height);
+    if (dragPoints.length < 2) return;
+    swipeCtx.beginPath();
+    swipeCtx.moveTo(dragPoints[0].x, dragPoints[0].y);
+    for (let i = 1; i < dragPoints.length; i++) {
+        swipeCtx.lineTo(dragPoints[i].x, dragPoints[i].y);
+    }
+    swipeCtx.strokeStyle = 'rgba(0, 230, 118, 0.85)';
+    swipeCtx.lineWidth = 7;
+    swipeCtx.lineCap = 'round';
+    swipeCtx.lineJoin = 'round';
+    swipeCtx.stroke();
+}
+
+glCanvas.addEventListener('mousedown', onPointerDown);
+window.addEventListener('mousemove', onPointerMove);
+window.addEventListener('mouseup', onPointerUp);
+glCanvas.addEventListener('touchstart', onPointerDown, { passive: true });
+window.addEventListener('touchmove', onPointerMove, { passive: true });
+window.addEventListener('touchend', onPointerUp);
+
+function prepareShot(normX, normY, powerRatio, curveFactor) {
+    state.phase = 'RUNUP';
+    state.runupTimer = 0;
+
+    const speedZ = 15 + powerRatio * 12;
+    const flightTime = Math.abs(GOAL_Z) / speedZ;
+    const targetX = normX * 4.4 - curveFactor * 1.1;
+    const targetY = 0.2 + normY * 2.55;
+
+    const gravity = -9.8;
+    const vx = targetX / flightTime;
+    const vy = (targetY - BALL_RADIUS - 0.5 * gravity * flightTime * flightTime) / flightTime;
+
+    state.shotParams = {
+        vel: { x: vx, y: vy, z: -speedZ },
+        spin: curveFactor * 13.5
+    };
+
+    const zones = [
+        { x: -2.4, y: 0.65, dir: -1 },
+        { x: -2.5, y: 1.65, dir: -1 },
+        { x: 0.0,  y: 1.10, dir: 0 },
+        { x: 2.4,  y: 0.65, dir: 1 },
+        { x: 2.5,  y: 1.65, dir: 1 }
+    ];
+    state.keeperTarget = zones[Math.floor(Math.random() * zones.length)];
+}
+
+function showBanner(text, color) {
+    const msg = document.getElementById('message');
+    msg.textContent = text;
+    msg.style.color = color;
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 1600);
+}
+
+function updateScoreboard() {
+    document.getElementById('goals').textContent = state.goals;
+    document.getElementById('saves').textContent = state.saves;
+    document.getElementById('shots').textContent = state.shots;
+}
+
+// ==========================================
+// 6. BUCLE PRINCIPAL DE RENDERIZADO Y SIMULACIÓN
+// ==========================================
+let lastTime = performance.now();
+let resultShown = false;
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function loop(now) {
+    requestAnimationFrame(loop);
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+
+    // Suavizado de cámara
+    const targetCam = cameras[state.camIndex];
+    for (let i = 0; i < 3; i++) {
+        currentCamPos[i] = lerp(currentCamPos[i], targetCam.pos[i], 0.08);
+        currentCamLook[i] = lerp(currentCamLook[i], targetCam.look[i], 0.08);
+    }
+
+    // Animación idle del portero
+    if (state.phase === 'AIMING' || state.phase === 'RUNUP') {
+        const t = now * 0.006;
+        keeper.pelvisY = 0.95 + Math.abs(Math.sin(t)) * 0.04;
+        keeper.pos.x = Math.sin(t * 0.5) * 0.25;
+    }
+
+    // Carrera del lanzador
+    if (state.phase === 'RUNUP') {
+        state.runupTimer += dt;
+        const p = Math.min(state.runupTimer / 0.55, 1);
+
+        kicker.pos.x = lerp(-0.85, -0.25, p);
+        kicker.pos.z = lerp(2.4, 0.35, p);
+
+        const stride = Math.sin(p * Math.PI * 3);
+        kicker.leftLegRot.x = stride * 0.6;
+        kicker.leftArmRot.x = -stride * 0.5;
+        kicker.rightArmRot.x = stride * 0.5;
+
+        if (p < 0.7) {
+            kicker.rightLegRot.x = -p * 1.1;
+            kicker.rightKneeRot = p * 1.2;
+        } else {
+            const kp = (p - 0.7) / 0.3;
+            kicker.rightLegRot.x = lerp(-0.77, 0.85, kp);
+            kicker.rightKneeRot = lerp(0.84, 0.05, kp);
+            kicker.torsoRot.z = -kp * 0.25;
+        }
+
+        if (p >= 1) {
+            state.phase = 'FLYING';
+            state.ballVel = { ...state.shotParams.vel };
+            state.ballSpin = state.shotParams.spin;
+            state.shots++;
+            resultShown = false;
+        }
+    }
+
+    // Vuelo del balón y estirada del portero
+    if (state.phase === 'FLYING' || state.phase === 'RESULT') {
+        if (state.ballPos.y > BALL_RADIUS || state.ballVel.y > 0) {
+            state.ballVel.y += -9.8 * dt;
+            state.ballVel.x += state.ballSpin * dt;
+        } else {
+            state.ballPos.y = BALL_RADIUS;
+            state.ballVel.y = 0;
+            state.ballVel.x *= 0.96;
+            state.ballVel.z *= 0.96;
+        }
+
+        const prevZ = state.ballPos.z;
+        state.ballPos.x += state.ballVel.x * dt;
+        state.ballPos.y += state.ballVel.y * dt;
+        state.ballPos.z += state.ballVel.z * dt;
+
+        state.ballRot.x -= state.ballVel.z * dt * 4;
+        state.ballRot.y += state.ballSpin * dt * 1.5;
+
+        if (state.phase === 'FLYING') {
+            state.keeperAnim = Math.min(state.keeperAnim + dt * 2.6, 1);
+            const k = state.keeperAnim;
+            const target = state.keeperTarget;
+
+            keeper.pos.x = lerp(0, target.x, k);
+            keeper.pelvisY = lerp(0.95, target.y, Math.sin(k * Math.PI * 0.7));
+
+            if (target.dir !== 0) {
+                keeper.pelvisRot.z = -target.dir * k * 1.35;
+                keeper.leftArmRot = { x: 0, y: 0, z: target.dir > 0 ? 2.7 * k : 0.4 };
+                keeper.rightArmRot = { x: 0, y: 0, z: target.dir < 0 ? -2.7 * k : -0.4 };
+                keeper.leftLegRot.z = target.dir * 0.25 * k;
+                keeper.rightLegRot.z = target.dir * 0.25 * k;
+            } else {
+                keeper.leftArmRot = { x: -2.6 * k, y: 0, z: 0.3 };
+                keeper.rightArmRot = { x: -2.6 * k, y: 0, z: -0.3 };
+            }
+        }
+
+        if (!resultShown && prevZ >= GOAL_Z && state.ballPos.z <= GOAL_Z) {
+            resultShown = true;
+            const bx = state.ballPos.x;
+            const by = state.ballPos.y;
+
+            const insideWidth = Math.abs(bx) < (GOAL_W - BALL_RADIUS * 0.5);
+            const insideHeight = by < (GOAL_H - BALL_RADIUS * 0.5);
+            const isTopCorner = insideWidth && insideHeight && (Math.abs(bx) > 2.55 && by > 1.72);
+
+            const keeperReachX = keeper.pos.x;
+            const keeperReachY = keeper.pelvisY + 0.25;
+            const distToKeeper = Math.hypot(bx - keeperReachX, by - keeperReachY);
+
+            const sameSide = (Math.sign(bx) === state.keeperTarget.dir) || (Math.abs(bx) < 0.85 && state.keeperTarget.dir === 0);
+            const isSaved = insideWidth && insideHeight && !isTopCorner && sameSide && distToKeeper < 1.18;
+
+            if (isSaved) {
+                state.saves++;
+                state.phase = 'RESULT';
+                state.ballVel.z = Math.abs(state.ballVel.z) * 0.45;
+                state.ballVel.x += (bx - keeperReachX) * 5;
+                state.ballVel.y = 3.5;
+                showBanner('¡PARADÓN!', '#ff5252');
+            } else if (insideWidth && insideHeight) {
+                state.goals++;
+                state.phase = 'RESULT';
+                state.ballVel.x *= 0.25;
+                state.ballVel.y *= 0.25;
+                state.ballVel.z *= 0.25;
+                showBanner(isTopCorner ? '¡GOLAZO A LA ESCUADRA!' : '¡GOOOOL!', '#00e676');
+            } else {
+                state.phase = 'RESULT';
+                showBanner('¡FUERA!', '#ffd740');
+            }
+
+            updateScoreboard();
+            setTimeout(resetRound, 2100);
+        }
+
+        if (state.ballPos.z < GOAL_Z - 1.8 && Math.abs(state.ballPos.x) < GOAL_W) {
+            state.ballPos.z = GOAL_Z - 1.8;
+            state.ballVel.z = 0;
+            state.ballVel.x *= 0.5;
+        }
+    }
+
+    // Renderizado WebGL
+    gl.clearColor(0.043, 0.086, 0.172, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const projMat = Mat4.perspective(50 * Math.PI / 180, glCanvas.width / glCanvas.height, 0.1, 250);
+    const viewMat = Mat4.lookAt(currentCamPos, currentCamLook, [0, 1, 0]);
+    gl.uniformMatrix4fv(loc.uProj, false, projMat);
+    gl.uniformMatrix4fv(loc.uView, false, viewMat);
+
+    // Césped
+    for (const s of grassStrips) {
+        drawMesh(s.mesh, Mat4.translate(Mat4.identity(), 0, -0.05, s.z));
+    }
+
+    // Líneas
+    for (const l of lineMeshes) {
+        drawMesh(l.mesh, Mat4.translate(Mat4.identity(), l.x, 0.01, l.z), true);
+    }
+
+    // Gradas y público
+    drawMesh(standBack, Mat4.rotateX(Mat4.translate(Mat4.identity(), 0, 7.5, -28), 0.35));
+    drawMesh(standSide, Mat4.rotateZ(Mat4.translate(Mat4.identity(), -43, 7.5, 0), -0.35));
+    drawMesh(standSide, Mat4.rotateZ(Mat4.translate(Mat4.identity(), 43, 7.5, 0), 0.35));
+    for (const f of fansData) {
+        drawMesh(f.mesh, Mat4.translate(Mat4.identity(), f.x, f.y, f.z));
+    }
+
+    // Portería y red
+    drawMesh(postVertMesh, Mat4.translate(Mat4.identity(), -GOAL_W, GOAL_H / 2, GOAL_Z));
+    drawMesh(postVertMesh, Mat4.translate(Mat4.identity(), GOAL_W, GOAL_H / 2, GOAL_Z));
+    drawMesh(postHorizMesh, Mat4.rotateZ(Mat4.translate(Mat4.identity(), 0, GOAL_H, GOAL_Z), Math.PI / 2));
+    drawMesh(netMesh, Mat4.identity(), true);
+
+    // Jugadores
+    renderPlayer(keeper);
+    renderPlayer(kicker);
+
+    // Sombra y balón
+    drawMesh(ballShadowMesh, Mat4.translate(Mat4.identity(), state.ballPos.x, 0.015, state.ballPos.z), true);
+    let bMat = Mat4.translate(Mat4.identity(), state.ballPos.x, state.ballPos.y, state.ballPos.z);
+    bMat = Mat4.rotateX(bMat, state.ballRot.x);
+    bMat = Mat4.rotateY(bMat, state.ballRot.y);
+    drawMesh(ballMesh, bMat);
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
