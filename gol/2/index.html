@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mundial de Penaltis 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #090d16;
+            color: #f8fafc;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            z-index: 1;
+            touch-action: none;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        .country-card {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .country-card:hover {
+            transform: translateY(-4px) scale(1.03);
+            border-color: #38bdf8;
+            box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.35);
+        }
+        .country-card.selected {
+            border-color: #fbbf24;
+            background: rgba(251, 191, 36, 0.18);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.45);
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 28px rgba(16, 185, 129, 0.85); }
+        }
+        .btn-play {
+            animation: pulseGlow 2.2s infinite;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CANVAS PRINCIPAL DEL ESTADIO Y JUEGO (SIEMPRE VISIBLE EN PANTALLA COMPLETA) -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD SUPERIOR EN PARTIDO -->
+    <div id="matchHud" class="hidden fixed top-0 left-0 right-0 z-20 p-2.5 sm:p-4 pointer-events-none flex flex-col items-center gap-1.5 sm:gap-2">
+        <!-- Etiqueta de Ronda -->
+        <div class="px-3.5 py-1 rounded-full bg-slate-950/90 border border-amber-400/40 text-amber-300 text-[11px] sm:text-sm font-extrabold tracking-widest uppercase shadow-lg">
+            <span id="hudRoundName">FASE DE GRUPOS • PARTIDO 1/3</span> &bull; <span class="text-white/90">PRIMERO A 5 GOLES</span>
+        </div>
+
+        <!-- Marcador Principal -->
+        <div class="glass-panel rounded-2xl px-4 py-1.5 sm:px-6 sm:py-2.5 flex items-center gap-4 sm:gap-8 shadow-2xl">
+            <!-- Equipo Jugador -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span id="hudPlayerFlag" class="text-2xl sm:text-3xl">🇪🇸</span>
+                <div class="text-left">
+                    <div id="hudPlayerCode" class="font-black text-sm sm:text-lg tracking-wider text-white">ESP</div>
+                    <div id="hudPlayerDots" class="flex gap-1 mt-0.5"></div>
+                </div>
+            </div>
+
+            <!-- Goles -->
+            <div class="flex items-center gap-3 bg-slate-950/95 px-3.5 py-1 rounded-xl border border-white/15">
+                <span id="hudPlayerScore" class="text-2xl sm:text-4xl font-black text-emerald-400">0</span>
+                <span class="text-slate-500 font-bold text-lg">-</span>
+                <span id="hudCpuScore" class="text-2xl sm:text-4xl font-black text-rose-400">0</span>
+            </div>
+
+            <!-- Equipo Rival -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="text-right">
+                    <div id="hudCpuCode" class="font-black text-sm sm:text-lg tracking-wider text-white">BRA</div>
+                    <div id="hudCpuDots" class="flex gap-1 mt-0.5 justify-end"></div>
+                </div>
+                <span id="hudCpuFlag" class="text-2xl sm:text-3xl">🇧🇷</span>
+            </div>
+        </div>
+
+        <!-- Indicador de Rol / Instrucción Dinámica -->
+        <div id="roleBanner" class="px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-emerald-400 text-slate-950 font-black text-xs sm:text-base shadow-xl text-center max-w-[92vw]">
+            ⚽ TU TURNO DE TIRAR: Dibuja una línea o curva desde el balón a la portería
+        </div>
+    </div>
+
+    <!-- BOTÓN SONIDO FLOTANTE -->
+    <button id="soundToggle" class="fixed top-3 right-3 z-40 w-10 h-10 rounded-full glass-panel flex items-center justify-center text-lg hover:bg-slate-800 transition cursor-pointer" title="Activar/Silenciar sonido">
+        🔊
+    </button>
+
+    <!-- PANTALLA 1: SELECCIÓN DE PAÍS -->
+    <div id="screenSelectCountry" class="fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl p-5 sm:p-8 flex flex-col max-h-[92vh] shadow-2xl border border-white/15">
+            <div class="text-center mb-4 sm:mb-6">
+                <div class="inline-block px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold tracking-widest uppercase mb-2">
+                    Copa Mundial de Penaltis
+                </div>
+                <h1 class="text-3xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-white via-sky-200 to-amber-300 bg-clip-text text-transparent">
+                    ELIGE TU SELECCIÓN
+                </h1>
+                <p class="text-slate-300 text-xs sm:text-sm mt-1">
+                    Supera la Fase de Grupos, Octavos, Cuartos, Semifinales y la Gran Final. ¡Gana el primero en llegar a <strong class="text-emerald-400">5 goles</strong>!
+                </p>
+            </div>
+
+            <!-- Grid de Países -->
+            <div id="countriesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto custom-scroll pr-1 py-1">
+                <!-- Generado dinámicamente por JS -->
+            </div>
+
+            <!-- Botón Comenzar -->
+            <div class="mt-5 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div id="selectedCountryInfo" class="flex items-center gap-3 text-sm text-slate-300">
+                    <span class="text-2xl">🇪🇸</span>
+                    <span>Has elegido: <strong class="text-white">España</strong></span>
+                </div>
+                <button id="btnStartTournament" class="btn-play w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-base sm:text-lg tracking-wide uppercase transition cursor-pointer">
+                    COMENZAR MUNDIAL 🏆
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: CUADRO DEL TORNEO / FASE DE GRUPOS Y ELIMINATORIAS -->
+    <div id="screenTournament" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-4xl rounded-3xl p-5 sm:p-8 flex flex-col max-h-[92vh] shadow-2xl border border-white/15">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-white/10">
+                <div>
+                    <span id="tourneyBadge" class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-extrabold uppercase tracking-wider">
+                        Fase de Grupos
+                    </span>
+                    <h2 id="tourneyTitle" class="text-2xl sm:text-3xl font-black text-white mt-1">
+                        Grupo A - Clasificación
+                    </h2>
+                </div>
+                <!-- Barra de progreso de fases -->
+                <div class="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs font-bold">
+                    <span id="stepGroups" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950">Grupos</span>
+                    <span class="text-slate-500">→</span>
+                    <span id="stepR16" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400">Octavos</span>
+                    <span class="text-slate-500">→</span>
+                    <span id="stepQF" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400">Cuartos</span>
+                    <span class="text-slate-500">→</span>
+                    <span id="stepSF" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400">Semis</span>
+                    <span class="text-slate-500">→</span>
+                    <span id="stepFinal" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400">Final</span>
+                </div>
+            </div>
+
+            <!-- Contenido Dinámico: Tabla de Grupo o Llave de Eliminatoria -->
+            <div id="tourneyBody" class="my-4 overflow-y-auto custom-scroll flex-1">
+                <!-- Se rellena por JS -->
+            </div>
+
+            <!-- Acción Siguiente Partido -->
+            <div class="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div id="nextMatchPreview" class="flex items-center gap-3 bg-slate-900/90 px-4 py-2.5 rounded-2xl border border-white/10 w-full sm:w-auto justify-center">
+                    <!-- Vista previa rival -->
+                </div>
+                <button id="btnPlayNextMatch" class="btn-play w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-base sm:text-lg uppercase tracking-wide transition cursor-pointer">
+                    JUGAR PARTIDO ⚽
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADO DE PARTIDO / ELIMINACIÓN / CAMPEÓN -->
+    <div id="screenEndModal" class="hidden fixed inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="glass-panel w-full max-w-lg rounded-3xl p-6 sm:p-8 text-center shadow-2xl border border-white/20">
+            <div id="endEmoji" class="text-6xl sm:text-7xl mb-3">🏆</div>
+            <h2 id="endTitle" class="text-3xl sm:text-4xl font-black text-white mb-2">¡VICTORIA!</h2>
+            <p id="endSubtitle" class="text-slate-300 text-sm sm:text-base mb-6">
+                Has ganado la tanda de penaltis 5 - 3 y avanzas a la siguiente ronda.
+            </p>
+            <div id="endScoreBox" class="bg-slate-900/90 rounded-2xl p-4 mb-6 border border-white/10 flex items-center justify-center gap-6">
+                <!-- Detalle resultado -->
+            </div>
+            <button id="btnEndAction" class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-lg uppercase tracking-wide hover:brightness-110 transition cursor-pointer">
+                CONTINUAR
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. MOTOR DE AUDIO SINTETIZADO (WEB AUDIO API) - SIN ARCHIVOS EXTERNOS
+         * ============================================================================
+         */
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            toggleMute() {
+                this.muted = !this.muted;
+                return this.muted;
+            }
+            playWhistle() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(2800, now);
+                osc.frequency.linearRampToValueAtTime(3100, now + 0.08);
+                osc.frequency.linearRampToValueAtTime(2750, now + 0.35);
+
+                const lfo = this.ctx.createOscillator();
+                const lfoGain = this.ctx.createGain();
+                lfo.frequency.value = 38;
+                lfoGain.gain.value = 120;
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.16, now + 0.03);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                lfo.start(now);
+                osc.stop(now + 0.42);
+                lfo.stop(now + 0.42);
+            }
+            playKick() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(42, now + 0.16);
+                gain.gain.setValueAtTime(0.42, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.19);
+            }
+            playPost() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(520, now);
+                osc.frequency.exponentialRampToValueAtTime(290, now + 0.35);
+                gain.gain.setValueAtTime(0.32, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+            playSave() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(190, now);
+                osc.frequency.exponentialRampToValueAtTime(75, now + 0.22);
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+            playGoalCheer() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const freqs = [261.63, 329.63, 392.00, 523.25];
+                freqs.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.04);
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.08, now + 0.08 + idx * 0.04);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.04);
+                    osc.stop(now + 0.9);
+                });
+            }
+        }
+        const sfx = new SoundFX();
+
+        /**
+         * ============================================================================
+         * 2. SELECCIONES NACIONALES CON COLORES OFICIALES
+         * ============================================================================
+         */
+        const COUNTRIES = [
+            { id: 'ESP', name: 'España', flag: '🇪🇸', primary: '#dc2626', secondary: '#1e3a8a', accent: '#facc15', gk: '#0ea5e9', rating: 92 },
+            { id: 'ARG', name: 'Argentina', flag: '🇦🇷', primary: '#38bdf8', secondary: '#0f172a', accent: '#ffffff', gk: '#10b981', rating: 94 },
+            { id: 'BRA', name: 'Brasil', flag: '🇧🇷', primary: '#facc15', secondary: '#1d4ed8', accent: '#16a34a', gk: '#1e293b', rating: 93 },
+            { id: 'FRA', name: 'Francia', flag: '🇫🇷', primary: '#1d4ed8', secondary: '#ffffff', accent: '#ef4444', gk: '#f97316', rating: 93 },
+            { id: 'GER', name: 'Alemania', flag: '🇩🇪', primary: '#f8fafc', secondary: '#111827', accent: '#eab308', gk: '#a855f7', rating: 90 },
+            { id: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', primary: '#ffffff', secondary: '#1e3a8a', accent: '#dc2626', gk: '#ef4444', rating: 91 },
+            { id: 'POR', name: 'Portugal', flag: '🇵🇹', primary: '#991b1b', secondary: '#15803d', accent: '#facc15', gk: '#eab308', rating: 91 },
+            { id: 'ITA', name: 'Italia', flag: '🇮🇹', primary: '#2563eb', secondary: '#ffffff', accent: '#16a34a', gk: '#475569', rating: 89 },
+            { id: 'NED', name: 'Países Bajos', flag: '🇳🇱', primary: '#f97316', secondary: '#ffffff', accent: '#1d4ed8', gk: '#06b6d4', rating: 89 },
+            { id: 'URU', name: 'Uruguay', flag: '🇺🇾', primary: '#7dd3fc', secondary: '#0f172a', accent: '#ffffff', gk: '#f43f5e', rating: 88 },
+            { id: 'JPN', name: 'Japón', flag: '🇯🇵', primary: '#1e3a8a', secondary: '#1e40af', accent: '#ffffff', gk: '#ec4899', rating: 86 },
+            { id: 'MEX', name: 'México', flag: '🇲🇽', primary: '#15803d', secondary: '#ffffff', accent: '#dc2626', gk: '#eab308', rating: 85 }
+        ];
+
+        const STAGES = [
+            { key: 'GROUPS', name: 'Fase de Grupos', short: 'Grupos' },
+            { key: 'R16', name: 'Octavos de Final', short: 'Octavos' },
+            { key: 'QF', name: 'Cuartos de Final', short: 'Cuartos' },
+            { key: 'SF', name: 'Semifinales', short: 'Semis' },
+            { key: 'FINAL', name: 'Gran Final', short: 'Final' }
+        ];
+
+        let state = {
+            selectedCountry: COUNTRIES[0],
+            stageIndex: 0,
+            groupTeams: [],
+            groupMatchIndex: 0,
+            knockoutOpponent: null,
+            confettiActive: false,
+
+            match: {
+                active: false,
+                opponent: null,
+                playerGoals: 0,
+                cpuGoals: 0,
+                playerHistory: [],
+                cpuHistory: [],
+                turn: 'PLAYER_KICK', // 'PLAYER_KICK' | 'CPU_KICK'
+                subState: 'AIMING',  // 'AIMING' | 'PLAYER_RUNUP' | 'CPU_PREP' | 'FLYING' | 'RESULT_PAUSE'
+                timer: 0,
+                pendingShot: null,
+                bannerText: '',
+                bannerColor: '#10b981',
+                bannerTimer: 0
+            }
+        };
+
+        /**
+         * ============================================================================
+         * 3. CANVAS Y GEOMETRÍA EN PERSPECTIVA DEL CAMPO, PORTERÍA Y JUGADORES
+         * ============================================================================
+         */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let W = window.innerWidth || 1024;
+        let H = window.innerHeight || 768;
+
+        let field = {
+            horizonY: 0,
+            goalX: 0,
+            goalY: 0,
+            goalW: 0,
+            goalH: 0,
+            postThickness: 11,
+            ballStartX: 0,
+            ballStartY: 0,
+            ballRadius: 20
+        };
+
+        let ball = {
+            x: 0,
+            y: 0,
+            z: 0,
+            curve: 0,
+            spin: 0,
+            trail: [],
+            targetX: 0,
+            targetY: 0,
+            flightTime: 0,
+            flightDuration: 0.65,
+            startX: 0,
+            startY: 0,
+            outcome: null
+        };
+
+        let keeper = {
+            x: 0,
+            y: 0,
+            startX: 0,
+            startY: 0,
+            targetX: 0,
+            targetY: 0,
+            diveAngle: 0,
+            targetAngle: 0,
+            isDiving: false,
+            diveProgress: 0,
+            color: '#0ea5e9',
+            idlePhase: 0
+        };
+
+        let shooter = {
+            visible: true,
+            x: 0,
+            y: 0,
+            startX: 0,
+            startY: 0,
+            runProgress: 0,
+            kickLegAngle: 0,
+            country: COUNTRIES[0],
+            aimTargetX: 0,
+            aimTargetY: 0,
+            aimCurve: 0,
+            hasKicked: false
+        };
+
+        let drawing = {
+            isDrawing: false,
+            points: []
+        };
+
+        let netShake = { time: 0, impactX: 0, impactY: 0 };
+        let particles = [];
+        let confetti = [];
+        let crowdWave = 0;
+
+        /**
+         * Garantiza dimensiones reales > 0 y recalcula todas las posiciones del estadio
+         */
+        function resizeCanvas() {
+            const newW = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 800);
+            const newH = Math.max(480, window.innerHeight || document.documentElement.clientHeight || 600);
+
+            W = newW;
+            H = newH;
+            canvas.width = W;
+            canvas.height = H;
+
+            // Línea de horizonte del estadio (debajo del marcador HUD)
+            field.horizonY = Math.max(175, H * 0.43);
+
+            // Dimensiones generosas de la portería centrada
+            const maxGoalW = Math.min(W * 0.78, 580);
+            field.goalW = Math.max(260, maxGoalW);
+            field.goalH = Math.min(field.goalW * 0.44, field.horizonY * 0.62);
+            field.goalX = (W - field.goalW) / 2;
+            field.goalY = field.horizonY - field.goalH + 14;
+            field.postThickness = Math.max(8, field.goalW * 0.022);
+
+            // Posición del balón en el punto de penalti
+            field.ballStartX = W / 2;
+            field.ballStartY = H * 0.81;
+            field.ballRadius = Math.max(16, Math.min(25, W * 0.032));
+
+            if (!state.match.active || state.match.subState === 'AIMING' || state.match.subState === 'CPU_PREP') {
+                resetPositions();
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function resetPositions() {
+            ball.x = field.ballStartX;
+            ball.y = field.ballStartY;
+            ball.z = 0;
+            ball.spin = 0;
+            ball.trail = [];
+            ball.outcome = null;
+
+            keeper.x = W / 2;
+            keeper.y = field.goalY + field.goalH - 8;
+            keeper.startX = keeper.x;
+            keeper.startY = keeper.y;
+            keeper.targetX = keeper.x;
+            keeper.targetY = keeper.y;
+            keeper.diveAngle = 0;
+            keeper.targetAngle = 0;
+            keeper.isDiving = false;
+            keeper.diveProgress = 0;
+
+            // El lanzador siempre es visible: el jugador cuando chuta, el rival cuando defiende
+            shooter.visible = true;
+            shooter.startX = field.ballStartX - 68;
+            shooter.startY = field.ballStartY + 62;
+            shooter.x = shooter.startX;
+            shooter.y = shooter.startY;
+            shooter.runProgress = 0;
+            shooter.kickLegAngle = 0;
+            shooter.hasKicked = false;
+            shooter.country = (state.match.turn === 'CPU_KICK' && state.match.opponent)
+                ? state.match.opponent
+                : state.selectedCountry;
+
+            drawing.isDrawing = false;
+            drawing.points = [];
+        }
+
+        /**
+         * ============================================================================
+         * 4. UI DE SELECCIÓN DE PAÍSES Y GESTIÓN DEL TORNEO
+         * ============================================================================
+         */
+        function renderCountrySelection() {
+            const grid = document.getElementById('countriesGrid');
+            grid.innerHTML = '';
+
+            COUNTRIES.forEach(c => {
+                const isSelected = state.selectedCountry.id === c.id;
+                const card = document.createElement('button');
+                card.className = `country-card rounded-2xl p-3 sm:p-4 bg-slate-900/90 border border-white/10 flex flex-col items-center gap-1.5 cursor-pointer ${isSelected ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <span class="text-3xl sm:text-4xl drop-shadow">${c.flag}</span>
+                    <span class="font-extrabold text-white text-sm sm:text-base">${c.name}</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full border border-white/40" style="background:${c.primary}"></span>
+                        <span class="w-3 h-3 rounded-full border border-white/40" style="background:${c.secondary}"></span>
+                        <span class="text-[11px] font-bold text-amber-400 ml-1">★ ${c.rating}</span>
+                    </div>
+                `;
+                card.onclick = () => {
+                    sfx.init();
+                    state.selectedCountry = c;
+                    shooter.country = c;
+                    document.getElementById('selectedCountryInfo').innerHTML = `
+                        <span class="text-2xl">${c.flag}</span>
+                        <span>Has elegido: <strong class="text-white">${c.name}</strong></span>
+                    `;
+                    renderCountrySelection();
+                };
+                grid.appendChild(card);
+            });
+        }
+
+        function startTournament() {
+            sfx.playWhistle();
+            state.confettiActive = false;
+            state.stageIndex = 0;
+            state.groupMatchIndex = 0;
+
+            const others = COUNTRIES.filter(c => c.id !== state.selectedCountry.id)
+                .sort(() => Math.random() - 0.5);
+            const groupRivals = others.slice(0, 3);
+
+            state.groupTeams = [
+                { country: state.selectedCountry, pts: 0, gf: 0, gc: 0, played: 0, won: 0, isPlayer: true },
+                ...groupRivals.map(r => ({ country: r, pts: 0, gf: 0, gc: 0, played: 0, won: 0, isPlayer: false }))
+            ];
+
+            document.getElementById('screenSelectCountry').classList.add('hidden');
+            showTournamentScreen();
+        }
+
+        function updateStageProgressPills() {
+            const ids = ['stepGroups', 'stepR16', 'stepQF', 'stepSF', 'stepFinal'];
+            ids.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                if (idx < state.stageIndex) {
+                    el.className = 'px-2.5 py-1 rounded-lg bg-emerald-900/70 text-emerald-300 border border-emerald-500/40';
+                } else if (idx === state.stageIndex) {
+                    el.className = 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-black shadow';
+                } else {
+                    el.className = 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400';
+                }
+            });
+        }
+
+        function showTournamentScreen() {
+            document.getElementById('matchHud').classList.add('hidden');
+            document.getElementById('screenEndModal').classList.add('hidden');
+            document.getElementById('screenTournament').classList.remove('hidden');
+
+            updateStageProgressPills();
+            const stage = STAGES[state.stageIndex];
+            const body = document.getElementById('tourneyBody');
+            const nextPreview = document.getElementById('nextMatchPreview');
+
+            if (stage.key === 'GROUPS') {
+                document.getElementById('tourneyBadge').textContent = `Fase de Grupos • Jornada ${state.groupMatchIndex + 1} de 3`;
+                document.getElementById('tourneyTitle').textContent = 'Grupo A — Clasifican los 2 primeros';
+
+                const sorted = [...state.groupTeams].sort((a, b) => {
+                    if (b.pts !== a.pts) return b.pts - a.pts;
+                    const diffA = a.gf - a.gc;
+                    const diffB = b.gf - b.gc;
+                    if (diffB !== diffA) return diffB - diffA;
+                    return b.gf - a.gf;
+                });
+
+                let tableHtml = `
+                    <div class="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/75">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="border-b border-white/10 text-slate-400 uppercase text-[11px]">
+                                    <th class="py-3 px-3">Pos</th>
+                                    <th class="py-3 px-3">Selección</th>
+                                    <th class="py-3 px-2 text-center">PJ</th>
+                                    <th class="py-3 px-2 text-center">PG</th>
+                                    <th class="py-3 px-2 text-center">GF</th>
+                                    <th class="py-3 px-2 text-center">GC</th>
+                                    <th class="py-3 px-3 text-center text-amber-300">PTS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                sorted.forEach((row, i) => {
+                    const qualifies = i < 2;
+                    tableHtml += `
+                        <tr class="border-b border-white/5 ${row.isPlayer ? 'bg-sky-500/15 font-bold' : ''}">
+                            <td class="py-3 px-3">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-black ${qualifies ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400'}">
+                                    ${i + 1}
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 flex items-center gap-2">
+                                <span class="text-xl">${row.country.flag}</span>
+                                <span class="text-white">${row.country.name}</span>
+                                ${row.isPlayer ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500 text-slate-950 font-black">TÚ</span>' : ''}
+                            </td>
+                            <td class="py-3 px-2 text-center text-slate-300">${row.played}</td>
+                            <td class="py-3 px-2 text-center text-slate-300">${row.won}</td>
+                            <td class="py-3 px-2 text-center text-slate-300">${row.gf}</td>
+                            <td class="py-3 px-2 text-center text-slate-300">${row.gc}</td>
+                            <td class="py-3 px-3 text-center font-black text-base text-amber-300">${row.pts}</td>
+                        </tr>
+                    `;
+                });
+                tableHtml += `</tbody></table></div>
+                <p class="text-xs text-slate-400 mt-3 text-center">
+                    🟢 Los 2 primeros avanzan a <strong class="text-white">Octavos de Final</strong>. Gana cada partido el primero que llegue a 5 goles.
+                </p>`;
+                body.innerHTML = tableHtml;
+
+                const rivalObj = state.groupTeams[state.groupMatchIndex + 1];
+                nextPreview.innerHTML = `
+                    <span class="text-2xl">${state.selectedCountry.flag}</span>
+                    <span class="font-black text-white">${state.selectedCountry.id}</span>
+                    <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-xs font-black">VS</span>
+                    <span class="font-black text-white">${rivalObj.country.id}</span>
+                    <span class="text-2xl">${rivalObj.country.flag}</span>
+                `;
+            } else {
+                document.getElementById('tourneyBadge').textContent = 'Eliminatoria Directa • Todo o Nada';
+                document.getElementById('tourneyTitle').textContent = stage.name;
+
+                if (!state.knockoutOpponent) {
+                    const usedIds = [state.selectedCountry.id];
+                    const pool = COUNTRIES.filter(c => !usedIds.includes(c.id))
+                        .sort((a, b) => (b.rating + Math.random() * 8) - (a.rating + Math.random() * 8));
+                    state.knockoutOpponent = pool[0];
+                }
+
+                const opp = state.knockoutOpponent;
+                body.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-4 sm:py-6">
+                        <div class="text-xs uppercase tracking-widest text-amber-400 font-bold mb-4">
+                            Duelo de ${stage.name}
+                        </div>
+                        <div class="flex items-center justify-center gap-4 sm:gap-10 w-full max-w-xl bg-slate-900/90 p-6 rounded-3xl border border-white/15 shadow-xl">
+                            <div class="flex flex-col items-center gap-2 flex-1">
+                                <span class="text-5xl sm:text-6xl drop-shadow-lg">${state.selectedCountry.flag}</span>
+                                <span class="font-black text-lg sm:text-2xl text-white">${state.selectedCountry.name}</span>
+                                <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold">TU SELECCIÓN</span>
+                            </div>
+
+                            <div class="flex flex-col items-center">
+                                <span class="text-2xl sm:text-4xl font-black text-amber-400">VS</span>
+                                <span class="text-[11px] text-slate-400 mt-1">A 5 GOLES</span>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-2 flex-1">
+                                <span class="text-5xl sm:text-6xl drop-shadow-lg">${opp.flag}</span>
+                                <span class="font-black text-lg sm:text-2xl text-white">${opp.name}</span>
+                                <span class="text-xs px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-bold">NIVEL ★ ${opp.rating}</span>
+                            </div>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 mt-5 max-w-md text-center">
+                            Si ganas esta tanda de penaltis avanzarás directamente a <strong class="text-amber-300">${state.stageIndex < 4 ? STAGES[state.stageIndex + 1].name : 'la Gloria Eterna'}</strong>.
+                        </p>
+                    </div>
+                `;
+
+                nextPreview.innerHTML = `
+                    <span class="text-2xl">${state.selectedCountry.flag}</span>
+                    <span class="font-black text-white">${state.selectedCountry.id}</span>
+                    <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-xs font-black">VS</span>
+                    <span class="font-black text-white">${opp.id}</span>
+                    <span class="text-2xl">${opp.flag}</span>
+                `;
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 5. INICIAR PARTIDO DE PENALTIS
+         * ============================================================================
+         */
+        function startMatch() {
+            sfx.playWhistle();
+            document.getElementById('screenTournament').classList.add('hidden');
+            document.getElementById('matchHud').classList.remove('hidden');
+
+            // Garantizar que el canvas tenga dimensiones reales al empezar el partido
+            resizeCanvas();
+            requestAnimationFrame(() => resizeCanvas());
+
+            const stage = STAGES[state.stageIndex];
+            let opponent;
+            let roundLabel = stage.name.toUpperCase();
+
+            if (stage.key === 'GROUPS') {
+                opponent = state.groupTeams[state.groupMatchIndex + 1].country;
+                roundLabel = `GRUPOS • PARTIDO ${state.groupMatchIndex + 1}/3`;
+            } else {
+                opponent = state.knockoutOpponent;
+            }
+
+            state.match = {
+                active: true,
+                opponent: opponent,
+                playerGoals: 0,
+                cpuGoals: 0,
+                playerHistory: [],
+                cpuHistory: [],
+                turn: 'PLAYER_KICK',
+                subState: 'AIMING',
+                timer: 0,
+                pendingShot: null,
+                bannerText: '',
+                bannerColor: '#10b981',
+                bannerTimer: 0
+            };
+
+            document.getElementById('hudRoundName').textContent = roundLabel;
+            document.getElementById('hudPlayerFlag').textContent = state.selectedCountry.flag;
+            document.getElementById('hudPlayerCode').textContent = state.selectedCountry.id;
+            document.getElementById('hudCpuFlag').textContent = opponent.flag;
+            document.getElementById('hudCpuCode').textContent = opponent.id;
+
+            updateMatchHud();
+            setupTurn('PLAYER_KICK');
+        }
+
+        function updateMatchHud() {
+            const m = state.match;
+            document.getElementById('hudPlayerScore').textContent = m.playerGoals;
+            document.getElementById('hudCpuScore').textContent = m.cpuGoals;
+
+            const renderDots = (history, containerId) => {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                const totalSlots = Math.max(5, history.length);
+                for (let i = 0; i < totalSlots; i++) {
+                    const dot = document.createElement('span');
+                    if (i < history.length) {
+                        dot.className = history[i]
+                            ? 'w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]'
+                            : 'w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-rose-500';
+                    } else {
+                        dot.className = 'w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-slate-700 border border-white/15';
+                    }
+                    container.appendChild(dot);
+                }
+            };
+            renderDots(m.playerHistory, 'hudPlayerDots');
+            renderDots(m.cpuHistory, 'hudCpuDots');
+        }
+
+        function setupTurn(turnType) {
+            const m = state.match;
+            m.turn = turnType;
+            const roleBanner = document.getElementById('roleBanner');
+
+            if (turnType === 'PLAYER_KICK') {
+                m.subState = 'AIMING';
+                keeper.color = m.opponent.gk;
+                resetPositions();
+                roleBanner.className = 'px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-emerald-400 text-slate-950 font-black text-xs sm:text-base shadow-xl text-center max-w-[92vw]';
+                roleBanner.textContent = '⚽ TU TURNO DE TIRAR: Dibuja una línea o curva desde el balón a la portería';
+            } else if (turnType === 'CPU_KICK') {
+                m.subState = 'CPU_PREP';
+                m.timer = 0;
+                keeper.color = state.selectedCountry.gk;
+                resetPositions();
+
+                // Elegir tiro de la IA
+                const skillFactor = (m.opponent.rating - 80) / 20;
+                const marginX = field.goalW * 0.08;
+                const marginY = field.goalH * 0.12;
+                shooter.aimTargetX = field.goalX + marginX + Math.random() * (field.goalW - marginX * 2);
+                shooter.aimTargetY = field.goalY + marginY + Math.random() * (field.goalH - marginY * 1.4);
+                shooter.aimCurve = (Math.random() - 0.5) * (85 + skillFactor * 55);
+
+                roleBanner.className = 'px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-amber-400 text-slate-950 font-black text-xs sm:text-base shadow-xl text-center max-w-[92vw]';
+                roleBanner.textContent = `🧤 ERES EL PORTERO (${state.selectedCountry.name}): ¡Toca o desliza en la portería para parar!`;
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 6. CONTROLES RATÓN Y TÁCTIL (DIBUJAR TIRO Y PARADA DE PORTERO)
+         * ============================================================================
+         */
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function onPointerDown(e) {
+            if (!state.match.active) return;
+            sfx.init();
+            const pos = getPointerPos(e);
+            const m = state.match;
+
+            // MODO 1: EL JUGADOR PATEA (DIBUJA EL TIRO DESDE EL BALÓN O ZONA INFERIOR)
+            if (m.turn === 'PLAYER_KICK' && m.subState === 'AIMING') {
+                const distToBall = Math.hypot(pos.x - ball.x, pos.y - ball.y);
+                if (distToBall < field.ballRadius * 7 || pos.y > field.horizonY) {
+                    drawing.isDrawing = true;
+                    drawing.points = [{ x: ball.x, y: ball.y }, pos];
+                }
+            }
+            // MODO 2: EL JUGADOR ES PORTERO
+            else if (m.turn === 'CPU_KICK' && (m.subState === 'CPU_PREP' || m.subState === 'FLYING')) {
+                triggerPlayerKeeperDive(pos.x, pos.y);
+            }
+        }
+
+        function onPointerMove(e) {
+            if (!state.match.active) return;
+            const pos = getPointerPos(e);
+            const m = state.match;
+
+            if (m.turn === 'PLAYER_KICK' && m.subState === 'AIMING' && drawing.isDrawing) {
+                const last = drawing.points[drawing.points.length - 1];
+                if (Math.hypot(pos.x - last.x, pos.y - last.y) > 5) {
+                    drawing.points.push(pos);
+                }
+            } else if (m.turn === 'CPU_KICK' && (m.subState === 'CPU_PREP' || m.subState === 'FLYING')) {
+                if (e.buttons === 1 || e.touches) {
+                    triggerPlayerKeeperDive(pos.x, pos.y);
+                }
+            }
+        }
+
+        function onPointerUp() {
+            if (!state.match.active) return;
+            const m = state.match;
+
+            if (m.turn === 'PLAYER_KICK' && m.subState === 'AIMING' && drawing.isDrawing) {
+                drawing.isDrawing = false;
+                if (drawing.points.length >= 2) {
+                    preparePlayerShot(drawing.points);
+                }
+                drawing.points = [];
+            }
+        }
+
+        canvas.addEventListener('mousedown', onPointerDown);
+        canvas.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('mouseup', onPointerUp);
+
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onPointerDown(e); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); onPointerMove(e); }, { passive: false });
+        window.addEventListener('touchend', onPointerUp);
+
+        /**
+         * Prepara el tiro dibujado por el jugador e inicia la carrera del lanzador
+         */
+        function preparePlayerShot(pts) {
+            const start = pts[0];
+            const end = pts[pts.length - 1];
+
+            // Verificar que el trazo apunte hacia arriba (portería)
+            if (start.y - end.y < 30) return;
+
+            const mid = pts[Math.floor(pts.length / 2)];
+            const straightMidX = (start.x + end.x) / 2;
+            const curveOffset = (mid.x - straightMidX) * 1.4;
+
+            const dy = start.y - end.y;
+            const dx = end.x - start.x;
+            const goalDistY = field.ballStartY - (field.goalY + field.goalH * 0.52);
+            const scale = Math.min(1.3, Math.max(0.75, goalDistY / dy));
+
+            let finalX = start.x + dx * scale + curveOffset * 0.42;
+            let finalY = start.y - dy * scale;
+            finalY = Math.max(field.goalY - field.goalH * 0.3, Math.min(field.goalY + field.goalH + 12, finalY));
+
+            const swipeLen = Math.hypot(dx, dy);
+            const duration = Math.max(0.48, Math.min(0.76, 0.84 - (swipeLen / H) * 0.44));
+
+            // Decisión del portero rival (IA)
+            const m = state.match;
+            const aiSkill = (m.opponent.rating - 75) / 30;
+            const guessesRight = Math.random() < (0.36 + aiSkill * 0.24);
+
+            let diveX, diveY;
+            if (guessesRight) {
+                diveX = Math.max(field.goalX + 25, Math.min(field.goalX + field.goalW - 25, finalX + (Math.random() - 0.5) * 45));
+                diveY = Math.max(field.goalY + 25, Math.min(field.goalY + field.goalH - 12, finalY + (Math.random() - 0.5) * 35));
+            } else {
+                const oppositeSide = finalX > W / 2 ? -1 : 1;
+                diveX = W / 2 + oppositeSide * (field.goalW * (0.25 + Math.random() * 0.2));
+                diveY = field.goalY + field.goalH * (0.45 + Math.random() * 0.4);
+            }
+
+            m.subState = 'PLAYER_RUNUP';
+            m.timer = 0;
+            m.pendingShot = { finalX, finalY, curveOffset, duration, diveX, diveY };
+        }
+
+        function triggerPlayerKeeperDive(targetX, targetY) {
+            const clampedX = Math.max(field.goalX - 15, Math.min(field.goalX + field.goalW + 15, targetX));
+            const clampedY = Math.max(field.goalY - 10, Math.min(field.goalY + field.goalH + 10, targetY));
+            startKeeperDive(clampedX, clampedY);
+        }
+
+        function startKeeperDive(tx, ty) {
+            keeper.isDiving = true;
+            keeper.startX = keeper.x;
+            keeper.startY = keeper.y;
+            keeper.targetX = tx;
+            keeper.targetY = ty;
+            keeper.diveProgress = 0;
+
+            const diffX = tx - (W / 2);
+            if (Math.abs(diffX) < 26) {
+                keeper.targetAngle = 0;
+            } else {
+                keeper.targetAngle = (diffX > 0 ? 1 : -1) * Math.min(1.25, Math.abs(diffX) / (field.goalW * 0.42));
+            }
+        }
+
+        function launchBall(targetX, targetY, curve, duration) {
+            state.match.subState = 'FLYING';
+            ball.startX = field.ballStartX;
+            ball.startY = field.ballStartY;
+            ball.x = ball.startX;
+            ball.y = ball.startY;
+            ball.z = 0;
+            ball.targetX = targetX;
+            ball.targetY = targetY;
+            ball.curve = curve;
+            ball.flightTime = 0;
+            ball.flightDuration = duration;
+            ball.trail = [];
+        }
+
+        /**
+         * ============================================================================
+         * 7. ACTUALIZACIÓN DE FÍSICA Y ANIMACIÓN (60 FPS)
+         * ============================================================================
+         */
+        function update(dt) {
+            crowdWave += dt * 3;
+            keeper.idlePhase += dt * 5.5;
+
+            // Actualizar partículas de impacto
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vy += 320 * dt;
+                p.life -= dt;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Actualizar confeti si es campeón
+            if (state.confettiActive) {
+                if (confetti.length < 110) {
+                    confetti.push({
+                        x: Math.random() * W,
+                        y: -15,
+                        vx: (Math.random() - 0.5) * 90,
+                        vy: 110 + Math.random() * 140,
+                        color: ['#fbbf24', '#34d399', '#38bdf8', '#f43f5e', '#ffffff'][Math.floor(Math.random() * 5)],
+                        size: 5 + Math.random() * 6,
+                        rot: Math.random() * Math.PI * 2
+                    });
+                }
+                confetti.forEach(c => {
+                    c.x += c.vx * dt;
+                    c.y += c.vy * dt;
+                    c.rot += dt * 4;
+                    if (c.y > H + 20) c.y = -15;
+                });
+            }
+
+            if (netShake.time > 0) {
+                netShake.time = Math.max(0, netShake.time - dt);
+            }
+
+            const m = state.match;
+            if (!m.active) return;
+
+            if (m.bannerTimer > 0) {
+                m.bannerTimer = Math.max(0, m.bannerTimer - dt);
+            }
+
+            // CARRERA DEL LANZADOR DEL JUGADOR
+            if (m.turn === 'PLAYER_KICK' && m.subState === 'PLAYER_RUNUP') {
+                m.timer += dt;
+                shooter.runProgress = Math.min(1, m.timer / 0.42);
+                shooter.x = shooter.startX + (field.ballStartX - 20 - shooter.startX) * shooter.runProgress;
+                shooter.y = shooter.startY + (field.ballStartY + 10 - shooter.startY) * shooter.runProgress;
+
+                if (shooter.runProgress >= 1 && !shooter.hasKicked) {
+                    shooter.hasKicked = true;
+                    shooter.kickLegAngle = 0.85;
+                    sfx.playKick();
+                    const ps = m.pendingShot;
+                    launchBall(ps.finalX, ps.finalY, ps.curveOffset, ps.duration);
+                    setTimeout(() => {
+                        if (state.match.subState === 'FLYING') {
+                            startKeeperDive(ps.diveX, ps.diveY);
+                        }
+                    }, 120);
+                }
+            }
+
+            // PREPARACIÓN Y CARRERA DEL DELANTERO RIVAL (IA)
+            if (m.turn === 'CPU_KICK' && m.subState === 'CPU_PREP') {
+                m.timer += dt;
+                shooter.runProgress = Math.min(1, m.timer / 1.35);
+                shooter.x = shooter.startX + (field.ballStartX - 20 - shooter.startX) * shooter.runProgress;
+                shooter.y = shooter.startY + (field.ballStartY + 10 - shooter.startY) * shooter.runProgress;
+
+                if (shooter.runProgress >= 1 && !shooter.hasKicked) {
+                    shooter.hasKicked = true;
+                    shooter.kickLegAngle = 0.85;
+                    sfx.playKick();
+                    launchBall(shooter.aimTargetX, shooter.aimTargetY, shooter.aimCurve, 0.64);
+                }
+            }
+
+            // ANIMACIÓN DEL PORTERO
+            if (keeper.isDiving) {
+                keeper.diveProgress = Math.min(1, keeper.diveProgress + dt * 2.7);
+                const ease = 1 - Math.pow(1 - keeper.diveProgress, 3);
+                keeper.x = keeper.startX + (keeper.targetX - keeper.startX) * ease;
+                keeper.y = keeper.startY + (keeper.targetY - keeper.startY) * ease;
+                keeper.diveAngle = keeper.targetAngle * ease;
+            } else if (m.subState === 'AIMING' || m.subState === 'CPU_PREP') {
+                // Balanceo activo del portero esperando el disparo
+                keeper.x = W / 2 + Math.sin(keeper.idlePhase) * 14;
+            }
+
+            // VUELO DEL BALÓN
+            if (m.subState === 'FLYING') {
+                ball.flightTime += dt;
+                const t = Math.min(1, ball.flightTime / ball.flightDuration);
+                ball.z = t;
+
+                const linearX = ball.startX + (ball.targetX - ball.startX) * t;
+                const curveArc = Math.sin(t * Math.PI) * ball.curve;
+                const linearY = ball.startY + (ball.targetY - ball.startY) * t;
+                const liftArc = Math.sin(t * Math.PI) * 34;
+
+                ball.x = linearX + curveArc;
+                ball.y = linearY - liftArc;
+                ball.spin += dt * 18;
+
+                ball.trail.push({ x: ball.x, y: ball.y, r: ball.radius * (1 - t * 0.45) });
+                if (ball.trail.length > 14) ball.trail.shift();
+
+                if (t >= 1) {
+                    evaluateShotOutcome();
+                }
+            }
+
+            // PAUSA TRAS RESULTADO ANTES DEL SIGUIENTE TURNO
+            if (m.subState === 'RESULT_PAUSE') {
+                m.timer -= dt;
+                if (m.timer <= 0) {
+                    advanceTurnOrFinishMatch();
+                }
+            }
+        }
+
+        function evaluateShotOutcome() {
+            const m = state.match;
+            const bx = ball.x;
+            const by = ball.y;
+
+            const leftPost = field.goalX;
+            const rightPost = field.goalX + field.goalW;
+            const crossbar = field.goalY;
+            const ground = field.goalY + field.goalH;
+
+            const distToKeeper = Math.hypot(bx - keeper.x, by - (keeper.y - 16));
+            const saveReach = Math.max(40, field.goalW * 0.12);
+
+            const isInsideGoal = (bx > leftPost + 4 && bx < rightPost - 4 && by > crossbar + 4 && by < ground + 12);
+            const hitPost = (
+                (Math.abs(bx - leftPost) <= field.postThickness + 5 && by >= crossbar - 6 && by <= ground) ||
+                (Math.abs(bx - rightPost) <= field.postThickness + 5 && by >= crossbar - 6 && by <= ground) ||
+                (Math.abs(by - crossbar) <= field.postThickness + 5 && bx >= leftPost - 6 && bx <= rightPost + 6)
+            );
+
+            let isGoal = false;
+
+            if (isInsideGoal && distToKeeper <= saveReach) {
+                ball.outcome = 'SAVED';
+                sfx.playSave();
+                showShotBanner('🧤 ¡PARADÓN DEL PORTERO!', '#38bdf8');
+                spawnParticles(bx, by, '#38bdf8', 24);
+            } else if (hitPost) {
+                ball.outcome = 'POST';
+                sfx.playPost();
+                showShotBanner('💥 ¡AL PALO!', '#f59e0b');
+                spawnParticles(bx, by, '#fbbf24', 20);
+            } else if (isInsideGoal) {
+                isGoal = true;
+                ball.outcome = 'GOAL';
+                sfx.playGoalCheer();
+                netShake.time = 0.65;
+                netShake.impactX = bx;
+                netShake.impactY = by;
+                showShotBanner('⚽ ¡GOOOOOOL!', '#10b981');
+                spawnParticles(bx, by, '#34d399', 38);
+            } else {
+                ball.outcome = 'MISS';
+                sfx.playSave();
+                showShotBanner('❌ ¡TIRO DESVIADO!', '#f43f5e');
+            }
+
+            if (m.turn === 'PLAYER_KICK') {
+                m.playerHistory.push(isGoal);
+                if (isGoal) m.playerGoals++;
+            } else {
+                m.cpuHistory.push(isGoal);
+                if (isGoal) m.cpuGoals++;
+            }
+
+            updateMatchHud();
+            m.subState = 'RESULT_PAUSE';
+            m.timer = 1.45;
+        }
+
+        function showShotBanner(text, color) {
+            state.match.bannerText = text;
+            state.match.bannerColor = color;
+            state.match.bannerTimer = 1.35;
+        }
+
+        function spawnParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 70 + Math.random() * 220;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 80,
+                    color,
+                    size: 3 + Math.random() * 4.5,
+                    life: 0.5 + Math.random() * 0.45
+                });
+            }
+        }
+
+        function advanceTurnOrFinishMatch() {
+            const m = state.match;
+            const sameShotsCount = (m.playerHistory.length === m.cpuHistory.length);
+
+            // Regla solicitada: pasa de ronda / gana el primero que llegue a 5 goles por equipo
+            if (sameShotsCount && (m.playerGoals >= 5 || m.cpuGoals >= 5)) {
+                if (m.playerGoals !== m.cpuGoals) {
+                    finishMatch(m.playerGoals > m.cpuGoals);
+                    return;
+                }
+            }
+
+            if (m.turn === 'PLAYER_KICK') {
+                setupTurn('CPU_KICK');
+            } else {
+                setupTurn('PLAYER_KICK');
+            }
+        }
+
+        function finishMatch(playerWon) {
+            const m = state.match;
+            m.active = false;
+            sfx.playWhistle();
+
+            const stage = STAGES[state.stageIndex];
+            const modal = document.getElementById('screenEndModal');
+            const emoji = document.getElementById('endEmoji');
+            const title = document.getElementById('endTitle');
+            const subtitle = document.getElementById('endSubtitle');
+            const scoreBox = document.getElementById('endScoreBox');
+            const btn = document.getElementById('btnEndAction');
+
+            scoreBox.innerHTML = `
+                <div class="flex flex-col items-center">
+                    <span class="text-3xl">${state.selectedCountry.flag}</span>
+                    <span class="font-bold text-sm text-white mt-1">${state.selectedCountry.name}</span>
+                </div>
+                <div class="text-3xl sm:text-4xl font-black text-white">
+                    <span class="${playerWon ? 'text-emerald-400' : 'text-rose-400'}">${m.playerGoals}</span>
+                    <span class="text-slate-500 mx-1">-</span>
+                    <span class="${!playerWon ? 'text-emerald-400' : 'text-rose-400'}">${m.cpuGoals}</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-3xl">${m.opponent.flag}</span>
+                    <span class="font-bold text-sm text-white mt-1">${m.opponent.name}</span>
+                </div>
+            `;
+
+            if (stage.key === 'GROUPS') {
+                const pTeam = state.groupTeams[0];
+                const rTeam = state.groupTeams[state.groupMatchIndex + 1];
+
+                pTeam.played++;
+                rTeam.played++;
+                pTeam.gf += m.playerGoals;
+                pTeam.gc += m.cpuGoals;
+                rTeam.gf += m.cpuGoals;
+                rTeam.gc += m.playerGoals;
+
+                if (playerWon) {
+                    pTeam.pts += 3;
+                    pTeam.won++;
+                } else {
+                    rTeam.pts += 3;
+                    rTeam.won++;
+                }
+
+                const otherIndices = [1, 2, 3].filter(idx => idx !== state.groupMatchIndex + 1);
+                if (otherIndices.length === 2) {
+                    const tA = state.groupTeams[otherIndices[0]];
+                    const tB = state.groupTeams[otherIndices[1]];
+                    const aWins = Math.random() < 0.52;
+                    tA.played++; tB.played++;
+                    if (aWins) {
+                        tA.pts += 3; tA.won++;
+                        tA.gf += 5; tA.gc += 3;
+                        tB.gf += 3; tB.gc += 5;
+                    } else {
+                        tB.pts += 3; tB.won++;
+                        tB.gf += 5; tB.gc += 3;
+                        tA.gf += 3; tA.gc += 5;
+                    }
+                }
+
+                state.groupMatchIndex++;
+
+                if (state.groupMatchIndex < 3) {
+                    emoji.textContent = playerWon ? '🎉' : '😤';
+                    title.textContent = playerWon ? '¡VICTORIA EN EL GRUPO!' : 'DERROTA EN EL GRUPO';
+                    subtitle.textContent = playerWon
+                        ? `Sumas 3 puntos vitales tras llegar a ${m.playerGoals} goles.`
+                        : `${m.opponent.name} alcanzó los 5 goles primero. ¡Aún puedes clasificar en el siguiente partido!`;
+                    btn.textContent = 'VER TABLA DEL GRUPO';
+                    btn.onclick = () => showTournamentScreen();
+                } else {
+                    const sorted = [...state.groupTeams].sort((a, b) => {
+                        if (b.pts !== a.pts) return b.pts - a.pts;
+                        return (b.gf - b.gc) - (a.gf - a.gc);
+                    });
+                    const rank = sorted.findIndex(t => t.isPlayer) + 1;
+
+                    if (rank <= 2) {
+                        emoji.textContent = '🎊';
+                        title.textContent = '¡CLASIFICADO A OCTAVOS!';
+                        subtitle.textContent = `Has finalizado ${rank}º en el Grupo A y avanzas a las eliminatorias del Mundial.`;
+                        btn.textContent = 'IR A OCTAVOS DE FINAL';
+                        btn.onclick = () => {
+                            state.stageIndex = 1;
+                            state.knockoutOpponent = null;
+                            showTournamentScreen();
+                        };
+                    } else {
+                        emoji.textContent = '💔';
+                        title.textContent = 'ELIMINADO EN GRUPOS';
+                        subtitle.textContent = `Terminaste en ${rank}ª posición del Grupo A. Solo clasifican los 2 primeros.`;
+                        btn.textContent = 'VOLVER A INTENTARLO';
+                        btn.onclick = () => resetToCountrySelection();
+                    }
+                }
+            } else {
+                if (playerWon) {
+                    if (stage.key === 'FINAL') {
+                        sfx.playGoalCheer();
+                        state.confettiActive = true;
+                        confetti = [];
+                        emoji.textContent = '🏆👑';
+                        title.textContent = `¡${state.selectedCountry.name.toUpperCase()} CAMPEÓN DEL MUNDO!`;
+                        subtitle.textContent = `¡Has conquistado la Copa Mundial de Penaltis venciendo ${m.playerGoals}-${m.cpuGoals} en la Gran Final!`;
+                        btn.textContent = 'JUGAR OTRO MUNDIAL';
+                        btn.onclick = () => resetToCountrySelection();
+                    } else {
+                        const nextStageName = STAGES[state.stageIndex + 1].name;
+                        emoji.textContent = '🔥';
+                        title.textContent = `¡PASAS A ${nextStageName.toUpperCase()}!`;
+                        subtitle.textContent = `Gran triunfo ${m.playerGoals}-${m.cpuGoals} ante ${m.opponent.name}.`;
+                        btn.textContent = `AVANZAR A ${nextStageName.toUpperCase()}`;
+                        btn.onclick = () => {
+                            state.stageIndex++;
+                            state.knockoutOpponent = null;
+                            showTournamentScreen();
+                        };
+                    }
+                } else {
+                    emoji.textContent = '😢';
+                    title.textContent = `ELIMINADO EN ${stage.name.toUpperCase()}`;
+                    subtitle.textContent = `${m.opponent.name} ganó ${m.cpuGoals}-${m.playerGoals} y te deja fuera del Mundial.`;
+                    btn.textContent = 'ELEGIR SELECCIÓN DE NUEVO';
+                    btn.onclick = () => resetToCountrySelection();
+                }
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function resetToCountrySelection() {
+            state.confettiActive = false;
+            document.getElementById('screenEndModal').classList.add('hidden');
+            document.getElementById('matchHud').classList.add('hidden');
+            document.getElementById('screenSelectCountry').classList.remove('hidden');
+            renderCountrySelection();
+        }
+
+        /**
+         * ============================================================================
+         * 8. RENDERIZADO COMPLETO DE ESCENA: ESTADIO, PORTERÍA, PORTERO, JUGADOR Y BALÓN
+         * ============================================================================
+         */
+        function drawStadium() {
+            // 1. Cielo nocturno del estadio
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, field.horizonY);
+            skyGrad.addColorStop(0, '#040711');
+            skyGrad.addColorStop(0.6, '#0f172a');
+            skyGrad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, W, field.horizonY);
+
+            // 2. Focos del estadio con haces de luz
+            const drawSpotlight = (sx, sy) => {
+                const beam = ctx.createRadialGradient(sx, sy, 6, sx, sy + 160, 290);
+                beam.addColorStop(0, 'rgba(255, 255, 255, 0.36)');
+                beam.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = beam;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 290, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(sx - 26, sy - 8, 52, 14);
+            };
+            drawSpotlight(W * 0.16, H * 0.11);
+            drawSpotlight(W * 0.84, H * 0.11);
+
+            // 3. Gradas y afición animada
+            const standTop = Math.max(40, field.horizonY - field.goalH * 1.15);
+            ctx.fillStyle = '#0b1120';
+            ctx.fillRect(0, standTop, W, field.horizonY - standTop);
+
+            const pColor = state.selectedCountry ? state.selectedCountry.primary : '#38bdf8';
+            const cColor = state.match.opponent ? state.match.opponent.primary : '#facc15';
+            for (let row = 0; row < 5; row++) {
+                const y = standTop + 12 + row * 14;
+                if (y > field.horizonY - 18) break;
+                for (let x = 10; x < W; x += 18) {
+                    const waveOffset = Math.sin(crowdWave + x * 0.03 + row) * 2.5;
+                    ctx.fillStyle = (x + row) % 3 === 0 ? pColor : ((x + row) % 2 === 0 ? cColor : '#64748b');
+                    ctx.beginPath();
+                    ctx.arc(x, y + waveOffset, 3.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Valla publicitaria LED
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, field.horizonY - 16, W, 16);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '800 10px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('WORLD CUP PENALTY SHOOTOUT  ★  PRIMERO A 5 GOLES  ★  COPA MUNDIAL', W / 2, field.horizonY - 4);
+
+            // 4. Césped verde con franjas de corte
+            const grassGrad = ctx.createLinearGradient(0, field.horizonY, 0, H);
+            grassGrad.addColorStop(0, '#15803d');
+            grassGrad.addColorStop(0.45, '#16a34a');
+            grassGrad.addColorStop(1, '#14532d');
+            ctx.fillStyle = grassGrad;
+            ctx.fillRect(0, field.horizonY, W, H - field.horizonY);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            const stripes = 7;
+            for (let i = 0; i < stripes; i += 2) {
+                const y1 = field.horizonY + ((H - field.horizonY) / stripes) * i;
+                const h1 = (H - field.horizonY) / stripes;
+                ctx.fillRect(0, y1, W, h1);
+            }
+
+            // 5. Líneas blancas del terreno de juego en perspectiva
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.78)';
+            ctx.lineWidth = 3;
+
+            // Línea de gol / fondo
+            const goalLineY = field.goalY + field.goalH;
+            ctx.beginPath();
+            ctx.moveTo(0, goalLineY);
+            ctx.lineTo(W, goalLineY);
+            ctx.stroke();
+
+            // Área pequeña
+            const sixTopW = field.goalW * 1.24;
+            const sixBotW = field.goalW * 1.44;
+            const sixBotY = goalLineY + (H - goalLineY) * 0.24;
+            ctx.beginPath();
+            ctx.moveTo(W / 2 - sixTopW / 2, goalLineY);
+            ctx.lineTo(W / 2 - sixBotW / 2, sixBotY);
+            ctx.lineTo(W / 2 + sixBotW / 2, sixBotY);
+            ctx.lineTo(W / 2 + sixTopW / 2, goalLineY);
+            ctx.stroke();
+
+            // Área grande
+            const boxTopW = field.goalW * 1.72;
+            const boxBotW = Math.min(W * 0.96, field.goalW * 2.65);
+            const boxBotY = H * 0.89;
+            ctx.beginPath();
+            ctx.moveTo(W / 2 - boxTopW / 2, goalLineY);
+            ctx.lineTo(W / 2 - boxBotW / 2, boxBotY);
+            ctx.lineTo(W / 2 + boxBotW / 2, boxBotY);
+            ctx.lineTo(W / 2 + boxTopW / 2, goalLineY);
+            ctx.stroke();
+
+            // Semicírculo frontal del área
+            ctx.beginPath();
+            ctx.ellipse(W / 2, boxBotY, field.goalW * 0.42, 24, 0, 0, Math.PI);
+            ctx.stroke();
+
+            // Punto de penalti blanco
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.ellipse(field.ballStartX, field.ballStartY + field.ballRadius * 0.78, 12, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawGoalAndNet() {
+            const gx = field.goalX;
+            const gy = field.goalY;
+            const gw = field.goalW;
+            const gh = field.goalH;
+            const depth = gw * 0.14;
+
+            // Fondo sombreado de la portería
+            ctx.fillStyle = 'rgba(2, 6, 23, 0.44)';
+            ctx.fillRect(gx, gy, gw, gh);
+
+            // Estructura trasera de la red (profundidad 3D)
+            const backLeft = gx + depth * 0.55;
+            const backRight = gx + gw - depth * 0.55;
+            const backTop = gy + gh * 0.14;
+            const backBottom = gy + gh - 4;
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(gx, gy);
+            ctx.lineTo(backLeft, backTop);
+            ctx.lineTo(backRight, backTop);
+            ctx.lineTo(gx + gw, gy);
+            ctx.moveTo(backLeft, backTop);
+            ctx.lineTo(backLeft, backBottom);
+            ctx.lineTo(gx, gy + gh);
+            ctx.moveTo(backRight, backTop);
+            ctx.lineTo(backRight, backBottom);
+            ctx.lineTo(gx + gw, gy + gh);
+            ctx.stroke();
+
+            // Malla de la red con física de vibración cuando entra gol
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.34)';
+            ctx.lineWidth = 1.2;
+
+            const cols = 20;
+            const rows = 9;
+
+            for (let i = 0; i <= cols; i++) {
+                const ratio = i / cols;
+                const topX = gx + ratio * gw;
+                const backX = backLeft + ratio * (backRight - backLeft);
+                ctx.beginPath();
+                ctx.moveTo(topX, gy);
+                for (let j = 1; j <= rows; j++) {
+                    const rY = j / rows;
+                    let px = topX + (backX - topX) * Math.sin(rY * Math.PI * 0.5);
+                    let py = gy + rY * gh;
+
+                    if (netShake.time > 0) {
+                        const d = Math.hypot(px - netShake.impactX, py - netShake.impactY);
+                        const ripple = Math.max(0, 1 - d / 150) * Math.sin(netShake.time * 30) * 15;
+                        px += ripple;
+                        py -= Math.abs(ripple) * 0.4;
+                    }
+                    ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+
+            for (let j = 1; j < rows; j++) {
+                const rY = j / rows;
+                const py = gy + rY * gh;
+                ctx.beginPath();
+                ctx.moveTo(gx, py);
+                ctx.lineTo(gx + gw, py);
+                ctx.stroke();
+            }
+
+            // Postes y larguero blancos metálicos con relieve
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = field.postThickness;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(gx, gy + gh);
+            ctx.lineTo(gx, gy);
+            ctx.lineTo(gx + gw, gy);
+            ctx.lineTo(gx + gw, gy + gh);
+            ctx.stroke();
+        }
+
+        function drawKeeper() {
+            ctx.save();
+            ctx.translate(keeper.x, keeper.y);
+            ctx.rotate(keeper.diveAngle);
+
+            // Sombra en el césped
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+            ctx.beginPath();
+            ctx.ellipse(0, 8, 28, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Piernas y medias
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-13, -18, 10, 24);
+            ctx.fillRect(3, -18, 10, 24);
+
+            // Camiseta del portero
+            ctx.fillStyle = keeper.color;
+            ctx.beginPath();
+            ctx.roundRect(-18, -50, 36, 35, 8);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Dorsal "1" en el pecho
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 13px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('1', 0, -28);
+
+            // Brazos estirados
+            const armSpread = keeper.isDiving ? 38 : 26;
+            const armY = keeper.isDiving ? -52 : -38;
+            ctx.strokeStyle = keeper.color;
+            ctx.lineWidth = 7.5;
+            ctx.beginPath();
+            ctx.moveTo(-15, -40);
+            ctx.lineTo(-armSpread, armY);
+            ctx.moveTo(15, -40);
+            ctx.lineTo(armSpread, armY);
+            ctx.stroke();
+
+            // Guantes blancos
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(-armSpread, armY, 7, 0, Math.PI * 2);
+            ctx.arc(armSpread, armY, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cabeza
+            ctx.fillStyle = '#fed7aa';
+            ctx.beginPath();
+            ctx.arc(0, -60, 11, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pelo
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(0, -63, 11, Math.PI, 0);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawShooter() {
+            if (!shooter.visible) return;
+            const team = shooter.country || state.selectedCountry;
+
+            ctx.save();
+            ctx.translate(shooter.x, shooter.y);
+
+            // Sombra en el suelo
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+            ctx.beginPath();
+            ctx.ellipse(0, 14, 24, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pantalón corto
+            ctx.fillStyle = team.secondary;
+            ctx.fillRect(-15, -22, 30, 14);
+
+            // Pierna izquierda (apoyo)
+            ctx.fillStyle = '#fed7aa';
+            ctx.fillRect(-13, -8, 9, 20);
+            ctx.fillStyle = team.primary;
+            ctx.fillRect(-13, 2, 9, 10);
+
+            // Pierna derecha (golpeo animado)
+            ctx.save();
+            ctx.translate(8, -8);
+            ctx.rotate(-shooter.kickLegAngle);
+            ctx.fillStyle = '#fed7aa';
+            ctx.fillRect(-4, 0, 9, 20);
+            ctx.fillStyle = team.primary;
+            ctx.fillRect(-4, 10, 9, 10);
+            ctx.restore();
+
+            // Camiseta del equipo (vista de espalda mirando a portería)
+            ctx.fillStyle = team.primary;
+            ctx.beginPath();
+            ctx.roundRect(-19, -60, 38, 40, 9);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Dorsal "10"
+            ctx.fillStyle = (team.primary === '#ffffff' || team.primary === '#f8fafc' || team.primary === '#facc15') ? '#0f172a' : '#ffffff';
+            ctx.font = '900 15px Outfit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('10', 0, -34);
+
+            // Brazos
+            ctx.strokeStyle = team.primary;
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            ctx.moveTo(-18, -52);
+            ctx.lineTo(-27, -30);
+            ctx.moveTo(18, -52);
+            ctx.lineTo(27, -30);
+            ctx.stroke();
+
+            // Cabeza y cabello (vista trasera)
+            ctx.fillStyle = '#fed7aa';
+            ctx.beginPath();
+            ctx.arc(0, -72, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(0, -73, 12, Math.PI * 0.85, Math.PI * 2.15);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawAimingLine() {
+            // Indicador pulsante alrededor del balón cuando es turno de tirar del jugador
+            if (state.match.active && state.match.turn === 'PLAYER_KICK' && state.match.subState === 'AIMING' && !drawing.isDrawing) {
+                const pulse = 1 + Math.sin(crowdWave * 2) * 0.14;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([6, 5]);
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, field.ballRadius * 1.55 * pulse, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (!drawing.isDrawing || drawing.points.length < 2) return;
+
+            ctx.save();
+            const grad = ctx.createLinearGradient(
+                drawing.points[0].x, drawing.points[0].y,
+                drawing.points[drawing.points.length - 1].x, drawing.points[drawing.points.length - 1].y
+            );
+            grad.addColorStop(0, 'rgba(52, 211, 153, 0.45)');
+            grad.addColorStop(1, 'rgba(250, 204, 21, 0.98)');
+
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.setLineDash([12, 8]);
+
+            ctx.beginPath();
+            ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+            for (let i = 1; i < drawing.points.length; i++) {
+                ctx.lineTo(drawing.points[i].x, drawing.points[i].y);
+            }
+            ctx.stroke();
+
+            const last = drawing.points[drawing.points.length - 1];
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(last.x, last.y, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawBall() {
+            // Estela del balón en vuelo
+            for (let i = 0; i < ball.trail.length; i++) {
+                const tr = ball.trail[i];
+                const alpha = (i / ball.trail.length) * 0.38;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(tr.x, tr.y, tr.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            const r = field.ballRadius * (1 - ball.z * 0.46);
+
+            // Sombra del balón
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(ball.x, ball.y + r * 0.88, r * 0.98, r * 0.38, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Esfera del balón
+            ctx.save();
+            ctx.translate(ball.x, ball.y);
+            ctx.rotate(ball.spin);
+
+            const ballGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+            ballGrad.addColorStop(0, '#ffffff');
+            ballGrad.addColorStop(0.75, '#e2e8f0');
+            ballGrad.addColorStop(1, '#94a3b8');
+
+            ctx.fillStyle = ballGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pentágonos clásicos
+            ctx.fillStyle = '#0f172a';
+            for (let i = 0; i < 5; i++) {
+                const ang = (i * Math.PI * 2) / 5;
+                const px = Math.cos(ang) * (r * 0.52);
+                const py = Math.sin(ang) * (r * 0.52);
+                ctx.beginPath();
+                ctx.arc(px, py, r * 0.22, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, r * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawKeeperZonesHint() {
+            if (state.match.active && state.match.turn === 'CPU_KICK' && state.match.subState === 'CPU_PREP') {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([8, 6]);
+                ctx.strokeRect(field.goalX + 4, field.goalY + 4, field.goalW - 8, field.goalH - 8);
+                ctx.restore();
+            }
+        }
+
+        function drawParticlesAndBanner() {
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            if (state.confettiActive) {
+                confetti.forEach(c => {
+                    ctx.save();
+                    ctx.translate(c.x, c.y);
+                    ctx.rotate(c.rot);
+                    ctx.fillStyle = c.color;
+                    ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size * 0.6);
+                    ctx.restore();
+                });
+            }
+
+            if (state.match.bannerTimer > 0) {
+                ctx.save();
+                const scale = 1 + Math.sin((1.35 - state.match.bannerTimer) * 6) * 0.06;
+                ctx.translate(W / 2, H * 0.36);
+                ctx.scale(scale, scale);
+
+                ctx.font = `900 ${Math.min(50, W * 0.085)}px Outfit, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = 'rgba(2, 6, 23, 0.92)';
+                ctx.strokeText(state.match.bannerText, 0, 0);
+
+                ctx.fillStyle = state.match.bannerColor;
+                ctx.fillText(state.match.bannerText, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function render() {
+            if (canvas.width === 0 || canvas.height === 0) {
+                resizeCanvas();
+            }
+            ctx.clearRect(0, 0, W, H);
+            drawStadium();
+            drawGoalAndNet();
+            drawKeeperZonesHint();
+            drawKeeper();
+            drawAimingLine();
+            drawBall();
+            drawShooter();
+            drawParticlesAndBanner();
+        }
+
+        /**
+         * ============================================================================
+         * 9. BUCLE PRINCIPAL DE ANIMACIÓN
+         * ============================================================================
+         */
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            const dt = Math.min(0.05, (timestamp - lastTime) / 1000 || 0.016);
+            lastTime = timestamp;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('btnStartTournament').addEventListener('click', startTournament);
+        document.getElementById('btnPlayNextMatch').addEventListener('click', startMatch);
+        document.getElementById('soundToggle').addEventListener('click', (e) => {
+            const muted = sfx.toggleMute();
+            e.target.textContent = muted ? '🔇' : '🔊';
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            resizeCanvas();
+            renderCountrySelection();
+            requestAnimationFrame(gameLoop);
+        });
+
+        window.onload = function () {
+            resizeCanvas();
+        };
+    </script>
+</body>
+</html>
